@@ -34,12 +34,6 @@ export class Synth {
     this.tried = true;
   }
 
-  /** Audio clock facts for the debug log. */
-  get info() {
-    const c = this.ctx;
-    return c ? { state: c.state, outputLatency: c.outputLatency ?? null, baseLatency: c.baseLatency ?? null } : { state: 'none' };
-  }
-
   /** Seconds to add to a `performance.now()` time to get the audio-clock time at which it is *heard*. */
   private clockOffset(ctx: AudioContext): number {
     const ts = ctx.getOutputTimestamp?.();

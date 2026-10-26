@@ -12,8 +12,6 @@ export class InputBus {
   private statusListeners = new Set<(devices: string[], error?: string) => void>();
   devices: string[] = [];
   midiError: string | undefined;
-  /** `performance.now()`-based time at which the browser received the last MIDI message (for the debug log). */
-  lastMidiStamp = 0;
 
   on(listener: Listener): () => void {
     this.listeners.add(listener);
@@ -50,7 +48,6 @@ export class InputBus {
           input.onmidimessage = (e) => {
             if (!e.data) return;
             const event = parseMidi(e.data);
-            this.lastMidiStamp = e.timeStamp;
             if (event) this.emit(event, 'midi');
           };
           names.push(input.name ?? 'MIDI input');

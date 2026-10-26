@@ -453,16 +453,6 @@ function finishWaitRun(summary: RunSummary): void {
   if (loopOn()) { session?.restart(); renderStatus(); refreshKeys(); }
 }
 
-// ───────────── debug log ─────────────
-// One JSON object per line, prefixed [pt], so a run can be copied out of the console and analysed.
-// `rel` times are ms from beat 0 of the run (negative = count-in); a press at the right moment has offset 0.
-const NOTE_NAMES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
-const nm = (midi: number) => `${NOTE_NAMES[midi % 12]}${Math.floor(midi / 12) - 1}`;
-const r1 = (n: number) => Math.round(n * 10) / 10;
-function debug(ev: string, data: Record<string, unknown>): void {
-  console.log('[pt]', JSON.stringify({ ev, ...data }));
-}
-
 // ───────────── tempo mode ─────────────
 function readBpm(): number {
   const el = $<HTMLInputElement>('bpm');
@@ -499,11 +489,6 @@ function startTempo(): void {
   }
   const cancelClicks = synth.scheduleClicks(clicks);
 
-  debug('start', {
-    piece: current.id, hands, level, bpm, beatMs: r1(run.beatMs), windowMs: r1(run.windowMs), latencyMs,
-    countInMs: r1(run.beatZeroAt - t0), audio: synth.info,
-    schedule: run.schedule.map((e) => ({ note: nm(e.note), beat: e.beat, rel: r1(e.time - run.beatZeroAt) })),
-  });
   const { spots, anchors } = stepPlaces(cursor, steps);
   tempo = { run, cursor, steps, bpm, cancelClicks, raf: 0, lastRaw: 0, spots, anchors };
   cursor.reset();
@@ -530,22 +515,6 @@ function stepPlaces(cursor: RangeCursor, steps: TimedStep[]): { spots: Spot[]; a
   };
 }
 
-function logPress(run: TempoRun, midi: number, source: string, stamp: number, r: ReturnType<TempoRun['press']>): void {
-  const rel = stamp - latencyMs - run.beatZeroAt;
-  // the nearest note of the same pitch, to see which one this press was aiming at
-  const near = run.schedule.filter((e) => e.note === midi)
-    .map((e) => ({ rel: e.time - run.beatZeroAt, state: e.state }))
-    .sort((a, b) => Math.abs(rel - a.rel) - Math.abs(rel - b.rel))[0];
-  const hw = source === 'midi' ? r1(bus.lastMidiStamp - latencyMs - run.beatZeroAt) : undefined;
-  debug('press', {
-    note: nm(midi), src: source, rel: r1(rel), hwRel: hw, result: r.kind,
-    offset: r.kind === 'hit' ? r1(r.offsetMs) : r.kind === 'extra' && r.offsetMs !== undefined ? r1(r.offsetMs) : undefined,
-    wanted: r.kind === 'extra' ? r.wanted.map(nm) : undefined,
-    nearestSamePitch: near ? { rel: r1(near.rel), state: near.state, delta: r1(rel - near.rel) } : undefined,
-    windowMs: r1(run.windowMs),
-  });
-}
-
 function tick(): void {
   if (!tempo || !current) return;
   const now = performance.now() - latencyMs;
@@ -555,7 +524,6 @@ function tick(): void {
     tempo.cursor.moveTo(u.cursorRawIndex);
   }
   if (u.newlyMissed.length) {
-    debug('miss', { notes: u.newlyMissed.map(nm), rel: r1(now - tempo.run.beatZeroAt) });
     for (const n of u.newlyMissed) keyboard.flash('should', n, 1500);
     setFeedback(describeMissed(u.newlyMissed));
   }
@@ -576,7 +544,6 @@ function tick(): void {
 
   if (u.phase === 'done' && u.summary) {
     const summary = u.summary;
-    debug('end', { ...summary });
     stopTempo();
     finishTempoRun(summary);
     return;
@@ -975,9 +942,7 @@ bus.on((event, source) => {
     if (outcome?.finished) finishWaitRun(outcome.finished);
   } else if (tempo) {
     const at = score.anchor();
-    const stamp = performance.now();
-    const r = tempo.run.press(event.note, stamp - latencyMs); // minus the measured setup delay
-    logPress(tempo.run, event.note, source, stamp, r);
+    const r = tempo.run.press(event.note, performance.now() - latencyMs); // minus the measured setup delay
     if (r.kind === 'hit') {
       keyboard.flash('hit', event.note);
       score.showRight(event.note, tempo.anchors[r.stepIdx] ?? at); // on its own note: the cursor may not have reached it yet
@@ -996,7 +961,6 @@ bus.on((event, source) => {
   } else if (mode === 'tempo' && current) {
     // Tempo mode before Start: no run, no clock. Check the key against the first notes so you can still see where it sits on the staff.
     const wanted = firstStepNotes();
-    debug('idle-press', { note: nm(event.note), wanted: wanted.map(nm), right: wanted.includes(event.note) });
     if (wanted.includes(event.note)) {
       keyboard.flash('hit', event.note);
       score.showRight(event.note);
