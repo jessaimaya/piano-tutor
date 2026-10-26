@@ -10,6 +10,22 @@ MIDI keyboard, and you can also play with your computer keyboard or the mouse.
 > **Status:** it works and is covered by unit tests. Tempo mode has been driven by scripts with timed key presses, but not yet
 > tried by a person on a real piano across different setups, so expect rough edges. Issues and suggestions are welcome.
 
+## Screenshots
+
+**Wait mode.** The cursor waits for the right notes. A wrong key gets a plain explanation, and the keyboard shows what you played.
+
+![Wait mode on Ode to Joy, with feedback on a wrong note](docs/screenshots/wait-mode.png)
+
+**Tempo mode.** A metronome sets the pace and every note has a timing window. The key you should have played is outlined in green, and the status line counts what was in time, missed or extra.
+
+![Tempo mode with a missed note and an extra note](docs/screenshots/tempo-mode.png)
+
+**Sight-reading test.** Freshly generated pieces in seven levels, so you never see the same one twice.
+
+![Sight-reading test, level 1](docs/screenshots/sight-reading.png)
+
+(The screenshots use a stand-in for the piano connection, so the top bar shows a P-115.)
+
 ## What the app does
 
 - **Reads real notation.** It loads MusicXML (`.mxl`, `.musicxml`) and draws it with
