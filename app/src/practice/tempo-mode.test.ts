@@ -255,3 +255,27 @@ describe('steps that start partway into the piece', () => {
     expect(run.update(2000 + 1100).cursorRawIndex).toBe(9);
   });
 });
+
+describe('a player who keeps a steady offset from the clock', () => {
+  // C4 D4 E4(half) then rests, at 44 bpm: the second note is judged on its own time, not on when the first was played
+  const piece = [step(0, 0, 60), step(1, 1, 62), step(2, 2, 64)];
+  const play = (offsetMs: number) => {
+    const r = run(piece, 44, 4);
+    const hits = [60, 62, 64].map((n, i) => r.press(n, r.timeOfBeat(i) + offsetMs).kind);
+    return hits;
+  };
+
+  it('scores every note when on the beat', () => expect(play(0)).toEqual(['hit', 'hit', 'hit']));
+  it('scores every note up to the window, early or late', () => {
+    expect(play(250)).toEqual(['hit', 'hit', 'hit']);
+    expect(play(-250)).toEqual(['hit', 'hit', 'hit']);
+  });
+  it('misses every note, not only the later ones, when past the window', () => {
+    expect(play(MAX_WINDOW_MS + 60)).toEqual(['extra', 'extra', 'extra']);
+  });
+  it('a player who is slowly dragging loses the notes once the drift passes the window', () => {
+    const r = run(piece, 44, 4);
+    const drift = [0, 150, 340].map((d, i) => r.press([60, 62, 64][i]!, r.timeOfBeat(i) + d).kind);
+    expect(drift).toEqual(['hit', 'hit', 'extra']);
+  });
+});

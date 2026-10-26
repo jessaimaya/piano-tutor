@@ -6,6 +6,41 @@ export class Synth {
   private ctx: AudioContext | undefined;
   private voices = new Map<number, { osc: OscillatorNode; gain: GainNode }>();
 
+  /** True once the audio clock is running: a fresh context starts a moment late and its clock reads 0 until then. */
+  get isReady(): boolean {
+    return !!this.ctx && this.ctx.state === 'running' && this.ctx.currentTime > 0;
+  }
+
+  private tried = false;
+
+  /** Nothing more to wait for: the clock runs, or it didn't start in time (or there is no audio) and we go on without. */
+  get settled(): boolean {
+    return this.isReady || this.tried;
+  }
+
+  /** Start the audio clock and wait for it to move, so clicks scheduled right after land on time. Gives up after half a second. */
+  async ready(): Promise<void> {
+    try {
+      this.ctx ??= new AudioContext();
+      const deadline = performance.now() + 500;
+      while (!this.isReady && performance.now() < deadline) {
+        // resume() can stay pending when the browser blocks audio, so never wait on it alone
+        await Promise.race([this.ctx.resume(), new Promise((r) => setTimeout(r, 100))]);
+        if (!this.isReady) await new Promise((r) => setTimeout(r, 15));
+      }
+    } catch {
+      // no audio: the visual count-in still works
+    }
+    this.tried = true;
+  }
+
+  /** Seconds to add to a `performance.now()` time to get the audio-clock time at which it is *heard*. */
+  private clockOffset(ctx: AudioContext): number {
+    const ts = ctx.getOutputTimestamp?.();
+    if (ts?.performanceTime && ts.contextTime !== undefined) return ts.contextTime - ts.performanceTime / 1000;
+    return ctx.currentTime - performance.now() / 1000 - (ctx.outputLatency || 0);
+  }
+
   noteOn(note: number): void {
     try {
       this.ctx ??= new AudioContext();
@@ -50,7 +85,7 @@ export class Synth {
       const master = ctx.createGain(); // chords add up: keep the sum clear of clipping
       master.gain.value = 0.5;
       master.connect(ctx.destination);
-      const offsetSec = ctx.currentTime - performance.now() / 1000;
+      const offsetSec = this.clockOffset(ctx);
       for (const n of notes) {
         const t = n.atMs / 1000 + offsetSec;
         const end = t + Math.max(0.08, n.durMs / 1000 * 0.97);
@@ -96,7 +131,7 @@ export class Synth {
       this.ctx ??= new AudioContext();
       void this.ctx.resume();
       const ctx = this.ctx;
-      const offsetSec = ctx.currentTime - performance.now() / 1000;
+      const offsetSec = this.clockOffset(ctx);
       for (const c of clicks) {
         const t = c.atMs / 1000 + offsetSec;
         if (t < ctx.currentTime) continue;

@@ -383,6 +383,7 @@ function readBpm(): number {
 
 function startTempo(): void {
   if (!current || tempo || calibration || listening) return;
+  if (!synth.settled) { void synth.ready().then(startTempo); return; } // the first click must not wait for the audio clock to start
   const cursor = activeCursor();
   const steps = readTimeline(cursor, hands);
   if (!steps.some((s) => s.notes.length > 0)) { showResult('Nothing to play for that hand.', true); return; }
@@ -691,6 +692,7 @@ function cancelListen(): void {
 }
 
 function startListen(): void {
+  if (!synth.settled) { void synth.ready().then(startListen); return; } // the first click must not wait for the audio clock to start
   if (sight) { showResult('Listening is off during the sight-reading test: reading it cold is the point.', true); return; }
   if (!current || tempo || calibration || listening) return;
   const cursor = activeCursor();
@@ -773,6 +775,7 @@ function renderLatency(): void {
 
 function startCalibration(): void {
   if (tempo || calibration || listening) return;
+  if (!synth.settled) { void synth.ready().then(startCalibration); return; } // the first click must not wait for the audio clock to start
   clearFeedback();
   $('result').hidden = true;
   const beatMs = 750, lead = 4; // four clicks to get the feel, then the ones that count
