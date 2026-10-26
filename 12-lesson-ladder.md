@@ -59,6 +59,18 @@ Saturday replaces "New bars" and "Make it steady" with **replay**: every "kept u
 
 Each unit is a few days to two weeks: it ends when its **exit** is met, not when the calendar says so. "Own" pieces are in `pieces.ts`; "Faber" and the rest are imported scores (ids in the ledger and in `library.json`).
 
+### Introduction week (before Stage 0)
+
+Added 2026-10-27 at the player's request: **right hand first, then left, then basic exercises with both**, before any reading. Seven days, three units, no reading step and no note cards (reading the staff starts in unit 0.1). The five-finger exercise in the Middle C position is the whole day: warm-up (steps), the new exercise (holds, then thirds), the steady run, review and play. The unit fixes the hands, and the score shows the other hand's staff faded.
+
+| Unit | Days | Hands | Exercise | Said at the keyboard |
+|---|---|---|---|---|
+| I.1 Right hand at the keyboard | 2 | right | steps (warm-up), holds | thumb on Middle C, curved fingers, finger numbers, arm weight |
+| I.2 Left hand at the keyboard | 2 | left | steps (warm-up), holds | the left thumb on Middle C too: the hand reaches down, a mirror image |
+| I.3 Both hands, basic exercises | 3 | both, slow on the first day | steps (warm-up), holds, thirds | both thumbs on Middle C; the hands move in opposite directions on the same fingers |
+
+A unit ends after its days (`exit.days`), not by finishing a piece. A player who skips the placement test starts here; the sight-reading test places a player who passes nothing here too. *More → Go back to the introduction week* returns to it.
+
 ### Stage 0: Orientation (weeks 1–4)
 
 Syllabus goal: names notes in the Middle C range, hands take turns, steady ♩=60.
@@ -144,3 +156,5 @@ Not built yet: the Stage 0 flash cards beyond ten per day, a history page, "Prac
 Reading, warm-ups, note cards and the Review and Play fallbacks were audited against the books and rebuilt so that each is tied to the unit and grows over its days. Several pieces moved because Faber's early pieces put the hands together sooner than this syllabus does. The audit, the evidence and the open questions are in [13-progression-review.md](13-progression-review.md).
 
 A second pass the same day, after reading the three beginner books, moved the left hand's first position to Middle C and down (F3–C4) and made the first two units introduce one note at a time (new pieces: Two Notes, Hot Cross Buns (easy), Down the Stairs, Three Steps Down, Left-Hand Walk): [13-progression-review.md](13-progression-review.md) section 4.
+
+An introduction week was added the same day (see its section above). A bug found with it: a day plan saved earlier the same day stayed for the whole day even if it had not been touched, so a plan built before a change to the course (for example the two-handed warm-up) kept showing. Now only a plan you have started is kept; an untouched one is made again from the course as it is, and *More → Plan today again* does it on demand.

@@ -36,6 +36,14 @@ export const SLOTS: Record<number, readonly Slot[]> = {
   45: [['warmup', 4], ['reading', 6], ['newbars', 8], ['steady', 7], ['newbars', 8], ['steady', 7], ['review', 3], ['play', 2]],
 };
 
+/** An introduction day has no reading step: its minutes go to the new exercise instead. */
+export function introSlots(slots: readonly Slot[]): readonly Slot[] {
+  const reading = slots.filter(([k]) => k === 'reading').reduce((a, [, m]) => a + m, 0);
+  const kept = slots.filter(([k]) => k !== 'reading');
+  const at = kept.findIndex(([k]) => k === 'newbars');
+  return kept.map(([k, m], i): Slot => [k, i === at ? m + reading : m]);
+}
+
 /** The nearest supported length at or below `minutes` (at least 10). */
 export function supportedMinutes(minutes: number): number {
   const opts = MINUTES_OPTIONS as readonly number[];
@@ -81,7 +89,7 @@ function pieceOf(input: PlanInput, id: string): PieceInfo {
 export function buildDay(input: PlanInput): Step[] {
   const { unit, state } = input;
   const minutes = supportedMinutes(input.minutes);
-  const slots = SLOTS[minutes]!;
+  const slots = unit.intro ? introSlots(SLOTS[minutes]!) : SLOTS[minutes]!;
   const day = state.unitDays; // days that counted in this unit: the warm-up and the note cards grow with it
 
   const open = unit.main.filter((id) => !input.isFinished(id));
@@ -94,10 +102,14 @@ export function buildDay(input: PlanInput): Step[] {
   const readingLevel = rungFor(unit, state.readingLevel); // the player's rung, kept inside what this unit has taught
   const saturday = input.date.getDay() === 6;
 
+  /** An introduction unit fixes the hands (right, then left, then both); other units go right, left, both slowly, then both. */
+  const handsOf = (id: string, d: number, pieceHands: Hands) =>
+    unit.hands && pieceHands === 'both' ? { hands: unit.hands, both: unit.hands === 'both', first: d === 1 } : handsForDay(d, pieceHands);
+
   const newBarsFor = (id: string, minutesLeft: number): Step[] => {
     const info = pieceOf(input, id);
     const d = (state.pieceDays[id] ?? 0) + 1;
-    const h = handsForDay(d, info.hands);
+    const h = handsOf(id, d, info.hands);
     const listen = h.first && d === 1 ? 'Press Listen first and follow the score once. ' : '';
     const tempoText = h.both && h.first ? ' Start at half tempo.' : '';
     return [
@@ -112,7 +124,7 @@ export function buildDay(input: PlanInput): Step[] {
   const steadyFor = (id: string, mins: number): Step => {
     const info = pieceOf(input, id);
     const d = (state.pieceDays[id] ?? 0) + 1;
-    const h = handsForDay(d, info.hands);
+    const h = handsOf(id, d, info.hands);
     const target: StepTarget = { mode: 'tempo', pieceId: id, hands: h.hands, tempoShare: h.both && h.first ? 0.5 : 0.7, forceTempo: h.both && h.first };
     return {
       kind: 'steady', minutes: mins, core: false, goal: 2,
@@ -143,7 +155,7 @@ export function buildDay(input: PlanInput): Step[] {
     }
     switch (kind) {
       case 'warmup': {
-        const stage0 = unit.stage === 0;
+        const stage0 = unit.stage === 0 && !unit.intro; // an introduction has no note cards: reading the staff comes after it
         if (stage0 && day % 2 === 1) { // the first day is the five fingers; the cards come on the second
           steps.push({
             kind: 'cards', minutes: mins, core: false, goal: CARDS_PER_STEP,
@@ -159,7 +171,7 @@ export function buildDay(input: PlanInput): Step[] {
           steps.push({
             kind: 'warmup', minutes: mins, core: false, goal: 1,
             title: `Warm-up: ${info.title.replace(/^Five fingers: /, '')}`,
-            text: `Slow and even, ${handName(hands)}, fingers curved, wrists loose. One clean run is enough.`,
+            text: `Slow and even, ${handName(hands)}, fingers curved, wrists loose. One clean run is enough.${unit.tip ? ` ${unit.tip}` : ''}`,
             target: { mode: 'tempo', pieceId: id, hands, tempoShare: 0.7 },
           });
         }
@@ -195,7 +207,7 @@ export function buildDay(input: PlanInput): Step[] {
         const id = finishedId ?? todayId;
         const info = pieceOf(input, id);
         // A piece you have not finished is played with the hand it is on today, never the whole piece at once.
-        const hands = finishedId ? info.hands : handsForDay((state.pieceDays[todayId] ?? 0) + 1, info.hands).hands;
+        const hands = finishedId ? info.hands : handsOf(todayId, (state.pieceDays[todayId] ?? 0) + 1, info.hands).hands;
         steps.push({ kind: 'play', minutes: mins, core: false, goal: 1, title: `Play: ${info.title}`, text: 'For the music. Play it the way you like it: no scoring pressure, take your time.', target: { mode: 'tempo', pieceId: id, hands } });
         break;
       }

@@ -110,6 +110,10 @@ All three put the left hand **around Middle C first**, introduce notes one or tw
 
 Faber agrees on the left hand too (its unit 2 pieces use A3–C4), so these pieces needed no change.
 
+### The introduction week and a stale-plan bug (2026-10-27)
+
+The player still saw a two-handed warm-up after the fix and asked for an introduction before the syllabus: right hand, then left, then basic exercises with both. Two causes were found: (1) a day plan saved earlier the same day is kept all day, so a plan from before the fix stayed; (2) a two-staff exercise played with one hand still showed the other hand's notes at full strength, which reads as "play both". Both are fixed (an untouched plan is made again; the unused hand's staff is faded), and the introduction week was built as unit I.1 to I.3 ([12-lesson-ladder.md](12-lesson-ladder.md)). It is grounded in the three books' first pages: Ferrante and Milnes both start with hand position, finger numbers and Middle C before any tune, and Faber's Unit 1 is a keyboard introduction before staff reading (that unit is made of keyboard diagrams, which I have not read closely).
+
 ## 5. Open decisions and gaps
 
 1. **Faber against the syllabus.** If you would rather follow Faber's pace (hands together from unit 2), the stage 0 pieces move back; say so and I will undo section 3.5. I chose the syllabus because "hands never together" in stage 0 is the one rule written for a total beginner.

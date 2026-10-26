@@ -1,7 +1,43 @@
 {
   "version": 1,
-  "note": "The course: units of Stages 0 to 2 from 12-lesson-ladder.md. Piece ids come from pieces.ts, technique.ts (t-five-*, t-scale-*) and scores/library.json. Stage 2 has three units so far (Faber Book 1 Units 10-13); Units 14-16 are not converted yet.",
+  "note": "The course: units of Stages 0 to 2 from 12-lesson-ladder.md. Piece ids come from pieces.ts, technique.ts (t-five-*, t-scale-*) and scores/library.json. Stage 2 has three units so far (Faber Book 1 Units 10-13); Units 14-16 are not converted yet. The introduction week (I.1 to I.3, seven days) comes first: the hands at the keyboard before any reading.",
   "units": [
+    {
+      "id": "I.1",
+      "stage": 0,
+      "title": "Right hand at the keyboard",
+      "intro": true,
+      "hands": "rh",
+      "tip": "Sit tall. Thumb on Middle C, fingers curved as if holding an apple, wrist level and loose; finger 1 is the thumb, 5 the little finger. Let the arm's weight play the note.",
+      "warmup": ["t-mid-c-steps"],
+      "warmupHands": ["rh"],
+      "main": ["t-mid-c-holds"],
+      "exit": { "finished": [], "days": 2 }
+    },
+    {
+      "id": "I.2",
+      "stage": 0,
+      "title": "Left hand at the keyboard",
+      "intro": true,
+      "hands": "lh",
+      "tip": "The left thumb goes on Middle C too and the hand reaches down: finger 1 plays C, finger 5 plays F. Same shape as the right hand, as in a mirror.",
+      "warmup": ["t-mid-c-steps"],
+      "warmupHands": ["lh"],
+      "main": ["t-mid-c-holds"],
+      "exit": { "finished": [], "days": 2 }
+    },
+    {
+      "id": "I.3",
+      "stage": 0,
+      "title": "Both hands, basic exercises",
+      "intro": true,
+      "hands": "both",
+      "tip": "Both thumbs on Middle C. The hands now move in opposite directions on the same finger numbers. Go slowly: even is better than fast.",
+      "warmup": ["t-mid-c-steps"],
+      "warmupHands": ["both"],
+      "main": ["t-mid-c-holds", "t-mid-c-thirds"],
+      "exit": { "finished": [], "days": 3 }
+    },
     {
       "id": "0.1",
       "stage": 0,
@@ -165,7 +201,7 @@
   "placement": [
     {
       "passed": 0,
-      "unit": "0.1"
+      "unit": "I.1"
     },
     {
       "passed": 1,

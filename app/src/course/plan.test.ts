@@ -178,6 +178,42 @@ describe('warm-up and note cards', () => {
   });
 });
 
+describe('the introduction week', () => {
+  const intro = (hands: Hands, extra: Partial<Unit> = {}): Unit => ({
+    id: 'i', stage: 0, title: 'I', intro: true, hands, tip: 'Thumb on Middle C.', warmup: ['w-c'], warmupHands: [hands],
+    main: ['a'], exit: { finished: [], days: 2 }, ...extra,
+  });
+  const day = (u: Unit, state = newState('i'), minutes = 25) => buildDay(input({ unit: u, minutes }, state));
+
+  it('has no reading step and no note cards, and the reading minutes go to the exercise', () => {
+    const steps = day(intro('rh'));
+    expect(kinds(steps)).toEqual(['warmup', 'newbars', 'steady', 'review', 'play']);
+    expect(steps.map((s) => s.minutes)).toEqual([3, 11, 6, 3, 2]);
+    expect(kinds(day(intro('rh'), newState('i'), 10))).toEqual(['newbars', 'play']);
+    expect(day(intro('rh'), { ...newState('i'), unitDays: 1 })[0]!.kind).toBe('warmup'); // stage 0, but no cards on the second day
+  });
+
+  it('asks for one hand at a time in the first two units: the warm-up, the new exercise, the steady run and the play step', () => {
+    for (const h of ['rh', 'lh'] as const) {
+      const steps = day(intro(h));
+      expect(steps.map((s) => s.target.hands), h).toEqual([h, h, h, h, h]);
+    }
+  });
+
+  it('starts both hands slowly, then at the exercise’s own pace', () => {
+    const first = day(intro('both'));
+    expect(first.find((s) => s.kind === 'newbars')!.target.hands).toBe('both');
+    expect(first.find((s) => s.kind === 'steady')!.target.tempoShare).toBe(0.5);
+    const later = day(intro('both'), { ...newState('i'), pieceDays: { a: 1 } });
+    expect(later.find((s) => s.kind === 'steady')!.target.tempoShare).toBe(0.7);
+  });
+
+  it('puts the unit’s tip with the warm-up', () => {
+    expect(day(intro('rh'))[0]!.text).toContain('Thumb on Middle C.');
+    expect(day(intro('rh', { tip: undefined }))[0]!.text).not.toContain('Thumb');
+  });
+});
+
 describe('warm-up hands', () => {
   const warm = (unitDays: number, stage: number, warmupHands?: Hands[]) =>
     buildDay(input({ unit: { ...unit(stage), warmupHands } }, { ...newState('u'), unitDays })).find((s) => s.kind === 'warmup')!;

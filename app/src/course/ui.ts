@@ -145,9 +145,12 @@ export function createCourse(host: Host) {
     }
 
     const doneCount = u.exit.finished.filter(finished).length;
+    const progress = u.intro
+      ? `Day ${Math.min(state.unitDays + 1, u.exit.days ?? 1)} of ${u.exit.days}: no reading yet, just the hands at the keyboard`
+      : `${doneCount} of ${u.exit.finished.length} goal ${u.exit.finished.length === 1 ? 'piece' : 'pieces'} finished · reading: ${rungOf(rungFor(u, state.readingLevel)).name}`;
     home.append(h('p', { class: 'course-unit' },
-      h('strong', {}, `Stage ${u.stage} · unit ${u.id}`), ` ${u.title}`,
-      h('br'), h('span', { class: 'muted' }, `${doneCount} of ${u.exit.finished.length} goal ${u.exit.finished.length === 1 ? 'piece' : 'pieces'} finished · reading: ${rungOf(rungFor(u, state.readingLevel)).name}`),
+      h('strong', {}, u.intro ? `Introduction · ${u.id}` : `Stage ${u.stage} · unit ${u.id}`), ` ${u.title}`,
+      h('br'), h('span', { class: 'muted' }, progress),
     ));
 
     home.append(h('div', { class: 'course-minutes' }, h('span', { class: 'muted' }, 'Time today'),
@@ -160,9 +163,10 @@ export function createCourse(host: Host) {
       renderHome();
     }));
 
-    const plan = (state.today && state.today.date === date) ? state.today.steps : steps();
+    const started = !!state.today && state.today.date === date && (touched(state.today) || state.today.closed);
+    const plan = started ? state.today!.steps : steps();
     home.append(h('ol', { class: 'course-plan' }, ...plan.map((s, i) => {
-      const st = state.today && state.today.date === date ? state.today.states[i] : 'todo';
+      const st = started ? state.today!.states[i] : 'todo';
       return h('li', { 'data-state': st ?? 'todo' }, h('span', { class: 'plan-name' }, KIND_LABEL[s.kind]), ` ${s.title.includes(': ') ? s.title.split(': ').slice(1).join(': ') : ''}`, h('span', { class: 'muted' }, ` ${mm(s.minutes)}`));
     })));
 
@@ -198,6 +202,26 @@ export function createCourse(host: Host) {
       const b = h('button', { type: 'button' }, `Undo finished: ${host.info(id)?.title ?? id}`);
       b.addEventListener('click', () => { state = unmarkDone(state, id); save(); renderHome(); });
       row.append(b);
+    }
+    const again = h('button', { type: 'button', id: 'course-replan' }, 'Plan today again');
+    again.addEventListener('click', () => {
+      const t = state.today;
+      if (t && touched(t) && !t.closed && again.dataset.sure !== 'yes') { again.dataset.sure = 'yes'; again.textContent = 'Plan again and drop what you did today? Click again'; return; }
+      state = { ...state, today: undefined };
+      save();
+      renderHome();
+    });
+    row.append(again);
+    const firstUnit = host.course.units[0];
+    if (firstUnit?.intro && state.unitId !== firstUnit.id) {
+      const back = h('button', { type: 'button', id: 'course-intro' }, 'Go back to the introduction week');
+      back.addEventListener('click', () => {
+        if (back.dataset.sure !== 'yes') { back.dataset.sure = 'yes'; back.textContent = 'Go back to day 1 of the introduction week? Click again (your pieces stay finished)'; return; }
+        state = { ...state, unitId: firstUnit.id, unitDays: 0, readingPasses: 0, today: undefined };
+        save();
+        renderHome();
+      });
+      row.append(back);
     }
     const test = h('button', { type: 'button' }, 'Take the sight-reading test');
     test.addEventListener('click', () => { placing = !state.placement; void startTest(); });

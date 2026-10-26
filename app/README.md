@@ -49,7 +49,7 @@ take that test to find your start (its result picks a unit, `placement` in `cour
 the log already uses (three clean tempo runs in a row at its target) or by **More → Mark as finished**; a unit ends when its exit pieces are
 finished and the reading level (and, in stage 0, the cards) are good enough, and the next unit starts by itself.
 
-The course is **`course/course.json`**: thirteen units (stages 0 and 1, and three of stage 2) naming each unit's warm-ups, warm-up hands, note-card notes, reading rungs, pieces and exit; `npm test` checks that every id exists, that no exercise uses something taught in a later unit, and that no unit reads ahead of itself ([13-progression-review.md](../13-progression-review.md)).
+The course is **`course/course.json`**: sixteen units (a seven-day introduction week, stages 0 and 1, and three of stage 2) naming each unit's warm-ups, warm-up hands, tips, note-card notes, reading rungs, pieces and exit; `npm test` checks that every id exists, that no exercise uses something taught in a later unit, and that no unit reads ahead of itself ([13-progression-review.md](../13-progression-review.md)).
 Stage 2 stops at unit 2.3 (Faber Book 1 Units 10–13); later music is not converted yet: see `../11-ingestion-ledger.md`. Progress is in `piano-tutor:course:v1`.
 
 | Module | Job | Tests |

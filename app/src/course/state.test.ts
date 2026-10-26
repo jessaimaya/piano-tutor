@@ -154,6 +154,41 @@ describe('closing a day', () => {
   });
 });
 
+describe('starting a day', () => {
+  it('keeps a plan you have started, and makes an untouched one again so it follows the course as it is now', () => {
+    const old = startDay(newState('u1'), [step('warmup'), step('newbars', true)], '2026-10-26');
+    const fresh = [step('reading', true), step('newbars', true)];
+    expect(startDay(old, fresh, '2026-10-26').today!.steps.map((s) => s.kind)).toEqual(['reading', 'newbars']); // untouched: replaced
+    const begun = finishStep(old, 0, 'done');
+    expect(startDay(begun, fresh, '2026-10-26').today!.steps.map((s) => s.kind)).toEqual(['warmup', 'newbars']); // started: kept
+    expect(startDay({ ...old, today: { ...old.today!, closed: true } }, fresh, '2026-10-26').today!.steps).toHaveLength(2);
+  });
+});
+
+describe('an introduction unit that ends by days', () => {
+  const intro = { id: 'i', stage: 0, title: '', intro: true, warmup: [], main: ['a'], exit: { finished: [], days: 2 } };
+  const fin = () => false;
+
+  it('is complete after that many days, and not before', () => {
+    expect(unitComplete(intro, { ...newState('i'), unitDays: 1 }, fin)).toBe(false);
+    expect(unitComplete(intro, { ...newState('i'), unitDays: 2 }, fin)).toBe(true);
+  });
+
+  it('moves on to the next unit with its days at zero, and keeps the reading rung where it was', () => {
+    const course: Course = { version: 1, placement: [], units: [intro, { id: 'n', stage: 0, title: '', reading: { from: 1, to: 3 }, warmup: [], main: ['b'], exit: { finished: ['b'] } }] };
+    const a = advance({ ...newState('i'), unitDays: 2 }, course, fin);
+    expect([a.state.unitId, a.state.unitDays, a.state.readingLevel, a.courseDone]).toEqual(['n', 0, 1, false]);
+  });
+
+  it('closing a day in a unit without reading leaves the reading rung alone', () => {
+    const course: Course = { version: 1, placement: [], units: [intro] };
+    let t = startDay({ ...newState('i'), readingLevel: 4 }, [step('warmup'), step('newbars', true)], '2026-10-26');
+    t = finishStep(t, 1, 'done');
+    const closed = closeDay(t, course);
+    expect([closed.readingLevel, closed.unitDays]).toEqual([4, 1]);
+  });
+});
+
 describe('days in a unit', () => {
   const counted = (s: CourseState, date: string): CourseState => {
     const t = startDay({ ...s, today: undefined }, day(), date);

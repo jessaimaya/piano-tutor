@@ -410,6 +410,7 @@ function renderControls(): void {
   for (const b of document.querySelectorAll<HTMLButtonElement>('#mode button')) {
     b.setAttribute('aria-pressed', String(b.dataset.mode === mode));
   }
+  score.setActiveHands(hands);
   $('tempo-controls').hidden = mode !== 'tempo';
   $('target').textContent = current ? `target ${current.targetBpm} bpm` : '';
   $('beat-hint').textContent = current && current.unit.quarters !== 1 ? `Beat = ${current.unit.name} note, ${current.unit.perBar} per bar` : '';

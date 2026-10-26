@@ -63,6 +63,8 @@ describe('the order of concepts', () => {
         for (const c of conceptsOf(piece.notation)) {
           // The warm-up one hand at a time never puts both hands in a bar: the exercise is the same notes, one hand of it.
           if (c === 'both hands in the same bar' && hands && !hands.includes('both')) continue;
+          // The introduction week is where the hands first play together (the exercise with both thumbs on Middle C).
+          if (c === 'both hands in the same bar' && u.intro) continue;
           expect(unitIndex(FIRST_UNIT[c]!), `${id} (in unit ${u.id}) uses ${c}, which is taught from unit ${FIRST_UNIT[c]}`).toBeLessThanOrEqual(unitIndex(u.id));
         }
       }

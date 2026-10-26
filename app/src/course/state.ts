@@ -142,7 +142,9 @@ export const touched = (t: TodayPlan): boolean => t.states.some((s) => s !== 'to
  */
 export function startDay(state: CourseState, steps: Step[], date: string): CourseState {
   const t = state.today;
-  if (t && t.date === date && !t.closed && (t.minutes === state.minutes || touched(t))) return state;
+  // Only a plan you have started is kept. One you have not touched is made again, so it always follows the course as it is now
+  // (a plan saved before the course changed would otherwise stay all day).
+  if (t && t.date === date && !t.closed && touched(t)) return state;
   return { ...state, today: { date, minutes: state.minutes, steps, states: steps.map(() => 'todo'), progress: steps.map(() => 0), readingAcc: [], closed: false } };
 }
 
@@ -214,8 +216,8 @@ export function closeDay(state: CourseState, c: Course = course): CourseState {
 
   // The rung moves inside the unit's own range: two good days up, a poor day down, never past the unit's last rung.
   const unit = unitById(state.unitId, c);
-  const floor = unit?.reading.from ?? 1;
-  const ceil = unit?.reading.to ?? MAX_READING_LEVEL;
+  const floor = unit?.reading?.from ?? 1;
+  const ceil = unit?.reading?.to ?? MAX_READING_LEVEL;
   let readingLevel = unit ? rungFor(unit, state.readingLevel) : state.readingLevel;
   let { readingPasses } = state;
   if (t.readingAcc.length) {
@@ -249,6 +251,7 @@ export const unmarkDone = (state: CourseState, pieceId: string): CourseState =>
 /** Has the player met the unit's exit? `finished(id)` says whether a piece counts as finished (log status or marked by hand). */
 export function unitComplete(unit: Unit, state: CourseState, finished: (id: string) => boolean): boolean {
   return unit.exit.finished.every(finished)
+    && (unit.exit.days === undefined || state.unitDays >= unit.exit.days)
     && (unit.exit.readingLevel === undefined || state.readingLevel >= unit.exit.readingLevel)
     && (!unit.exit.cards || cardsPass(state));
 }
@@ -270,7 +273,7 @@ export function advance(state: CourseState, c: Course, finished: (id: string) =>
   if (unitId === state.unitId) return { state, from, courseDone: false };
   // A new unit starts reading on its first rung (or where the player already is, if that is further).
   const entered = c.units.find((u) => u.id === unitId);
-  const readingLevel = entered ? Math.max(entered.reading.from, state.readingLevel) : state.readingLevel;
+  const readingLevel = entered?.reading ? Math.max(entered.reading.from, state.readingLevel) : state.readingLevel;
   return { state: { ...state, unitId, readingLevel, readingPasses: 0, unitDays: 0, today: undefined }, from, courseDone: false };
 }
 
@@ -279,7 +282,7 @@ export function applyPlacement(state: CourseState, level: number, date: string, 
   const unitId = placementUnit(level, c);
   const unit = c.units.find((u) => u.id === unitId);
   return {
-    ...state, unitId, unitDays: 0, readingLevel: unit?.reading.from ?? 1, readingPasses: 0, lastTestDate: date,
+    ...state, unitId, unitDays: 0, readingLevel: unit?.reading?.from ?? 1, readingPasses: 0, lastTestDate: date,
     placement: { level, date }, today: undefined,
   };
 }

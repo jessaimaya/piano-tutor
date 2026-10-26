@@ -36,6 +36,8 @@ export class ScoreView implements MeasuredCursor {
   /** The note cards are drawn at a size of their own and are not fitted to the window. */
   private fixedZoom = false;
   private seen = { w: 0, h: 0 };
+  /** Which hand is being asked for: the other staff's notes are drawn faded. */
+  private activeHands: 'rh' | 'lh' | 'both' = 'both';
   private resizeTimer: ReturnType<typeof setTimeout> | undefined;
 
   constructor(private container: HTMLElement) {
@@ -85,10 +87,37 @@ export class ScoreView implements MeasuredCursor {
     this.relayout();
   }
 
+  /**
+   * Fade the notes of the hand that is not being asked for, so a score with two staves never looks like it wants both hands (a warm-up
+   * for the right hand shows the left hand's staff too, in light grey). Redone after every drawing.
+   */
+  setActiveHands(hands: 'rh' | 'lh' | 'both'): void {
+    this.activeHands = hands;
+    this.fade();
+  }
+
+  private fade(): void {
+    if (!this.loaded) return;
+    const faded = this.activeHands === 'rh' ? 1 : this.activeHands === 'lh' ? 0 : -1;
+    for (const staves of this.osmd.GraphicSheet.MeasureList) {
+      staves.forEach((measure, staff) => {
+        for (const entry of measure.staffEntries) {
+          for (const voice of entry.graphicalVoiceEntries) {
+            for (const note of voice.notes) {
+              const el = (note as unknown as { getSVGGElement?: () => SVGGElement | undefined }).getSVGGElement?.();
+              if (el) el.style.opacity = staff === faded && staves.length > 1 ? '0.25' : '';
+            }
+          }
+        }
+      });
+    }
+  }
+
   /** Draw the loaded piece. In the minimal view `baseZoom` is the biggest staff wanted; it shrinks until the window shows two systems. */
   private draw(): void {
     if (this.paged && !this.fixedZoom) this.fit();
     else this.osmd.render();
+    this.fade();
   }
 
   /** Draw again for the window as it is now (turned sideways, a toolbar gone) and put the cursor and the page back. */
