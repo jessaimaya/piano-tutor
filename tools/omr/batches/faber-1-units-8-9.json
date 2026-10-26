@@ -1,0 +1,79 @@
+{
+  "pdf": "literacy/Adult piano adventures a*.pdf",
+  "source": "Faber Adult Piano Adventures Book 1",
+  "detector": "scan.py v2",
+  "pieces": [
+    {
+      "title": "May Dance",
+      "composer": "Nancy and Randall Faber",
+      "piece": "92:2-3",
+      "stage": 1,
+      "page": "90"
+    },
+    {
+      "title": "When the Saints Go Marching In",
+      "composer": "Traditional",
+      "piece": "93:1-4",
+      "stage": 1,
+      "page": "91",
+      "patches": [
+        {
+          "bar": 12,
+          "hand": "lh",
+          "notes": "R:h C3:q D3:q"
+        },
+        {
+          "bar": 13,
+          "hand": "lh",
+          "notes": "F3:h E3:q F3:q"
+        }
+      ]
+    },
+    {
+      "title": "African Celebration",
+      "composer": "Traditional",
+      "piece": "94:1-4,95:1-5",
+      "stage": 1,
+      "page": "92-93",
+      "patches": [
+        {
+          "bar": 15,
+          "hand": "lh",
+          "notes": "G3+C3:h F3:q D3:q"
+        },
+        {
+          "bar": 35,
+          "hand": "lh",
+          "notes": "G3+C3:h F3:q D3:q"
+        },
+        {
+          "bar": 26,
+          "hand": "rh",
+          "notes": "F5:q F5:q E5:q E5:q"
+        },
+        {
+          "bar": 27,
+          "hand": "rh",
+          "notes": "C5:q C5:e D5:e E5:q E5:q"
+        },
+        {
+          "bar": 28,
+          "hand": "rh",
+          "notes": "D5:q D5:q C5:h"
+        },
+        {
+          "bar": 29,
+          "hand": "rh",
+          "notes": "C5:q C5:e D5:e E5:q E5:q"
+        }
+      ]
+    },
+    {
+      "title": "American Fiddle Tune",
+      "composer": "Traditional",
+      "piece": "101:1-4",
+      "stage": 1,
+      "page": "99"
+    }
+  ]
+}

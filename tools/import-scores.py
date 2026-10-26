@@ -35,7 +35,7 @@ joplin gottschalk elgar holst vaughan britten copland gershwin ives barber
 trad traditional anonymous folk unknown
 '''.split())
 
-DEFAULT_BPM = {3: 72, 4: 66, 5: 80, 6: 92}
+DEFAULT_BPM = {0: 60, 1: 60, 2: 66, 3: 72, 4: 66, 5: 80, 6: 92}
 
 
 def _load_difficulty():
@@ -276,7 +276,7 @@ def main():
             print(f'BROKEN     {label}: {e}')
             note(src, 'BROKEN', label)
             continue
-        stage = a.stage or d['stage']
+        stage = d['stage'] if a.stage is None else a.stage  # 0 is a real stage
         bare_title = re.sub(r'\bno\.?\s*', '', d['title'], flags=re.I)
         ident = 'x-' + slug(surname(d['composer'])) + '-' + slug(bare_title)
         fname = ident[2:] + '.' + d['ext']

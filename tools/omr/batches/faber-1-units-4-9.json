@@ -1,0 +1,263 @@
+{
+  "pdf": "literacy/Adult piano adventures a*.pdf",
+  "source": "Faber Adult Piano Adventures Book 1",
+  "pieces": [
+    {
+      "title": "Eine Kleine Nachtmusik",
+      "composer": "Wolfgang Amadeus Mozart",
+      "piece": "54:1-2,55:1-3",
+      "stage": 1,
+      "page": "52-53",
+      "hand": {
+        "timeSig": [
+          4,
+          4
+        ],
+        "fifths": 0,
+        "rh": "C4:h. R:q | C4:h. R:q | C4:q R:q C4:q E4:q | G4:h. R:q | F4:h. D4:q | F4:h. D4:q | F4:q D4:q R:q D4:q | R:w | C4:h C4:h | R:q E4:q D4:q C4:q | C4:q R:q R:h | R:q D4:q F4:q R:q | D4:q C4:q C4:h | R:q E4:q D4:q C4:q | C4:q R:q R:h | R:q D4:q F4:q R:q | C4:h. R:q | C4:h. R:q | C4:q R:q C4:q E4:q | C4:w",
+        "lh": "R:h. G3:q | R:h. G3:q | R:q G3:q R:h | R:w | R:w | R:w | R:h B3:q R:q | G3:h. R:q | R:w | R:w | R:q B3:q B3:h | R:h. B3:q | R:w | R:w | R:q B3:q B3:h | R:h. B3:q | R:h. G3:q | R:h. G3:q | R:q G3:q R:h | R:w"
+      }
+    },
+    {
+      "title": "New World Symphony Theme",
+      "composer": "Antonín Dvořák",
+      "piece": "56:1-3,57:1-3",
+      "stage": 1,
+      "page": "54-55",
+      "patches": [
+        {
+          "bar": 7,
+          "hand": "lh",
+          "notes": "R:w"
+        },
+        {
+          "bar": 8,
+          "hand": "lh",
+          "notes": "G3:w"
+        },
+        {
+          "bar": 13,
+          "hand": "lh",
+          "notes": "R:w"
+        },
+        {
+          "bar": 14,
+          "hand": "lh",
+          "notes": "R:w"
+        }
+      ]
+    },
+    {
+      "title": "Royal Procession",
+      "composer": "Nancy and Randall Faber",
+      "piece": "60:2-3,61:1-4",
+      "stage": 1,
+      "page": "58-59",
+      "patches": [
+        {
+          "bar": 9,
+          "hand": "lh",
+          "notes": "G3:w"
+        }
+      ]
+    },
+    {
+      "title": "Ode to Joy (bass clef)",
+      "composer": "Ludwig van Beethoven",
+      "piece": "65:2",
+      "stage": 1,
+      "page": "63"
+    },
+    {
+      "title": "All Through the Night",
+      "composer": "Traditional",
+      "piece": "65:3",
+      "stage": 1,
+      "page": "63",
+      "hands": "lh",
+      "hand": {
+        "timeSig": [
+          4,
+          4
+        ],
+        "fifths": 0,
+        "rh": "R:w | R:w | R:w | R:w | R:w | R:w | R:w | R:w",
+        "lh": "F3:h. E3:q | D3:h F3:h | G3:h. F3:q | E3:h C3:h | D3:w | E3:h. E3:q | F3:w | F3:w"
+      }
+    },
+    {
+      "title": "Lightly Row",
+      "composer": "Traditional",
+      "piece": "65:4",
+      "stage": 1,
+      "page": "63"
+    },
+    {
+      "title": "Theme from the Surprise Symphony",
+      "composer": "Joseph Haydn",
+      "piece": "66:2-3",
+      "stage": 1,
+      "page": "64"
+    },
+    {
+      "title": "Hungarian Dance",
+      "composer": "Johannes Brahms",
+      "piece": "67:1-4",
+      "stage": 1,
+      "page": "65"
+    },
+    {
+      "title": "Shepherd's Song",
+      "composer": "Ludwig van Beethoven",
+      "piece": "68:1-2,69:1-4",
+      "stage": 1,
+      "page": "66-67",
+      "hand": {
+        "timeSig": [
+          3,
+          4
+        ],
+        "fifths": 0,
+        "rh": "R:h. | C4:q R:q R:q | R:h. | C4:q R:q R:q | E4:h. | C4:h G4:q | E4:h. | C4:h R:q | C4:h E4:q | G4:h E4:q | F4:h. | F4:h. | F4:h. | D4:h G4:q | E4:h. | C4:h E4:q | D4:h R:q | R:h. | R:q C4:h | C4:h. | R:h. | C4:q R:q R:q | R:h. | R:h.",
+        "lh": "C3:q E3:q G3:q | R:q G3:q E3:q | C3:q E3:q G3:q | R:q G3:q E3:q | C3:q E3:q G3:q | R:h. | C3:q E3:q G3:q | R:q R:q G3:q | R:h. | R:h. | R:q G3+F3:q G3+F3:q | G3+F3:h. | R:q G3+F3:q G3+F3:q | R:h. | R:q G3+E3+C3:q G3+E3+C3:q | R:h. | R:q R:q A3:q | B3:h G3:q | G3:q R:q R:q | G3+E3+C3:h. | C3:q E3:q G3:q | R:q G3:q E3:q | C3:q E3:q G3:q | C2:h."
+      }
+    },
+    {
+      "title": "French Minuet",
+      "composer": "Jean-Philippe Rameau",
+      "piece": "73:1-3",
+      "stage": 1,
+      "page": "71",
+      "hand": {
+        "timeSig": [
+          3,
+          4
+        ],
+        "fifths": 0,
+        "rh": "G4:e F4:e E4:e F4:e D4:e E4:e | F4:e E4:e D4:e E4:e C4:e D4:e | E4:e G4:e F4:e E4:e D4:e C4:e | D4:e C4:e R:h | G4:e F4:e E4:e F4:e D4:e E4:e | F4:e E4:e D4:e E4:e C4:e D4:e | E4:e G4:e F4:e E4:e D4:e E4:e | C4:h.",
+        "lh": "R:h. | R:h. | R:h. | R:q B3:e A3:e G3:q | R:h. | R:h. | G3:h B3:q | R:h."
+      }
+    },
+    {
+      "title": "Morning",
+      "composer": "Edvard Grieg",
+      "piece": "74:3+0.775-0.925,75:1-4",
+      "stage": 1,
+      "page": "72-73"
+    },
+    {
+      "title": "English Folk Song",
+      "composer": "Traditional",
+      "piece": "78:2-4",
+      "stage": 1,
+      "page": "76"
+    },
+    {
+      "title": "Gavotte",
+      "composer": "George Frideric Handel",
+      "piece": "79:2-4",
+      "stage": 1,
+      "page": "77",
+      "hand": {
+        "timeSig": [
+          4,
+          4
+        ],
+        "fifths": 0,
+        "pickup": 2,
+        "rh": "E4:q F4:e E4:e | D4:q G4:q C4:q D4:e E4:e | E4:q D4:q F4:q G4:e F4:e | E4:q D4:e C4:e D4:q C4:q | C4:h E4:q F4:e E4:e | D4:q G4:q C4:q D4:e E4:e | E4:q D4:q F4:q G4:e F4:e | E4:q D4:e C4:e D4:q C4:q | C4:h",
+        "lh": "G3+E3+C3:h | G3+F3+C3:h E3:q F3:e G3:e | G3:q F3:q R:h | R:h G3+F3+C3:h | G3+E3+C3:h G3+E3+C3:h | G3+F3+C3:h E3:q F3:e G3:e | G3:q F3:q R:h | R:h G3+F3+C3:h | G3+E3+C3:h"
+      }
+    },
+    {
+      "title": "Simple Gifts",
+      "composer": "Traditional",
+      "piece": "81:1-3+0.697-0.885",
+      "stage": 1,
+      "page": "79",
+      "hand": {
+        "timeSig": [
+          4,
+          4
+        ],
+        "fifths": 0,
+        "pickup": 1,
+        "rh": "R:q | C4:q C4:e D4:e E4:e C4:e E4:e F4:e | G4:q G4:e F4:e E4:q D4:e C4:e | D4:q D4:q D4:q C4:q | D4:e E4:e D4:e B3:e R:h | C4:e B3:e C4:e D4:e E4:q D4:e D4:e | E4:q F4:q G4:q E4:q | D4:q D4:e D4:e E4:q D4:e D4:e | C4:q C4:e C4:e C4:q",
+        "lh": "G3:e G3:e | R:w | C3+E3+G3:w | C3+F3+G3:w | R:h G3:q G3:q | R:w | C3:q D3:q E3:q R:q | C3+F3+G3:w | C3+E3+G3:q C3+F3+G3:q C3+E3+G3:q"
+      }
+    },
+    {
+      "title": "Moon on the Water",
+      "composer": "Nancy and Randall Faber",
+      "piece": "84:1,85:1-4",
+      "stage": 1,
+      "page": "82-83",
+      "patches": [
+        {
+          "bar": 18,
+          "hand": "rh",
+          "notes": "F4+A4:h."
+        }
+      ]
+    },
+    {
+      "title": "500-Year-Old Melody",
+      "composer": "Traditional",
+      "piece": "86:1-3,87:1-4",
+      "stage": 1,
+      "page": "84-85"
+    },
+    {
+      "title": "Musette",
+      "composer": "Anonymous",
+      "piece": "100:1-3",
+      "stage": 1,
+      "page": "98"
+    },
+    {
+      "title": "Theme by Mozart",
+      "composer": "Wolfgang Amadeus Mozart",
+      "piece": "102:2-3,103:1-4",
+      "stage": 1,
+      "page": "100-101",
+      "patches": [
+        {
+          "bar": 1,
+          "hand": "rh",
+          "notes": "B4:q C5:q B4:q"
+        },
+        {
+          "bar": 2,
+          "hand": "rh",
+          "notes": "D5:h D5:q"
+        },
+        {
+          "bar": 3,
+          "hand": "rh",
+          "notes": "A4:q B4:q A4:q"
+        },
+        {
+          "bar": 9,
+          "hand": "rh",
+          "notes": "B4:q C5:q B4:q"
+        },
+        {
+          "bar": 10,
+          "hand": "rh",
+          "notes": "D5:h D5:q"
+        },
+        {
+          "bar": 13,
+          "hand": "rh",
+          "notes": "G4:h A4:q"
+        },
+        {
+          "bar": 15,
+          "hand": "rh",
+          "notes": "B4:h A4:q"
+        }
+      ]
+    }
+  ],
+  "detector": "scan.py v2"
+}

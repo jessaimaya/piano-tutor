@@ -1,0 +1,85 @@
+{
+  "pdf": "literacy/Adult piano adventures a*.pdf",
+  "source": "Faber Adult Piano Adventures Book 1",
+  "pieces": [
+    {
+      "title": "Midnight Ride",
+      "composer": "Nancy and Randall Faber",
+      "piece": "40:2,41:1-4",
+      "stage": 0,
+      "page": "38-39"
+    },
+    {
+      "title": "Russian Folk Song",
+      "composer": "Traditional",
+      "piece": "38:3,39:1-4",
+      "stage": 0,
+      "page": "36-37",
+      "hand": {
+        "timeSig": [
+          4,
+          4
+        ],
+        "fifths": 0,
+        "rh": "C4+E4:q C4+E4:q C4+E4:q C4+E4:q | D4:q D4:q C4:q C4:q | R:w | C4+E4:q C4+E4:q C4+E4:q C4+E4:q | D4:q D4:q C4:q C4:q | R:w | R:h. C4:q | D4:q D4:q C4:q C4:q | R:w | R:h. C4:q | D4:q D4:q C4:q C4:q | R:w | C4+E4:q C4+E4:q C4+E4:q C4+E4:q | D4:q D4:q C4:q C4:q | E4:h R:h | R:w",
+        "lh": "A3:q A3:q A3:q A3:q | R:w | B3:h A3:h | A3:q A3:q A3:q A3:q | R:w | B3:h A3:h | B3:h. R:q | R:w | B3:h A3:h | B3:h. R:q | R:w | B3:h A3:h | A3:q A3:q A3:q A3:q | R:w | R:h B3:h | A3:w"
+      }
+    },
+    {
+      "title": "Chant of the Monk",
+      "composer": "Nancy and Randall Faber",
+      "piece": "44:2",
+      "stage": 0,
+      "page": "42",
+      "hand": {
+        "timeSig": [
+          4,
+          4
+        ],
+        "fifths": 0,
+        "rh": "C4:q D4:q E4:q F4:q | G4:q F4:q E4:h | D4:q C4:q D4:q E4:q | F4:q E4:q D4:h | C4:w"
+      }
+    },
+    {
+      "title": "Chant of the Monks",
+      "composer": "Nancy and Randall Faber",
+      "piece": "45:1-3",
+      "stage": 0,
+      "page": "43",
+      "hand": {
+        "timeSig": [
+          4,
+          4
+        ],
+        "fifths": 0,
+        "rh": "C4:q D4:q E4:q F4:q | G4:q F4:q E4:h | D4:q C4:q D4:q E4:q | F4:q E4:q D4:h | C4:w | C4:q D4:q E4:q F4:q | G4:q F4:q E4:h | D4:q C4:q D4:q E4:q | F4:q E4:q D4:h | C4:w",
+        "lh": "C3:q D3:q E3:q F3:q | G3:q F3:q E3:h | D3:q C3:q D3:q E3:q | F3:q E3:q D3:h | C3:w | C3:q D3:q E3:q F3:q | G3:q F3:q E3:h | D3:q C3:q D3:q E3:q | F3:q E3:q D3:h | C3:w"
+      }
+    },
+    {
+      "title": "Shining Stars",
+      "composer": "Nancy and Randall Faber",
+      "piece": "46:2,47:1-4",
+      "stage": 0,
+      "page": "44-45",
+      "fillRests": "upper-first"
+    },
+    {
+      "title": "Roman Trumpets",
+      "composer": "Nancy and Randall Faber",
+      "piece": "48:2-3,49:1-2",
+      "stage": 0,
+      "page": "46-47",
+      "hand": {
+        "timeSig": [
+          4,
+          4
+        ],
+        "fifths": 0,
+        "rh": "F4:h F4:h | F4:h F4:h | G4:q F4:q E4:q D4:q | C4:w | F4:h F4:h | F4:h F4:h | G4:q F4:q E4:q D4:q | C4:w | R:w | R:h C4:h | D4:q E4:q F4:q E4:q | D4:h C4:h | F4:h F4:h | F4:h F4:h | G4:q F4:q E4:q D4:q | F4:w",
+        "lh": "F3+C4:h F3+C4:h | F3+C4:h F3+C4:h | R:w | R:w | F3+C4:h F3+C4:h | F3+C4:h F3+C4:h | R:w | R:w | A3:q G3:q F3:q G3:q | A3:h R:h | R:w | R:w | F3+C4:h F3+C4:h | F3+C4:h F3+C4:h | R:w | F3+C4:h F2+C3:h"
+      }
+    }
+  ],
+  "detector": "scan.py v2 (system numbers belong to a detector version: re-scan and compare before trusting old numbers)"
+}

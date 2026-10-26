@@ -1,0 +1,86 @@
+{
+  "pdf": "literacy/Adult piano adventures a*.pdf",
+  "source": "Faber Adult Piano Adventures Book 1",
+  "detector": "scan.py v2",
+  "pieces": [
+    {
+      "title": "Half-Time Band",
+      "composer": "Nancy and Randall Faber",
+      "piece": "107:1-4",
+      "stage": 2,
+      "page": "105"
+    },
+    {
+      "title": "Greensleeves",
+      "composer": "Traditional",
+      "piece": "108:1-2,109:1-5",
+      "stage": 2,
+      "page": "106-107",
+      "skip": "lyrics under the staves confuse the OMR: needs hand transcription"
+    },
+    {
+      "title": "Romance (Eine kleine Nachtmusik)",
+      "composer": "Wolfgang Amadeus Mozart",
+      "piece": "111:1-4",
+      "stage": 2,
+      "page": "109"
+    },
+    {
+      "title": "Sleeping Beauty Waltz",
+      "composer": "Peter Ilyich Tchaikovsky",
+      "piece": "112:2-3,113:1-4",
+      "stage": 2,
+      "page": "110-111"
+    },
+    {
+      "title": "Danny Boy",
+      "composer": "Traditional",
+      "piece": "121:1-4",
+      "stage": 2,
+      "page": "119",
+      "skip": "lyrics under the staves confuse the OMR: needs hand transcription"
+    },
+    {
+      "title": "Aria (The Marriage of Figaro)",
+      "composer": "Wolfgang Amadeus Mozart",
+      "piece": "123:1-4",
+      "stage": 2,
+      "page": "121",
+      "skip": "lyrics under the staves confuse the OMR: needs hand transcription"
+    },
+    {
+      "title": "Nobody Knows the Trouble I've Seen",
+      "composer": "Traditional",
+      "piece": "126:1-2,127:1-4",
+      "stage": 2,
+      "page": "124-125",
+      "skip": "lyrics under the staves confuse the OMR: needs hand transcription"
+    },
+    {
+      "title": "Scale Waltz",
+      "composer": "Nancy and Randall Faber",
+      "piece": "134:1-4",
+      "stage": 2,
+      "page": "132",
+      "patches": [
+        {
+          "bar": 15,
+          "hand": "rh",
+          "notes": "D4:q G4:e F4:e E4:e D4:e"
+        },
+        {
+          "bar": 15,
+          "hand": "lh",
+          "notes": "G3+B2:h R:q"
+        }
+      ]
+    },
+    {
+      "title": "Trumpet Voluntary",
+      "composer": "Jeremiah Clarke",
+      "piece": "137:1-4",
+      "stage": 2,
+      "page": "135"
+    }
+  ]
+}

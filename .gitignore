@@ -34,3 +34,8 @@ inbox/*
 
 # Design references (other people's work)
 ref*.webp
+
+# OMR pipeline: the environment, page images and unchecked output stay local
+tools/omr/.venv/
+tools/omr/work/
+tools/omr/review/
