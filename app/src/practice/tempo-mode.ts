@@ -104,6 +104,13 @@ export class TempoRun {
     return this.t0;
   }
 
+  /** Every note due in the run with its time and state, for the debug log. */
+  get schedule(): { beat: number; note: number; time: number; state: 'open' | 'matched' | 'missed' }[] {
+    return this.expected.map((e) => ({
+      beat: this.steps[e.stepIdx]!.beat, note: e.note, time: e.time, state: e.matched ? 'matched' : e.missed ? 'missed' : 'open',
+    }));
+  }
+
   timeOfBeat(beat: number): number {
     return this.t0 + beat * this.beatMs;
   }
