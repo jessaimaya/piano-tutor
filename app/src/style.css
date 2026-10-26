@@ -229,10 +229,13 @@ main { min-width: 0; }
 /* score paper */
 #score { background: var(--paper); color: #000; border-radius: 20px; padding: 12px; min-height: 160px; overflow-x: auto; box-shadow: var(--raise); }
 
-/* a wrong key, drawn on the staff in red */
-.wrong-note { pointer-events: none; animation: wrong-fade 3.5s ease-out forwards; }
-.wrong-head, .wrong-sharp { fill: var(--bad); }
-.wrong-ledger { stroke: var(--bad); }
+/* a key you pressed, drawn on the staff: red when wrong, green when right */
+.mark-note { pointer-events: none; animation: wrong-fade 3.5s ease-out forwards; }
+.right-note { animation-duration: 1.8s; }
+.wrong-note .mark-head, .wrong-note .mark-sharp { fill: var(--bad); }
+.wrong-note .mark-ledger { stroke: var(--bad); }
+.right-note .mark-head, .right-note .mark-sharp { fill: var(--good); }
+.right-note .mark-ledger { stroke: var(--good); }
 @keyframes wrong-fade { 0%, 70% { opacity: 1; } 100% { opacity: 0; } }
 
 /* keyboard: keys sit in a dark bezel with a fine outline around it */

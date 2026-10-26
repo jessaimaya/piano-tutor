@@ -31,7 +31,7 @@ The three dots at the top right switch between the Warm, Cold blues and Night th
 - **Reads real notation.** It loads MusicXML (`.mxl`, `.musicxml`) and draws it with
   [OpenSheetMusicDisplay](https://opensheetmusicdisplay.org/), with a cursor on the current step.
 - **Wait mode.** The cursor stays put until you play exactly the right notes. Chords can be played in any order. Use it to learn a piece.
-- **Wrong notes on the staff.** A wrong key shows up as a red note on the staff at the cursor (with ledger lines and a sharp sign where needed), so you see at what height you played, not just a message. It works before you press Start too: in tempo mode the key is checked against the first notes of the piece (or your bar range) for the hand you chose, with no clock and no score.
+- **Notes on the staff.** A right key shows up as a green note that fades after a moment. A wrong key shows up as a red note on the staff at the cursor (with ledger lines and a sharp sign where needed), so you see at what height you played, not just a message. It works before you press Start too: in tempo mode the key is checked against the first notes of the piece (or your bar range) for the hand you chose, with no clock and no score.
 - **Tempo mode.** After a count-in, the score follows a metronome and each note has a timing window. You get the share of notes played
   in time, missed and extra notes, and whether you rush or drag. After a clean run the tempo rises 4 bpm. Three clean runs at the target tempo finish the piece.
   The tempo counts the piece's own beat, so 6/8 is counted in dotted quarters.

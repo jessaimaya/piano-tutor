@@ -813,23 +813,31 @@ bus.on((event, source) => {
   if (listening) return; // the cursor belongs to the playback until it ends
 
   if (mode === 'wait') {
+    const at = score.anchor(); // before the press moves the cursor
     const outcome = session?.press(event.note);
     if (outcome?.result.kind === 'wrong') {
       keyboard.flash('wrong', event.note);
-      score.showWrong(event.note);
+      score.showWrong(event.note, at);
       setFeedback(describeWrongNote(event.note, [...(session?.expected ?? [])]));
     }
-    if (outcome?.result.kind === 'correct' || outcome?.result.kind === 'advance') keyboard.flash('hit', event.note);
+    if (outcome?.result.kind === 'correct' || outcome?.result.kind === 'advance') {
+      keyboard.flash('hit', event.note);
+      score.showRight(event.note, at);
+    }
     if (outcome?.result.kind === 'advance') score.clearWrong(); // the cursor moved on: the mistake is behind you
     renderStatus();
     refreshKeys();
     if (outcome?.finished) finishWaitRun(outcome.finished);
   } else if (tempo) {
+    const at = score.anchor();
     const r = tempo.run.press(event.note, performance.now() - latencyMs); // minus the measured setup delay
-    if (r.kind === 'hit') keyboard.flash('hit', event.note);
+    if (r.kind === 'hit') {
+      keyboard.flash('hit', event.note);
+      score.showRight(event.note, at);
+    }
     if (r.kind === 'extra') {
       keyboard.flash('wrong', event.note);
-      if (r.offsetMs === undefined) score.showWrong(event.note); // right note at the wrong time is not a pitch error
+      if (r.offsetMs === undefined) score.showWrong(event.note, at); // right note at the wrong time is not a pitch error
       for (const w of r.wanted) keyboard.flash('should', w, 1500);
       setFeedback(
         r.offsetMs !== undefined ? describeOffTime(event.note, r.offsetMs)
@@ -841,8 +849,10 @@ bus.on((event, source) => {
   } else if (mode === 'tempo' && current) {
     // Tempo mode before Start: no run, no clock. Check the key against the first notes so you can still see where it sits on the staff.
     const wanted = firstStepNotes();
-    if (wanted.includes(event.note)) keyboard.flash('hit', event.note);
-    else if (wanted.length) {
+    if (wanted.includes(event.note)) {
+      keyboard.flash('hit', event.note);
+      score.showRight(event.note);
+    } else if (wanted.length) {
       keyboard.flash('wrong', event.note);
       score.showWrong(event.note);
       setFeedback(describeWrongNote(event.note, wanted));
