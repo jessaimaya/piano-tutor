@@ -112,7 +112,7 @@ since copying would pull in the GPL):
 
 ## Getting music into the app
 
-OMR on the scanned books doesn't work well enough (tested on one Beyer page: 6 minutes per page, wrong bar lengths).
-Beyer is public domain, but its pages are dense and the first exercises (Op. 101 pp. 8–9) are short five-finger drills that
+OMR on the scanned books: a first test on a 150 ppi Beyer page (oemer) took 6 minutes and gave wrong bar lengths, but a retest on 300 ppi
+pages with homr was fast and correct (see [tools/omr/README.md](tools/omr/README.md)), so the books can feed the library. Beyer is public domain, but its pages are dense and the first exercises (Op. 101 pp. 8–9) are short five-finger drills that
 `pieces.ts` already covers, so I'm not transcribing it now. For everything else, buy or download MusicXML (see
 [04-sheet-music-sources.md](04-sheet-music-sources.md)).

@@ -1,15 +1,15 @@
 import { describe, expect, it } from 'vitest';
 import { buildMusicXml, midiOf } from './notation';
-import { KEYS, lhFinger, rhFinger, techniquePieces } from './technique';
+import { KEYS, lhFinger, positionPieces, rhFinger, techniquePieces } from './technique';
 
 const WHITE = new Set([0, 2, 4, 5, 7, 9, 11]);
 
-interface Tok { name: string; midi: number; finger?: number }
+interface Tok { name: string; midi: number; finger?: number; dur: string }
 function tokens(text: string | undefined): Tok[] {
   return (text?.match(/[A-G][#b]?\d:[whqes]\.?(?:\/\d)?/g) ?? []).map((t) => {
     const [pitch, rest] = t.split(':') as [string, string];
     const finger = /\/(\d)/.exec(rest)?.[1];
-    return { name: pitch, midi: midiOf(pitch), finger: finger ? Number(finger) : undefined };
+    return { name: pitch, midi: midiOf(pitch), finger: finger ? Number(finger) : undefined, dur: rest.replace(/\/\d$/, '') };
   });
 }
 const pcs = (toks: Tok[]) => [...new Set(toks.map((t) => ((t.midi % 12) + 12) % 12))].sort((a, b) => a - b);
@@ -119,5 +119,50 @@ describe('technique exercises', () => {
     expect(tokens(byId['t-arp-C-major']!.notation.rh)[0]!.finger).toBe(1);
     expect(tokens(byId['t-arp-Bb-major']!.notation.rh)[0]!.finger).toBeUndefined();
     expect(tokens(byId['t-arp-Fs-major']!.notation.lh)[0]!.finger).toBeUndefined();
+  });
+});
+
+describe('five-finger positions', () => {
+  it('has C, G, F and D, each in four versions with a unique id, building valid MusicXML', () => {
+    expect(positionPieces.map((p) => p.id)).toEqual(['c', 'g', 'f', 'd'].flatMap((k) => [`t-five-${k}-steps`, `t-five-${k}-holds`, `t-five-${k}-thirds`, `t-five-${k}`]));
+    expect(new Set(positionPieces.map((p) => p.id)).size).toBe(16);
+    for (const p of positionPieces) expect(buildMusicXml(p.notation)).toContain('<score-partwise');
+  });
+
+  it('gets harder from steps to holds to thirds to the full exercise', () => {
+    const rh = (id: string) => tokens(positionPieces.find((p) => p.id === id)!.notation.rh);
+    const leaps = (id: string) => { const m = rh(id).map((t) => t.midi); return m.slice(1).map((x, i) => Math.abs(x - m[i]!)); };
+    expect(Math.max(...leaps('t-five-c-steps'))).toBeLessThanOrEqual(2); // neighbouring fingers only
+    expect(rh('t-five-c-steps').every((t) => t.dur === 'q' || t.dur === 'w')).toBe(true);
+    expect(rh('t-five-c-holds').some((t) => t.dur === 'h')).toBe(true);
+    expect(Math.max(...leaps('t-five-c-thirds'))).toBeGreaterThan(2); // skips a finger
+    expect(Math.max(...leaps('t-five-c-steps'))).toBeLessThan(Math.max(...leaps('t-five-c-thirds')));
+  });
+
+  it('spells each position on its own five notes', () => {
+    const names = (id: string) => [...new Set(tokens(positionPieces.find((p) => p.id === id)!.notation.rh).map((t) => t.name))].sort();
+    expect(names('t-five-c')).toEqual(['C4', 'D4', 'E4', 'F4', 'G4']);
+    expect(names('t-five-g')).toEqual(['A4', 'B4', 'C5', 'D5', 'G4']);
+    expect(names('t-five-f')).toEqual(['A4', 'Bb4', 'C5', 'F4', 'G4']);
+    expect(names('t-five-d')).toEqual(['A4', 'D4', 'E4', 'F#4', 'G4']);
+  });
+
+  it('puts the left hand an octave below the right and fingers it 5-4-3-2-1 from the bottom', () => {
+    for (const p of positionPieces) {
+      const rh = tokens(p.notation.rh);
+      const lh = tokens(p.notation.lh);
+      expect(lh.map((t) => t.midi + 12)).toEqual(rh.map((t) => t.midi));
+      expect(lh.map((t) => t.finger)).toEqual(rh.map((t) => 6 - t.finger!));
+    }
+  });
+
+  it('is eight bars of 4/4 and stays inside the on-screen keyboard', () => {
+    for (const p of positionPieces) {
+      expect(p.notation.rh!.split('|').filter((b) => b.trim())).toHaveLength(8);
+      for (const t of [...tokens(p.notation.rh), ...tokens(p.notation.lh)]) {
+        expect(t.midi).toBeGreaterThanOrEqual(36);
+        expect(t.midi).toBeLessThanOrEqual(84);
+      }
+    }
   });
 });

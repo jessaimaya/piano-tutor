@@ -9,6 +9,13 @@ const UNIT_PX = 10;
 const SVG_NS = 'http://www.w3.org/2000/svg';
 const WRONG_NOTE_MS = 3500;
 const RIGHT_NOTE_MS = 1800;
+/** Smallest staff the minimal view shrinks to when two systems would not fit the window otherwise (staff space = 10 px x zoom). */
+const MIN_FIT_ZOOM = 0.4;
+/** Systems the minimal view tries to show at once: the one you are reading and the one after it, so the next notes are never a surprise. */
+const ROWS_IN_VIEW = 2;
+/** Breathing room kept around the systems in the window, in px. */
+const FIT_SLACK_PX = 3;
+const RESIZE_DEBOUNCE_MS = 200;
 
 /** Where a coloured note goes: the measure's staves and the cursor's x, in OSMD units. */
 export interface NoteAnchor {
@@ -23,10 +30,18 @@ export class ScoreView implements MeasuredCursor {
   private osmd: OpenSheetMusicDisplay;
   private loaded = false;
   private pos = 0; // how many times the cursor has been advanced since the start
+  private paged = false;
+  /** The staff size a piece is drawn at unless `load` is given another (1 in the full view, the chosen size in the minimal one). */
+  private baseZoom = 1;
+  /** The note cards are drawn at a size of their own and are not fitted to the window. */
+  private fixedZoom = false;
+  private seen = { w: 0, h: 0 };
+  private resizeTimer: ReturnType<typeof setTimeout> | undefined;
 
   constructor(private container: HTMLElement) {
     this.osmd = new OpenSheetMusicDisplay(container, {
-      autoResize: true,
+      autoResize: false, // see `relayout`: the window size decides the staff size in the minimal view, so the layout is ours to redo
+
       backend: 'svg',
       drawTitle: true,
       drawComposer: true,
@@ -35,17 +50,131 @@ export class ScoreView implements MeasuredCursor {
       followCursor: true,
       cursorsOptions: [{ type: 0, color: '#2f6fde', alpha: 0.35, follow: true }],
     });
+    this.seen = { w: container.clientWidth, h: container.clientHeight };
+    new ResizeObserver(() => this.resized()).observe(container);
   }
 
-  async load(xml: string): Promise<void> {
+  /** `zoom` overrides the staff size for this score only (the note cards are drawn big). */
+  async load(xml: string, zoom?: number): Promise<void> {
     this.loaded = false;
+    this.fixedZoom = zoom !== undefined;
+    this.osmd.zoom = zoom ?? this.baseZoom;
     this.clearMarks();
     this.setPlayhead(undefined);
     await this.osmd.load(xml);
-    this.osmd.render();
+    this.draw();
     this.osmd.cursor.show();
     this.loaded = true;
     this.reset();
+  }
+
+  /**
+   * Minimal view (e-ink): the score is a fixed window, not a scrolling page. The cursor never scrolls the page smoothly; the page
+   * is turned once, when the cursor reaches the last system that fits (see `page`). Zoom is the staff size, 1 = 10 px per staff space.
+   */
+  setMinimal(on: boolean, zoom: number): void {
+    this.paged = on;
+    const cursor = this.osmd.cursorsOptions[0];
+    if (cursor) Object.assign(cursor, on ? { color: '#000000', alpha: 0.45, follow: false } : { color: '#2f6fde', alpha: 0.35, follow: true });
+    this.osmd.FollowCursor = !on;
+    this.osmd.setOptions({ drawTitle: !on, drawComposer: !on });
+    this.baseZoom = on ? zoom : 1;
+    this.osmd.zoom = this.baseZoom;
+    this.container.scrollTop = 0;
+    if (!this.loaded) return;
+    this.relayout();
+  }
+
+  /** Draw the loaded piece. In the minimal view `baseZoom` is the biggest staff wanted; it shrinks until the window shows two systems. */
+  private draw(): void {
+    if (this.paged && !this.fixedZoom) this.fit();
+    else this.osmd.render();
+  }
+
+  /** Draw again for the window as it is now (turned sideways, a toolbar gone) and put the cursor and the page back. */
+  private relayout(): void {
+    this.container.scrollTop = 0;
+    this.osmd.zoom = this.fixedZoom ? this.osmd.zoom : this.baseZoom;
+    this.draw();
+    this.osmd.cursor.update();
+    this.page();
+  }
+
+  private resized(): void {
+    const w = this.container.clientWidth;
+    const h = this.container.clientHeight;
+    // The full view's height follows its content, so only the width counts there (otherwise a redraw would trigger the next one).
+    const changed = w !== this.seen.w || (this.paged && h !== this.seen.h);
+    this.seen = { w, h };
+    if (!changed || !this.loaded || !w) return;
+    clearTimeout(this.resizeTimer);
+    this.resizeTimer = setTimeout(() => this.relayout(), RESIZE_DEBOUNCE_MS);
+  }
+
+  /** Content box of the score window in px: what is left inside its padding. */
+  private inner(): { w: number; h: number } {
+    const cs = getComputedStyle(this.container);
+    const pad = (a: string, b: string) => parseFloat(cs.getPropertyValue(a)) + parseFloat(cs.getPropertyValue(b));
+    return {
+      w: this.container.clientWidth - pad('padding-left', 'padding-right'),
+      h: this.container.clientHeight - pad('padding-top', 'padding-bottom'),
+    };
+  }
+
+  /** Top and bottom of each system in px, from the top of the drawing. Staff lines, clefs and the notes above and below are inside. */
+  private systems(): { top: number; bottom: number }[] {
+    const u = UNIT_PX * this.osmd.zoom;
+    const page = this.osmd.GraphicSheet?.MusicPages[0];
+    return (page?.MusicSystems ?? []).map((sys) => {
+      const box = sys.PositionAndShape;
+      return { top: (box.AbsolutePosition.y + box.BorderTop) * u, bottom: (box.AbsolutePosition.y + box.BorderBottom) * u };
+    });
+  }
+
+  /**
+   * Render at the biggest staff (`baseZoom`) that still shows the first two systems in the window, with no bar running past the right
+   * edge. Each pass scales by how much too big the drawing was; a smaller staff also fits more bars on a line, so the systems change
+   * and the next pass measures again.
+   */
+  private fit(): void {
+    let zoom = this.baseZoom;
+    for (let pass = 0; ; pass++) {
+      this.osmd.zoom = zoom;
+      this.osmd.render();
+      const room = this.inner();
+      const rows = this.systems().slice(0, ROWS_IN_VIEW);
+      const need = rows.length ? rows[rows.length - 1]!.bottom - rows[0]!.top : 0;
+      const wide = this.container.querySelector('svg')?.getBoundingClientRect().width ?? 0;
+      const k = Math.min(need > room.h ? (room.h - FIT_SLACK_PX) / need : 1, wide > room.w ? room.w / wide : 1);
+      if (k >= 1 || zoom <= MIN_FIT_ZOOM || pass >= 4) return;
+      zoom = Math.max(MIN_FIT_ZOOM, zoom * k);
+    }
+  }
+
+  /** Change the staff size in the minimal view and keep the cursor on the page. */
+  setZoom(zoom: number): void {
+    if (!this.paged) return;
+    this.setMinimal(true, zoom);
+  }
+
+  /**
+   * Turn the page so that a system is never cut: the window always starts at the top of a system. It turns when the system after
+   * the one under the cursor would not be fully in view, and then the cursor's system goes to the top, so the next one shows below it.
+   * One turn per page (e-ink redraws the whole screen), and it comes while you are still reading the last system of the page.
+   */
+  private page(): void {
+    if (!this.paged || !this.loaded) return;
+    const systems = this.systems();
+    const here = this.osmd.GraphicSheet.MeasureList[this.osmd.cursor.iterator.CurrentMeasureIndex]?.[0]?.ParentStaffLine.ParentMusicSystem;
+    const i = here ? this.osmd.GraphicSheet.MusicPages[0]!.MusicSystems.indexOf(here) : -1;
+    const cur = systems[i];
+    if (!cur) return;
+    const ahead = systems[Math.min(i + 1, systems.length - 1)]!;
+    const svgTop = (this.container.querySelector('svg')?.getBoundingClientRect().top ?? 0) - this.container.getBoundingClientRect().top + this.container.scrollTop;
+    const view = this.container.scrollTop;
+    const fits = cur.top + svgTop >= view - 1 && ahead.bottom + svgTop <= view + this.container.clientHeight + 1;
+    if (fits) return;
+    this.container.scrollTop = Math.max(0, cur.top + svgTop - FIT_SLACK_PX);
   }
 
   reset(): void {
@@ -53,6 +182,7 @@ export class ScoreView implements MeasuredCursor {
     this.clearMarks();
     if (!this.loaded) return;
     this.osmd.cursor.reset();
+    this.page();
   }
 
   /** Onset of the current step, in quarter-note beats from the start (OSMD counts in whole notes). */
@@ -84,6 +214,7 @@ export class ScoreView implements MeasuredCursor {
   next(): void {
     this.pos++;
     this.osmd.cursor.next();
+    this.page();
   }
 
   notes(): CursorNote[] {

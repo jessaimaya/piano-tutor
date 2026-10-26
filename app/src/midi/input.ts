@@ -37,7 +37,12 @@ export class InputBus {
 
   async connectMidi(): Promise<void> {
     if (!navigator.requestMIDIAccess) {
-      this.setStatus([], 'Web MIDI is not available in this browser. Use Chrome or Edge.');
+      this.setStatus(
+        [],
+        window.isSecureContext
+          ? 'Web MIDI is not available in this browser. Use Chrome or Edge.'
+          : 'Web MIDI needs a secure page: open the app from https:// or http://localhost, not a network address.',
+      );
       return;
     }
     try {

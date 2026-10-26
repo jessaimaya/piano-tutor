@@ -10,7 +10,7 @@ import type { Piece } from './pieces';
 
 const LETTERS = ['C', 'D', 'E', 'F', 'G', 'A', 'B'] as const;
 
-interface Key {
+export interface Key {
   name: string;
   fifths: number;
   /** Letter of the tonic. */
@@ -18,7 +18,7 @@ interface Key {
   /** Accidentals the key signature puts on letters. */
   acc: Partial<Record<(typeof LETTERS)[number], '#' | 'b'>>;
 }
-const KEYS: Record<string, Key> = {
+export const KEYS: Record<string, Key> = {
   C: { name: 'C', fifths: 0, tonic: 'C', acc: {} },
   G: { name: 'G', fifths: 1, tonic: 'G', acc: { F: '#' } },
   F: { name: 'F', fifths: -1, tonic: 'F', acc: { B: 'b' } },
@@ -34,17 +34,17 @@ export function noteName(key: Key, degree: number, octave: number): string {
 }
 
 /** Length of each duration token in quarter notes. */
-const BEATS: Record<string, number> = { w: 4, 'h.': 3, h: 2, 'q.': 1.5, q: 1, e: 0.5 };
+export const BEATS: Record<string, number> = { w: 4, 'h.': 3, h: 2, 'q.': 1.5, q: 1, e: 0.5 };
 const beatsOf = (tokens: readonly string[]) => tokens.reduce((s, t) => s + BEATS[t]!, 0);
 
-const P44 = {
+export const P44 = {
   plain: [['h', 'h'], ['h', 'q', 'q'], ['q', 'q', 'h'], ['q', 'q', 'q', 'q']],
   more: [['h.', 'q'], ['q', 'h', 'q'], ['w']],
   eighths: [['e', 'e', 'q', 'q', 'q'], ['q', 'q', 'e', 'e', 'q'], ['e', 'e', 'e', 'e', 'q', 'q'], ['q', 'e', 'e', 'q', 'q']],
   dotted: [['q.', 'e', 'q', 'q'], ['q.', 'e', 'h'], ['h', 'q.', 'e']],
   run: [['e', 'e', 'e', 'e', 'e', 'e', 'e', 'e'], ['e', 'e', 'e', 'e', 'q', 'q'], ['q', 'q', 'e', 'e', 'e', 'e']],
 };
-const P34 = {
+export const P34 = {
   plain: [['h', 'q'], ['q', 'h'], ['q', 'q', 'q']],
   more: [['h.']],
   eighths: [['e', 'e', 'q', 'q'], ['q', 'e', 'e', 'q'], ['q', 'q', 'e', 'e']],
@@ -101,8 +101,8 @@ export function rng(seed: number): () => number {
   };
 }
 
-type Rand = () => number;
-const pick = <T>(r: Rand, xs: readonly T[]): T => xs[Math.floor(r() * xs.length)]!;
+export type Rand = () => number;
+export const pick = <T>(r: Rand, xs: readonly T[]): T => xs[Math.floor(r() * xs.length)]!;
 
 function weighted(r: Rand, weights: readonly number[]): number {
   const total = weights.reduce((a, b) => a + b, 0);
@@ -115,12 +115,12 @@ function weighted(r: Rand, weights: readonly number[]): number {
 }
 
 /** Chord roots (scale degrees) per bar: I I IV V in the first half, then back home, ending on I. */
-function progression(bars: number): number[] {
+export function progression(bars: number): number[] {
   const base = [0, 0, 3, 4, 0, 3, 4, 0];
   return Array.from({ length: bars }, (_, i) => (i === bars - 1 ? 0 : base[i % base.length]!));
 }
 
-function melodyBars(spec: LevelSpec, r: Rand, key: Key, beatsPerBar: number, bars: number, roots: number[]): string[] {
+export function melodyBars(spec: Pick<LevelSpec, 'range' | 'patterns' | 'moves' | 'rests'>, r: Rand, key: Key, beatsPerBar: number, bars: number, roots: number[]): string[] {
   const [lo, hi] = spec.range;
   const set = (beatsPerBar === 4 ? P44 : P34);
   const pool = spec.patterns.flatMap((p) => set[p]);

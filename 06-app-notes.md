@@ -23,11 +23,13 @@ Not a build spec; just how the plan should shape the app when you get to it.
 >
 > 12. ✅ **Done 2026-10-25:** **Scores.** Every run gets one 0–100 score (`practice/scoring.ts`). Wait mode: the share of steps played right first try. Tempo mode: each note is worth 1 point, full credit within 50 ms of the beat, sliding to 60% at 250 ms or more off, nothing for a missed note, and a quarter of a note off per extra key. Timing is judged in absolute milliseconds, so the level changes what counts as a hit, not what a hit is worth. Stars: 90+ three, 75+ two, 50+ one. After each run a card shows the score, stars, the change since the last run of the same kind (mode, whole piece or bars) and the best. Under the title: last score, best, number of runs, a sparkline of the last 12 and a "Keep practising" flag when the last full run is under 75. Each library row shows its last score, tinted by level, and "Needs practice first" sorts the lowest scores to the top, unplayed pieces last. Only whole-piece runs count towards the strip and chips. Not done: a per-piece history page, weekly totals.
 >
-> **Backlog, high priority: persistent storage.** Everything (runs, scores, tempo per piece, latency, level, theme) lives in this browser's localStorage, so it is lost with the browser data and is not shared between machines or browsers. Next: a real store (a small local database or file behind the app, or export/import as a first step) with a versioned schema for runs, so scores survive and can be charted over weeks.
+> 13. ✅ **Done 2026-10-26:** **Course mode** (plan in [10-course-mode-plan.md](10-course-mode-plan.md), design in [12-lesson-ladder.md](12-lesson-ladder.md)): a daily session of up to six dots, a course of ten units (stages 0–1), the placement test, five-finger warm-ups, note cards, streak, backup export/import. See `app/README.md`.
+>
+> **Backlog, high priority: persistent storage.** (First step done: Backup in the course page saves and loads everything as a JSON file.) Everything (runs, scores, tempo per piece, latency, level, theme) lives in this browser's localStorage, so it is lost with the browser data and is not shared between machines or browsers. Next: a real store (a small local database or file behind the app, or export/import as a first step) with a versioned schema for runs, so scores survive and can be charted over weeks.
 >
 > **Backlog:** nothing else scheduled. Candidates: single Mutopia imports (6), set the range by clicking the score, a tempo ladder that resumes where you left off, pedal marks in Listen.
 >
-> **Considered and dropped:** a falling-notes piano roll and particle effects (the app exists to teach reading notation, and the roll lets you skip it), importing raw `.mid` files (no notation, so no staff to read; MusicXML only), real-time chord naming with tonal.js (low value for a beginner; revisit at stage 4+ if chord reading becomes a goal), accounts and a database (piano-ml has them; this is a one-person local app), auto-harmonization, OMR upload (tested: too slow and inaccurate for piano scans), MusicBrainz lookups.
+> **Considered and dropped:** a falling-notes piano roll and particle effects (the app exists to teach reading notation, and the roll lets you skip it), importing raw `.mid` files (no notation, so no staff to read; MusicXML only), real-time chord naming with tonal.js (low value for a beginner; revisit at stage 4+ if chord reading becomes a goal), accounts and a database (piano-ml has them; this is a one-person local app), auto-harmonization, OMR *upload in the app* (OMR itself is now a local tool, `tools/omr/`: homr on 300 ppi pages was fast and accurate; the earlier oemer test on a 150 ppi scan was not), MusicBrainz lookups.
 
 ## What the app is for
 
@@ -43,7 +45,7 @@ Keep the two separate so the content can grow without code changes.
 | Score rendering | **OpenSheetMusicDisplay** (MusicXML → SVG, built on VexFlow, has a cursor) or **Verovio** (MusicXML/MEI, very accurate engraving) |
 | Playback / metronome | Tone.js or a plain WebAudio scheduler |
 | Content editing | MuseScore Studio → export MusicXML |
-| PDF → MusicXML | Audiveris / MuseScore 4 PDF import, then hand correction |
+| PDF → MusicXML | **homr** via [`tools/omr/`](tools/omr/README.md) (tested, ~5 s per system), then check; MuseScore 4 PDF import or Audiveris as fallbacks |
 
 ## P-115 specifics the MIDI layer must handle
 

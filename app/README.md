@@ -27,6 +27,64 @@ npm run build      # typecheck + production build
 No piano plugged in? Play with the computer keyboard (shown in the sidebar) or click the on-screen keys.
 With the P-115 connected, the device name appears in the top bar and the sustain pedal value is shown live.
 
+## Course mode
+
+The app opens in Course; **Free | Course** at the top switches (and remembers the choice) between the app as it was (browse the library, play anything) and a daily session, Duolingo-style.
+Course mode hides the library and the mode and hands switches: each step decides what you play. One dot per step shows where you are
+(filled = done, ring = here, dashed = skipped); a step counts when its goal is reached (a run, two readings, ten cards), **Next** or **Skip
+step** moves on, and **Menu** goes back to the course page. A day counts for the streak when its *core* steps (reading and new bars) are done.
+
+| Dot | Step | Min (at 25) |
+|---|---|---|
+| 1 | Warm-up: the unit's five-finger exercise, easiest version first and one hand at a time in stage 0, or ten **note cards** every second day in stage 0 (the deck is the notes taught so far; a note on the staff, you play it, under 2 s is fast) | 3 |
+| 2 | Reading: two generated pieces from the reading ladder (25 rungs, one new thing each). You start a unit on its first rung and climb after two good days, never past the unit's last, so reading never outruns the lesson | 5 |
+| 3 | New bars: today's piece in wait mode; right hand on its first day, left hand on the second, both on the third | 6 |
+| 4 | Make it steady: the same piece in tempo mode, +4 bpm per clean run | 6 |
+| 5 | Review: the finished piece that has waited longest | 3 |
+| 6 | Play: for the music | 2 |
+
+Time today is 10, 15, 20, 25, 30 or 45 minutes (fewer or more dots; reading and new bars are never dropped). On Saturdays new bars and steady
+become a **replay** of the finished pieces; every four weeks the reading step is the sight-reading test. The first time you open Course you can
+take that test to find your start (its result picks a unit, `placement` in `course.json`) or begin at unit 0.1. A piece is finished by the rule
+the log already uses (three clean tempo runs in a row at its target) or by **More → Mark as finished**; a unit ends when its exit pieces are
+finished and the reading level (and, in stage 0, the cards) are good enough, and the next unit starts by itself.
+
+The course is **`course/course.json`**: thirteen units (stages 0 and 1, and three of stage 2) naming each unit's warm-ups, warm-up hands, note-card notes, reading rungs, pieces and exit; `npm test` checks that every id exists, that no exercise uses something taught in a later unit, and that no unit reads ahead of itself ([13-progression-review.md](../13-progression-review.md)).
+Stage 2 stops at unit 2.3 (Faber Book 1 Units 10–13); later music is not converted yet: see `../11-ingestion-ledger.md`. Progress is in `piano-tutor:course:v1`.
+
+| Module | Job | Tests |
+|---|---|---|
+| `src/course/ladder.ts` | reads and validates `course.json`, placement lookup | ✅ |
+| `src/course/state.ts` | the saved state: today's plan, streak, reading level, cards, unit exits (all pure functions) | ✅ |
+| `src/course/plan.ts` | builds a day: steps, time scaling, which hand, review pool, Saturday | ✅ |
+| `src/course/cards.ts` | the note cards: the deck for a unit, weighted draws, a card as a one-bar score, judging key and time | ✅ |
+| `src/content/reading.ts` | the reading ladder: 25 rungs and the generator for each | ✅ |
+| `src/course/ui.ts` | the course page and the dots bar; asks `main.ts` to open pieces | browser |
+| `src/storage/backup.ts` | **Backup** (in the course page): everything the app remembers as one JSON file, loaded back by replacing what is there | ✅ |
+| `technique.ts` `positionPieces` | the five-finger warm-ups (C, G, F, D, each in four versions: steps, holds, thirds, mixed), library section "Technique · Five fingers" | ✅ |
+
+In `npm run dev` the page exposes `window.__piano` (the course, the input bus, the log) for browser tests; the production build does not.
+
+## Minimal view (small and e-ink screens)
+
+The button at the top right switches to a minimal view (and back to the full app). Open `/?view=minimal` once to make a phone bookmark that
+starts there. It is the same app and the same practice log, with only what you need at the piano: the score, **☰ Pieces**, Wait/Tempo,
+Right/Left/Both, the tempo and Start/Stop. The rest (listen, bar range, timing level, calibration, sight-reading test, on-screen keyboard)
+stays in the full view. Built for a monochrome e-ink screen such as the Minimal Phone (4.3", 600×800):
+
+- pure black on white, no animation, and the score is a fixed window that turns its page when the cursor reaches the last system that fits
+  (no scrolling); the page always starts at the top of a system, so a line is never cut, and the line after the one you are reading is
+  always in view;
+- the staff is drawn at the width of the window and shrinks until two systems fit its height (never below 0.4); `A−` / `A+` set the
+  biggest size it may use, and it is drawn again when the window changes (turning the phone, a toolbar hiding);
+- held sideways (landscape, under 520 px high) the score takes the whole height on the left and the controls stack in a column on the right;
+- the moving line is replaced by the cursor jumping from note to note at the tempo, since e-ink smears continuous movement;
+- right notes show as a filled head on the staff, wrong ones as a dashed hollow head (no colour);
+- tap the result card to put it away; tap the MIDI label to reconnect.
+
+Web MIDI only works on `localhost` or `https`. From a phone, either `adb reverse tcp:5173 tcp:5173` and open `http://localhost:5173`, or
+host the `npm run build` output over https.
+
 ## What's in it
 
 | Module | Job | Tests |
@@ -45,6 +103,7 @@ With the P-115 connected, the device name appears in the top bar and the sustain
 | `src/content/scores.ts` | The imported-scores list: reads `scores/library.json`, loads each file on demand | build only |
 | `src/content/pieces.ts` | The starter library (31 pieces, stages 0–3) | ✅ |
 | `src/ui/staff-position.ts` | Where a key sits on a treble or bass staff (step from the top line, ledger lines, sharps): the red wrong-note drawn by `ScoreView.showWrong` | ✅ |
+| `src/ui/view.ts` | Which view is on (`?view=` beats the saved choice) and the staff-size steps of the minimal view | ✅ |
 | `src/ui/*` | OpenSheetMusicDisplay score + cursor, on-screen keyboard, small synth | checked in a browser |
 
 ## Scales and arpeggios

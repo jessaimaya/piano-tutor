@@ -11,6 +11,9 @@
       try { t = localStorage.getItem('piano-tutor:theme'); } catch (e) {}
       if (t !== 'warm' && t !== 'cold' && t !== 'night') t = matchMedia('(prefers-color-scheme: dark)').matches ? 'night' : 'warm';
       document.documentElement.dataset.theme = t;
+      var v = null, q = null;
+      try { v = localStorage.getItem('piano-tutor:view'); q = new URLSearchParams(location.search).get('view'); } catch (e) {}
+      document.documentElement.dataset.view = q === 'minimal' || q === 'full' ? q : v === 'minimal' ? 'minimal' : 'full';
     })();
   </script>
   <script type="module" src="/src/main.ts"></script>
@@ -18,16 +21,27 @@
 <body>
 <div class="shell">
   <header class="topbar">
+    <button id="min-pieces" type="button" class="min-only">☰ Pieces</button>
     <h1>Piano Tutor<i class="mark" aria-hidden="true"></i></h1>
     <div class="spacer"></div>
+    <span id="app-mode" class="segmented" role="group" aria-label="Free practice or the course">
+      <button type="button" data-app="free" title="Browse the library and play whatever you like">Free</button>
+      <button type="button" data-app="course" title="Today's session: warm-up, reading, new bars, review">Course</button>
+    </span>
+    <span class="min-only zoom" role="group" aria-label="Staff size">
+      <button id="zoom-out" type="button" aria-label="Smaller staff">A−</button>
+      <button id="zoom-in" type="button" aria-label="Bigger staff">A+</button>
+    </span>
     <div id="themes" class="themes" role="group" aria-label="Theme"></div>
     <span id="pedal" class="pill" title="Sustain pedal (CC64)">Pedal <b id="pedal-val">–</b></span>
     <span id="midi-status" class="pill">MIDI: starting…</span>
     <button id="midi-retry" type="button">Reconnect</button>
+    <button id="view-toggle" type="button" title="Switch between the full app and a minimal view for small or e-ink screens">Minimal view</button>
   </header>
 
   <div class="layout">
     <aside class="library" aria-label="Library">
+      <button id="min-close" type="button" class="min-only">Close</button>
       <div class="sr-launch">
         <button id="sr-start" type="button" title="Read pieces you have never seen, from easy to harder, until reading gets difficult">Sight-reading test</button>
         <span id="sr-last" class="muted"></span>
@@ -65,6 +79,10 @@
     </aside>
 
     <main>
+      <section id="course" class="course" hidden>
+        <div id="course-home" class="course-home"></div>
+        <div id="course-bar" class="course-bar" hidden></div>
+      </section>
       <section class="hero">
         <div class="hero-text">
           <h2 class="piece-title"><span id="piece-title">Pick a piece</span></h2>

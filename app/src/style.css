@@ -283,3 +283,242 @@ main { min-width: 0; }
 
 .score-chip { font: 600 11px var(--mono); border-radius: 999px; padding: 0 7px; color: var(--tone, var(--muted)); border: 1px solid color-mix(in srgb, var(--tone, var(--muted)) 50%, transparent); }
 .score-chip.needs { background: color-mix(in srgb, var(--tone) 14%, transparent); }
+
+/*
+ * Minimal view (html[data-view='minimal']): for small and e-ink screens such as the Minimal Phone (4.3", 600×800, black and white,
+ * slow refresh). Only the score and what you need to play it: pieces, hands, mode, tempo, Start. Pure black on white, no colour, no
+ * shadows, no animation (e-ink ghosts), big touch targets; the score is a fixed window that turns its page (see ScoreView.page).
+ * The full view is untouched: everything here sits behind the attribute.
+ */
+.min-only { display: none; }
+:root[data-view='minimal'] .min-only { display: inline-flex; }
+
+:root[data-view='minimal'] {
+  color-scheme: light;
+  --ground: #fff; --card: #fff; --well: #fff; --paper: #fff;
+  --ink: #000; --muted: #333; --hair: #000; --tick: #000;
+  --accent: #000; --accent-ink: #fff; --pop: #000; --pop2: #000;
+  --good: #000; --bad: #000; --warn: #000;
+  --primary-bg: #000; --primary-fg: #fff; --primary-shadow: #000;
+  --raise: none; --raise-sm: none; --inset: none; --shell-shadow: none;
+  --grain: 0;
+}
+[data-view='minimal'] * { transition: none !important; animation: none !important; }
+[data-view='minimal'] body { min-height: 0; font-size: 16px; line-height: 1.35; }
+[data-view='minimal'] body::before, [data-view='minimal'] .blob, [data-view='minimal'] .piece-title::before { display: none; }
+
+[data-view='minimal'] .shell { max-width: none; height: 100dvh; min-height: 540px; margin: 0; border: 0; border-radius: 0; box-shadow: none; display: flex; flex-direction: column; }
+[data-view='minimal'] .topbar { flex: none; flex-wrap: nowrap; gap: 6px; padding: 6px 8px; border-bottom: 2px solid #000; }
+[data-view='minimal'] .topbar h1, [data-view='minimal'] .themes, [data-view='minimal'] #pedal { display: none; }
+[data-view='minimal'] .zoom { gap: 4px; }
+[data-view='minimal'] #midi-status { flex: 0 1 auto; min-width: 0; max-width: 34vw; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; display: block; font-size: 11px; padding: 1px 8px; border: 1px solid #000; color: #000; }
+[data-view='minimal'] .pill.ok::before, [data-view='minimal'] .pill.bad::before { display: none; }
+[data-view='minimal'] .pill.bad { border-style: dashed; border-width: 2px; }
+[data-view='minimal'] #midi-retry { display: none; } /* tap the MIDI label instead */
+[data-view='minimal'] .topbar button { white-space: nowrap; }
+[data-view='minimal'] .layout { display: block; flex: 1; min-height: 0; padding: 0; }
+
+/* buttons: flat, outlined, inverted when on */
+[data-view='minimal'] button { min-height: 44px; padding: 4px 10px; font-weight: 600; background: #fff; color: #000; border: 2px solid #000; border-radius: 0; box-shadow: none; transform: none; }
+[data-view='minimal'] button:hover, [data-view='minimal'] button:active { border-color: #000; box-shadow: none; transform: none; }
+[data-view='minimal'] button:active { background: #000; color: #fff; }
+[data-view='minimal'] button:disabled { opacity: 1; color: #666; border-style: dashed; }
+[data-view='minimal'] button.primary { background: #000; color: #fff; }
+[data-view='minimal'] button.stop { background: #fff; color: #000; border-width: 4px; }
+[data-view='minimal'] button.round { width: 48px; height: 48px; border-radius: 0; font-size: 26px; font-weight: 600; }
+[data-view='minimal'] .topbar button { min-height: 40px; padding: 2px 8px; font-size: 14px; }
+[data-view='minimal'] .segmented { display: inline-flex; padding: 0; border: 2px solid #000; border-radius: 0; background: #fff; box-shadow: none; }
+[data-view='minimal'] .segmented button { min-height: 42px; border: 0; border-radius: 0; padding: 2px 9px; color: #000; background: #fff; }
+[data-view='minimal'] #hands { justify-self: stretch; }
+[data-view='minimal'] #hands button { flex: 1; }
+[data-view='minimal'] .segmented button + button { border-left: 2px solid #000; }
+[data-view='minimal'] .segmented button[aria-pressed='true'] { background: #000; color: #fff; box-shadow: none; }
+[data-view='minimal'] .segmented button:disabled { color: #666; }
+
+/* the page: a grid so the score takes whatever height the controls leave */
+[data-view='minimal'] main { height: 100%; min-height: 470px; padding: 0 8px 6px; display: grid; position: relative; align-content: stretch;
+  grid-template-columns: auto auto auto 1fr auto; grid-template-rows: auto minmax(150px, 1fr) auto auto auto auto; column-gap: 6px; row-gap: 0; }
+[data-view='minimal'] main > * { grid-column: 1 / -1; }
+[data-view='minimal'] .transport, [data-view='minimal'] #pace-controls, [data-view='minimal'] .group.dial, [data-view='minimal'] .dial-row { display: contents; }
+[data-view='minimal'] .hero { grid-row: 1; min-height: 0; margin: 0; }
+[data-view='minimal'] .hero-text { padding: 4px 0; }
+[data-view='minimal'] .piece-title { font-size: 18px; letter-spacing: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+[data-view='minimal'] #score { grid-row: 2; min-height: 0; overflow: hidden; padding: 4px; border: 2px solid #000; border-radius: 0; box-shadow: none; }
+[data-view='minimal'] #status { grid-row: 3; min-height: 0; margin: 4px 0 0; font-size: 13px; color: #000; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+[data-view='minimal'] #feedback { grid-row: 4; min-height: 0; margin: 2px 0 0; font-size: 14px; font-weight: 600; border-left: 4px solid #000; padding-left: 6px; }
+[data-view='minimal'] #status:empty, [data-view='minimal'] #feedback:empty { display: none; }
+[data-view='minimal'] .status .count { font-size: 30px; color: #000; }
+[data-view='minimal'] .status .bad { font-weight: 700; text-decoration: underline; }
+
+/* bottom rows: tempo and mode, then hands and Start */
+[data-view='minimal'] #bpm-dec { grid-row: 5; grid-column: 1; margin-top: 6px; }
+[data-view='minimal'] .bpm-stack { grid-row: 5; grid-column: 2; margin-top: 6px; justify-content: center; }
+[data-view='minimal'] #bpm-inc { grid-row: 5; grid-column: 3; margin-top: 6px; }
+[data-view='minimal'] #mode { grid-row: 5; grid-column: 5; margin-top: 6px; }
+[data-view='minimal'] #hands { grid-row: 6; grid-column: 1 / 4; margin-top: 6px; }
+[data-view='minimal'] #stop { grid-row: 6; grid-column: 4; justify-self: end; margin-top: 6px; }
+[data-view='minimal'] #restart { grid-row: 6; grid-column: 5; margin-top: 6px; }
+[data-view='minimal'] #bpm { width: 3ch; font-size: 36px; font-weight: 700; letter-spacing: 0; }
+[data-view='minimal'] #bpm-unit { font-size: 10px; color: #000; }
+
+/* hidden here, still in the full view: ask for them there */
+[data-view='minimal'] .piece-meta, [data-view='minimal'] .progress, [data-view='minimal'] #tempo-controls, [data-view='minimal'] #sr-panel,
+[data-view='minimal'] #keyboard, [data-view='minimal'] #listen, [data-view='minimal'] .group.opts, [data-view='minimal'] .group.dial .cap,
+[data-view='minimal'] .ruler, [data-view='minimal'] .ruler-labels, [data-view='minimal'] #beat-hint, [data-view='minimal'] .spacer { display: none !important; }
+
+/* the result of a run sits over the bottom of the score; a tap puts it away */
+[data-view='minimal'] .result { grid-row: 2; align-self: end; z-index: 3; margin: 0 6px 6px; padding: 8px 10px; background: #fff; border: 3px solid #000; border-radius: 0; font-size: 14px; }
+[data-view='minimal'] .result[hidden] { display: none; }
+[data-view='minimal'] .result::after { content: 'Tap to close'; display: block; text-align: right; font: 11px var(--mono); }
+[data-view='minimal'] .score-num { font-size: 44px; font-weight: 700; color: #000; }
+[data-view='minimal'] .score-stars, [data-view='minimal'] .score-word { color: #000; }
+
+/* keys pressed show on the staff by shape, not colour: a filled head is right, a dashed hollow one is wrong */
+[data-view='minimal'] .right-note .mark-head { fill: #000; }
+[data-view='minimal'] .wrong-note .mark-head { fill: #fff; stroke: #000; stroke-width: 2.5; stroke-dasharray: 3 2; }
+
+/* the library is a full-screen page, opened from ☰ Pieces */
+[data-view='minimal'] .library { display: none; }
+[data-view='minimal'].lib-open .library { display: block; position: fixed; inset: 0; z-index: 50; overflow: auto; border-radius: 0; box-shadow: none; padding: 8px 10px 24px; background: #fff; }
+[data-view='minimal'] #min-close { position: sticky; top: 0; z-index: 2; width: 100%; margin-bottom: 8px; background: #000; color: #fff; }
+[data-view='minimal'] .library .sr-launch, [data-view='minimal'] .library .import, [data-view='minimal'] .library > .hint,
+[data-view='minimal'] .lib-row:nth-of-type(2), [data-view='minimal'] .lib-row select:not(#lib-sort) { display: none; }
+[data-view='minimal'] .lib-tools { position: static; background: #fff; }
+[data-view='minimal'] .lib-tools input[type='search'], [data-view='minimal'] .lib-row select { min-height: 44px; border: 2px solid #000; border-radius: 0; box-shadow: none; background: #fff; color: #000; font-size: 16px; }
+[data-view='minimal'] .library h2, [data-view='minimal'] #library details > summary { color: #000; font-size: 13px; border-bottom: 2px solid #000; }
+[data-view='minimal'] .library h2::after { display: none; }
+[data-view='minimal'] .library .item { min-height: 48px; padding: 10px 6px; border-bottom: 1px solid #000; border-radius: 0; font-size: 17px; align-items: center; }
+[data-view='minimal'] .library .item:hover { background: none; }
+[data-view='minimal'] .library .item.current { background: #000; color: #fff; box-shadow: none; }
+[data-view='minimal'] .library .item.current::before { display: none; }
+[data-view='minimal'] .library .item .meta, [data-view='minimal'] .badge, [data-view='minimal'] .score-chip { color: inherit; border-color: currentColor; }
+
+/* ───────── course mode ─────────
+ * The course page and the bar of dots. In the course the library, the mode and hands switches and the bar-range options are hidden:
+ * the step decides what you play. Free mode (data-app='free') is the app as it was. */
+.course { margin: 0 0 10px; }
+.course-home, .course-bar { background: var(--well); border-radius: 20px; padding: 14px 20px 16px; box-shadow: var(--inset); }
+.course-home[hidden], .course-bar[hidden], .course[hidden] { display: none; }
+.course-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+.course-head h2 { margin: 0; font-size: 22px; letter-spacing: -.01em; }
+.streak { font: 12.5px var(--mono); color: var(--muted); }
+.course-notice { border-left: 3px solid var(--good); padding: 6px 12px; margin: 10px 0; background: color-mix(in srgb, var(--good) 11%, var(--card)); border-radius: 10px; }
+.course-unit { margin: 10px 0 6px; }
+.course-minutes { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin: 10px 0; }
+.course-plan { margin: 10px 0; padding-left: 1.5em; }
+.course-plan li { margin: 2px 0; }
+.course-plan li[data-state='done'] { color: var(--muted); text-decoration: line-through; }
+.course-plan li[data-state='skipped'] { color: var(--muted); }
+.plan-name { font-weight: 600; }
+.course-actions { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-top: 12px; }
+.course-done { color: var(--good); font-weight: 600; margin: 10px 0 0; }
+.course-more { margin-top: 14px; font-size: 13.5px; }
+.course-more summary { cursor: pointer; color: var(--muted); font-weight: 600; letter-spacing: .06em; text-transform: uppercase; font-size: 12px; }
+.course-top { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.dots { display: flex; gap: 10px; flex: 1 1 auto; align-items: center; }
+.dot { width: 22px; height: 22px; padding: 0; border-radius: 50%; border: 2px solid var(--tick); background: transparent; box-shadow: none; }
+.dot:hover { border-color: var(--accent); }
+.dot[data-done='true'] { background: var(--accent); border-color: var(--accent); }
+.dot[data-state='current'] { border-color: var(--accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 28%, transparent); }
+.dot[data-state='skipped'] { border-style: dashed; }
+#course-step-title { margin: 10px 0 2px; font-size: 20px; letter-spacing: -.01em; }
+#course-step-text { margin: 0; }
+.course-msg { min-height: 1.4em; margin: 6px 0 0; font: 13px var(--mono); color: var(--muted); }
+
+html[data-app='course'] .library, html[data-app='course'] .hero, html[data-app='course'] #mode, html[data-app='course'] #hands,
+html[data-app='course'] #pace-controls .opts, html[data-app='course'] #tempo-controls, html[data-app='course'] #sr-panel .sr-buttons #sr-next { display: none !important; }
+html[data-app='course'] .layout { grid-template-columns: 1fr; }
+html[data-app='course'][data-phase='home'] #score, html[data-app='course'][data-phase='home'] #keyboard, html[data-app='course'][data-phase='home'] .transport,
+html[data-app='course'][data-phase='home'] #pace-controls, html[data-app='course'][data-phase='home'] #status, html[data-app='course'][data-phase='home'] #feedback,
+html[data-app='course'][data-phase='home'] #result, html[data-app='course'][data-phase='home'] #sr-panel { display: none !important; }
+/* sight-reading is reading what you have not heard: no Listen on the reading step or the test */
+html[data-app='course'][data-step='reading'] #listen, html[data-app='course'][data-step='test'] #listen { display: none !important; }
+html[data-app='course'][data-step='cards'] .transport, html[data-app='course'][data-step='cards'] #pace-controls { display: none !important; }
+/* the test: Start stays (the text says to press it); Listen, the mode and the hands do not apply, and the tempo is set by the level */
+html[data-app='course'][data-step='test'] #pace-controls, html[data-app='course'][data-step='test'] #listen,
+html[data-app='course'][data-step='test'] #mode, html[data-app='course'][data-step='test'] #hands { display: none !important; }
+
+/* the minimal view: black and white, big dots, the course page scrolls inside the window */
+[data-view='minimal'] #app-mode { flex: none; }
+[data-view='minimal'] #app-mode button { min-height: 36px; padding: 2px 8px; font-size: 13px; }
+[data-view='minimal'][data-app='course'] #min-pieces { display: none; }
+[data-view='minimal'] #course { grid-row: 1; margin: 0; }
+[data-view='minimal'][data-phase='home'] #course { grid-row: 1 / 4; overflow: auto; }
+[data-view='minimal'] .course-home, [data-view='minimal'] .course-bar { background: #fff; border: 2px solid #000; border-radius: 0; box-shadow: none; padding: 8px 10px; }
+[data-view='minimal'] .course-head h2 { font-size: 20px; }
+[data-view='minimal'] .streak, [data-view='minimal'] .course-msg { color: #000; }
+[data-view='minimal'] .course-notice { background: #fff; border: 2px solid #000; border-radius: 0; }
+[data-view='minimal'] .dot { width: 26px; height: 26px; min-height: 0; padding: 0; border: 3px solid #000; border-radius: 50%; background: #fff; }
+[data-view='minimal'] .dot[data-done='true'] { background: #000; }
+[data-view='minimal'] .dot[data-state='current'] { outline: 3px solid #000; outline-offset: 2px; box-shadow: none; }
+[data-view='minimal'] .dot[data-state='skipped'] { border-style: dashed; }
+[data-view='minimal'] .course-top { flex-wrap: nowrap; gap: 8px; }
+[data-view='minimal'] .course-top .streak { display: none; }
+[data-view='minimal'] .dots { gap: 8px; }
+[data-view='minimal'] #course-menu { min-height: 34px; padding: 2px 10px; font-size: 13px; }
+[data-view='minimal'] #course-step-title { font-size: 16px; margin: 4px 0 0; }
+[data-view='minimal'] #course-step-text { font-size: 13px; line-height: 1.25; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+[data-view='minimal'] .course-msg { min-height: 1.1em; margin: 2px 0 0; font-size: 12px; }
+[data-view='minimal'] .course-actions { margin-top: 8px; }
+[data-view='minimal'] .course-bar .course-actions { margin-top: 2px; justify-content: flex-end; }
+[data-view='minimal'] #course-primary { min-height: 38px; padding: 2px 14px; }
+[data-view='minimal'][data-app='course'] #restart { grid-row: 5; grid-column: 5; margin-top: 6px; }
+[data-view='minimal'][data-app='course'] #stop { grid-row: 5; grid-column: 4; margin-top: 6px; }
+[data-view='minimal'] .course-plan li[data-state='done'] { color: #000; }
+[data-view='minimal'] .course-more summary { color: #000; }
+/* Listen stays available in the course (the first day of a piece starts by listening to it), under the tempo row */
+[data-view='minimal'][data-app='course'] #listen { display: inline-flex !important; grid-row: 6; grid-column: 1 / 4; margin-top: 6px; justify-self: start; }
+[data-view='minimal'][data-app='course'][data-phase='home'] #listen { display: none !important; }
+
+/* the minimal view held sideways (the phone on the music stand). Height is what is short there, so the score takes all of it, on the
+ * left, and everything else (top bar, course bar, tempo, Start) is one narrow column on the right. .layout and main dissolve
+ * (display: contents) so their children are placed straight on the shell's grid. Selectors carry [data-app] only to outrank the
+ * portrait rules above. Column 1 is the score; columns 2-4 are the side column, split in three for the tempo row. */
+@media (orientation: landscape) and (max-height: 520px) {
+  html[data-view='minimal'] .shell { display: grid; height: auto; min-height: 100dvh; column-gap: 6px; padding: 0 6px 0 0;
+    grid-template-columns: minmax(0, 1fr) repeat(4, 48px); grid-template-rows: repeat(11, auto) minmax(0, 1fr); align-content: stretch; }
+  html[data-view='minimal'] .layout, html[data-view='minimal'] main { display: contents; }
+  html[data-view='minimal'] .shell > *, html[data-view='minimal'] main > * { grid-column: 2 / 6; }
+  html[data-view='minimal'] .topbar { grid-row: 1; flex-wrap: wrap; gap: 4px; padding: 4px 0; border-bottom: 2px solid #000; }
+  html[data-view='minimal'] .topbar .zoom { display: none; }
+  html[data-view='minimal'] #midi-status { order: 3; max-width: none; flex: 1 1 100%; }
+  html[data-view='minimal'] #view-toggle { font-size: 0; padding: 2px 8px; }
+  html[data-view='minimal'] #view-toggle::after { content: 'Full'; font-size: 13px; }
+  html[data-view='minimal'] .topbar button { min-height: 34px; padding: 2px 6px; font-size: 13px; }
+  html[data-view='minimal'] #app-mode button { min-height: 34px; }
+  /* the score is as tall as the window, pinned while the side column scrolls if it has to; size containment keeps its drawing from stretching the rows */
+  html[data-view='minimal'] #score { grid-column: 1; grid-row: 1 / -1; align-self: start; position: sticky; top: 0; height: calc(100dvh - 8px); min-height: 0; margin: 4px 0; contain: size; }
+  html[data-view='minimal'] .result { grid-column: 1; grid-row: 1 / -1; align-self: end; }
+  html[data-view='minimal'] #course, html[data-view='minimal'][data-phase='home'] #course { grid-row: 2; margin: 4px 0 0; overflow: visible; }
+  html[data-view='minimal'][data-phase='home'] #course { grid-column: 1 / -1; grid-row: 2 / -1; }
+  html[data-view='minimal'] .hero { grid-row: 3; overflow: visible; }
+  html[data-view='minimal'] .hero-text { padding: 2px 0; }
+  html[data-view='minimal'] .piece-title { font-size: 14px; white-space: normal; }
+  html[data-view='minimal'][data-app] #bpm-dec { grid-column: 2; grid-row: 4; margin-top: 4px; }
+  html[data-view='minimal'][data-app] .bpm-stack { grid-column: 3 / 5; grid-row: 4; margin-top: 4px; }
+  html[data-view='minimal'][data-app] #bpm-inc { grid-column: 5; grid-row: 4; margin-top: 4px; }
+  html[data-view='minimal'][data-app] #restart { grid-column: 2 / 4; grid-row: 5; margin-top: 4px; }
+  html[data-view='minimal'][data-app] #stop { grid-column: 2 / 6; grid-row: 6; justify-self: stretch; margin-top: 4px; }
+  html[data-view='minimal'][data-app] #listen { grid-column: 4 / 6; grid-row: 5; justify-self: stretch; margin-top: 4px; padding: 2px 4px; font-size: 14px; }
+  html[data-view='minimal'][data-app] #mode { grid-column: 2 / 6; grid-row: 8; margin-top: 4px; }
+  html[data-view='minimal'][data-app] #hands { grid-column: 2 / 6; grid-row: 9; margin-top: 4px; }
+  html[data-view='minimal'] #status { grid-row: 10; margin: 4px 0 0; white-space: normal; font-size: 12px; line-height: 1.25; max-height: 5.2em; }
+  html[data-view='minimal'] #feedback { grid-row: 11; }
+  html[data-view='minimal'] #bpm-dec, html[data-view='minimal'] #bpm-inc { min-width: 0; padding: 0; }
+  html[data-view='minimal'] button.round { width: 100%; height: 44px; }
+  html[data-view='minimal'] #bpm { font-size: 28px; }
+  html[data-view='minimal'] .status .count { font-size: 24px; }
+
+  /* the course bar: dots on one line, the step's name, then Skip and Menu side by side */
+  html[data-view='minimal'] .course-bar { display: grid; grid-template-columns: 1fr 1fr; column-gap: 4px; padding: 4px 6px; }
+  html[data-view='minimal'] .course-bar .course-top { display: contents; }
+  html[data-view='minimal'] .course-bar .dots { grid-column: 1 / -1; grid-row: 1; gap: 5px; }
+  html[data-view='minimal'] .course-bar .dot { width: 22px; height: 22px; }
+  html[data-view='minimal'] #course-step-title { grid-column: 1 / -1; grid-row: 2; margin: 3px 0; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  html[data-view='minimal'] #course-step-text { display: none; }
+  html[data-view='minimal'] .course-bar .course-msg { grid-column: 1 / -1; grid-row: 3; margin: 0; font-size: 11px; }
+  html[data-view='minimal'] .course-bar .course-msg:empty { display: none; }
+  html[data-view='minimal'] .course-bar .course-actions { grid-column: 1; grid-row: 4; margin: 0; justify-content: stretch; }
+  html[data-view='minimal'] .course-bar .course-actions button { width: 100%; min-height: 36px; font-size: 13px; padding: 2px 4px; }
+  html[data-view='minimal'] .course-bar #course-menu { grid-column: 2; grid-row: 4; min-height: 36px; font-size: 13px; padding: 2px 4px; }
+}

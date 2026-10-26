@@ -2,8 +2,9 @@ import '@fontsource-variable/outfit';
 import './style.css';
 import { readScoreFile } from './content/mxl';
 import { scoreEntries, scoreEntryXml, type ScoreEntry } from './content/scores';
-import { techniquePieces } from './content/technique';
+import { positionPieces, techniquePieces } from './content/technique';
 import { pieces, pieceXml, STAGE_NAMES, type Piece } from './content/pieces';
+import { generateReading, MAX_RUNG, rungOf } from './content/reading';
 import { generateSightReading, LEVELS, MAX_LEVEL } from './content/sight-reading';
 import { bindComputerKeyboard, InputBus } from './midi/input';
 import { noteName } from './midi/parse';
@@ -26,6 +27,11 @@ import { filterLibrary, isFiltering, NO_FILTER, type LibraryFilter, type SortBy 
 import { ScoreView, type NoteAnchor } from './ui/score';
 import { playheadAt, type Spot } from './ui/playhead';
 import { bindThemes } from './ui/theme';
+import { backupFileName, exportBackup, importBackup, parseBackup } from './storage/backup';
+import { course as courseData } from './course/ladder';
+import { createCourse } from './course/ui';
+import type { StepTarget } from './course/state';
+import { resolveZoom, stepZoom, type ViewId } from './ui/view';
 
 const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
 
@@ -104,14 +110,20 @@ interface Listed {
   open: () => Promise<void>;
 }
 const stageSection = (stage: number) => ({ section: `Stage ${stage} · ${STAGE_NAMES[stage] ?? ''}`, sectionOrder: stage });
-const techniqueSection = (group: 'scales' | 'arpeggios') =>
-  ({ section: group === 'scales' ? 'Technique · Scales' : 'Technique · Arpeggios', sectionOrder: group === 'scales' ? 100 : 101, collapsed: true });
+const TECHNIQUE_SECTIONS = {
+  positions: { section: 'Technique · Five fingers', sectionOrder: 99 },
+  scales: { section: 'Technique · Scales', sectionOrder: 100 },
+  arpeggios: { section: 'Technique · Arpeggios', sectionOrder: 101 },
+} as const;
+const techniqueSection = (group: keyof typeof TECHNIQUE_SECTIONS) => ({ ...TECHNIQUE_SECTIONS[group], collapsed: true });
 
 const catalog: Listed[] = [
   ...pieces.map((p): Listed => ({ id: p.id, title: p.title, composer: p.composer, stage: p.stage, skills: p.skills, technique: false, ...stageSection(p.stage), hands: p.hands, targetBpm: p.targetBpm, open: () => openPiece(p) })),
-  ...techniquePieces.map((p): Listed => ({ id: p.id, title: p.title, composer: p.composer, stage: p.stage, skills: p.skills, technique: true, ...(p.group ? techniqueSection(p.group) : stageSection(p.stage)), hands: p.hands, targetBpm: p.targetBpm, open: () => openPiece(p) })),
+  ...[...positionPieces, ...techniquePieces].map((p): Listed => ({ id: p.id, title: p.title, composer: p.composer, stage: p.stage, skills: p.skills, technique: true, ...(p.group ? techniqueSection(p.group) : stageSection(p.stage)), hands: p.hands, targetBpm: p.targetBpm, open: () => openPiece(p) })),
   ...scoreEntries.map((e): Listed => ({ id: e.id, title: e.title, composer: e.composer, stage: e.stage, skills: e.skills, difficulty: e.difficulty, technique: false, ...stageSection(e.stage), hands: e.hands, targetBpm: e.targetBpm, open: () => openScoreEntry(e) })),
 ];
+
+const catalogById = new Map(catalog.map((i) => [i.id, i] as const));
 
 let filter: LibraryFilter = { ...NO_FILTER };
 
@@ -450,6 +462,7 @@ function finishWaitRun(summary: RunSummary): void {
   showRunResult(`${pct}% first try, ${summary.wrong} wrong note${summary.wrong === 1 ? '' : 's'}, ${secs}s. ` +
     (loopOn() ? 'Looping: play it again.' : pct >= 90 ? 'Ready to try Tempo mode.' : 'Press Restart to go again.'), rec, earlier);
   renderLibrary();
+  courseCtl.onRun({ pieceId: current.id, mode: 'wait', accuracy: accuracy(summary), sight: false });
   if (loopOn()) { session?.restart(); renderStatus(); refreshKeys(); }
 }
 
@@ -527,7 +540,8 @@ function tick(): void {
     for (const n of u.newlyMissed) keyboard.flash('should', n, 1500);
     setFeedback(describeMissed(u.newlyMissed));
   }
-  score.setPlayhead(playheadAt(tempo.spots, Math.max(0, (now - tempo.run.beatZeroAt) / tempo.run.beatMs)));
+  // The moving line is smooth on a screen and a smear on e-ink: the minimal view only steps the cursor from note to note.
+  if (view === 'full') score.setPlayhead(playheadAt(tempo.spots, Math.max(0, (now - tempo.run.beatZeroAt) / tempo.run.beatMs)));
   refreshKeys();
 
   const status = $('status');
@@ -579,6 +593,13 @@ function finishTempoRun(s: TempoSummary): void {
   }
   const runBpm = Math.round(s.bpm / current.unit.quarters); // in the piece's own beats, like the target
   if (sight) { finishSightRun(s); return; }
+  if (current.id.startsWith('sr-')) { // a generated reading piece in the course: shown, counted by the course, never logged
+    const pct = Math.round(accuracy(s) * 100);
+    showResult(`${pct}% of the notes in time (${s.missed} missed, ${s.extra} extra), ${describeTiming(s)}.`);
+    renderStatus();
+    courseCtl.onRun({ pieceId: current.id, mode: 'tempo', accuracy: accuracy(s), sight: true });
+    return;
+  }
   const rec: RunRecord = {
     pieceId: current.id, at: new Date().toISOString(), hands, mode: 'tempo', bpm: runBpm,
     steps: s.steps, firstTry: s.firstTry, wrong: s.wrong, durationMs: s.durationMs,
@@ -610,6 +631,7 @@ function finishTempoRun(s: TempoSummary): void {
   safeSet('bpm:' + current.id, $<HTMLInputElement>('bpm').value);
   renderLibrary();
   renderStatus();
+  courseCtl.onRun({ pieceId: current.id, mode: 'tempo', accuracy: accuracy(s), sight: false });
   // Loop: straight into the next pass (at the raised tempo, if the run was clean) until Stop, Escape, or the piece is done.
   if (loopOn() && mode === 'tempo' && !sight && status !== 'done') {
     loopTimer = setTimeout(() => { loopTimer = undefined; if (!tempo && mode === 'tempo' && current && loopOn()) startTempo(); }, 1200);
@@ -724,6 +746,7 @@ function finishSightRun(s: TempoSummary): void {
   if (st.done) {
     const record: SightRecord = { at: new Date().toISOString(), level: st.passedLevel };
     safeSet('sr:history', JSON.stringify([...sightHistory(), record]));
+    if (courseCtl.active) { void abortSight(false).then(() => courseCtl.onTestFinished(st.passedLevel)); return; }
     const message = `${pct}% in time on that last piece. ${describeOutcome(st.passedLevel, MAX_LEVEL, levelName)}`;
     void leaveSight().then(() => showResult(message));
     return;
@@ -754,6 +777,7 @@ const leaveSight = () => abortSight(true);
 $('sr-start').addEventListener('click', startSightTest);
 $('sr-next').addEventListener('click', () => void nextSightPiece());
 $('sr-quit').addEventListener('click', () => {
+  if (courseCtl.active) { void abortSight(false).then(() => courseCtl.onTestAborted()); return; }
   void leaveSight().then(() => showResult('Test ended without a result.'));
 });
 
@@ -921,6 +945,7 @@ bus.on((event, source) => {
   pressed.add(event.note);
   refreshKeys(); // show the key even when no run is active (tempo mode before Start has no `tempo`)
   if (source !== 'midi') synth.noteOn(event.note); // the piano makes its own sound
+  if (cardsOn) { cardKeyHandler?.(event.note); return; } // the course's note cards: the key answers the card, nothing else
   if (calibration) { calibration.taps.push(performance.now()); return; }
   if (listening) return; // the cursor belongs to the playback until it ends
 
@@ -1040,6 +1065,161 @@ $<HTMLInputElement>('import').addEventListener('change', async (e) => {
   $('piece-meta').textContent = 'imported file';
 });
 
+// ───────────── views ─────────────
+/** Full app, or the minimal view for small and e-ink screens: same app and same practice, fewer controls and a paged score. */
+let view: ViewId = document.documentElement.dataset.view === 'minimal' ? 'minimal' : 'full';
+let zoom = resolveZoom(safeGet('zoom'));
+
+function applyView(next: ViewId, remember: boolean): void {
+  view = next;
+  const root = document.documentElement;
+  root.dataset.view = next;
+  root.classList.remove('lib-open');
+  $('view-toggle').textContent = next === 'minimal' ? 'Full view' : 'Minimal view';
+  if (remember) {
+    safeSet('view', next);
+    const url = new URL(location.href);
+    if (url.searchParams.has('view')) { // the saved choice rules from now on
+      url.searchParams.delete('view');
+      history.replaceState(null, '', url);
+    }
+  }
+  score.setMinimal(next === 'minimal', zoom);
+}
+
+$('view-toggle').addEventListener('click', () => applyView(view === 'minimal' ? 'full' : 'minimal', true));
+$('min-pieces').addEventListener('click', () => document.documentElement.classList.add('lib-open'));
+$('min-close').addEventListener('click', () => document.documentElement.classList.remove('lib-open'));
+$('library').addEventListener('click', (e) => {
+  if ((e.target as HTMLElement).closest('.item')) document.documentElement.classList.remove('lib-open');
+});
+for (const [id, dir] of [['zoom-out', -1], ['zoom-in', 1]] as const) {
+  $(id).addEventListener('click', () => {
+    zoom = stepZoom(zoom, dir);
+    safeSet('zoom', String(zoom));
+    score.setZoom(zoom);
+  });
+}
+// A tap on the result card puts it away (in the minimal view it covers part of the score).
+$('result').addEventListener('click', () => { if (view === 'minimal') $('result').hidden = true; });
+
+// ───────────── course mode ─────────────
+let cardsOn = false;
+let cardKeyHandler: ((midi: number) => void) | undefined;
+
+const savedMode = (): Mode => ((safeGet('mode') as Mode | null) === 'tempo' ? 'tempo' : 'wait');
+
+/** Cancel whatever is running, so a new step starts from rest. */
+function stopEverything(): void {
+  cancelLoop();
+  cancelListen();
+  stopTempo();
+  if (sight) void abortSight(false);
+  cardsOn = false;
+  cardKeyHandler = undefined;
+  clearFeedback();
+  $('result').hidden = true;
+}
+
+/** Open a step's piece with the step's hands and mode, without touching the player's own free-mode settings. */
+async function openForStep(t: StepTarget): Promise<void> {
+  const item = t.pieceId ? catalogById.get(t.pieceId) : undefined;
+  if (!item) throw new Error(`${t.pieceId ?? 'the piece'} is not in this copy of the app`);
+  cardsOn = false;
+  await item.open();
+  if (!current) return;
+  if (t.mode === 'wait' || t.mode === 'tempo') mode = t.mode;
+  if (t.hands && (current.handsAvailable === 'both' || current.handsAvailable === t.hands)) hands = t.hands;
+  if (t.mode === 'tempo' && t.forceTempo && t.tempoShare) {
+    $<HTMLInputElement>('bpm').value = String(Math.round((current.targetBpm * t.tempoShare) / 2) * 2);
+    readBpm();
+  }
+  resetPractice();
+  renderControls();
+}
+
+/** One piece of the reading step: a rung of the reading ladder, so it holds only what the unit has taught by now. */
+async function openSight(rung: number): Promise<void> {
+  cardsOn = false;
+  const spec = rungOf(rung);
+  const piece = generateReading(spec.n, Math.floor(Math.random() * 1e9));
+  await openPiece(piece);
+  mode = 'tempo';
+  hands = current?.handsAvailable === 'both' ? 'both' : current?.handsAvailable ?? 'both';
+  $<HTMLInputElement>('bpm').value = String(spec.bpm);
+  $('piece-title').textContent = `Reading · ${spec.name}`;
+  $('piece-meta').textContent = `Rung ${spec.n} of ${MAX_RUNG}`;
+  resetPractice();
+  renderControls();
+}
+
+async function showCard(xml: string): Promise<void> {
+  cardsOn = true;
+  await score.load(xml, 2.4);
+  $('status').textContent = '';
+  $('piece-title').textContent = 'Note card';
+  $('piece-meta').textContent = 'Play the note you see';
+}
+
+function downloadBackup(): void {
+  if (!storage) { showResult('This browser does not let the app keep anything, so there is nothing to save.', true); return; }
+  const blob = new Blob([JSON.stringify(exportBackup(storage), null, 1)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = backupFileName();
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+}
+
+async function loadBackup(file: File): Promise<string> {
+  if (!storage) return 'This browser does not let the app keep anything, so a backup cannot be loaded.';
+  const parsed = parseBackup(await file.text());
+  if (!parsed.ok) return parsed.error;
+  const n = importBackup(storage, parsed.backup, 'replace');
+  setTimeout(() => location.reload(), 900); // the practice log and the settings were read at start-up
+  return `Loaded ${n} saved items from the backup (made ${parsed.backup.exportedAt.slice(0, 10)}). Reloading…`;
+}
+
+const courseCtl = createCourse({
+  course: courseData,
+  now: () => new Date(),
+  load: () => safeGet('course:v1'),
+  save: (json) => safeSet('course:v1', json),
+  info: (id) => { const i = catalogById.get(id); return i && { id: i.id, title: i.title, hands: i.hands, targetBpm: i.targetBpm }; },
+  available: (id) => catalogById.has(id),
+  finished: (id) => { const i = catalogById.get(id); return !!i && log.status(i.id, i.hands, i.targetBpm) === 'done'; },
+  open: openForStep,
+  openSight,
+  startTest: startSightTest,
+  showCard,
+  setKeyHandler: (h) => { cardKeyHandler = h; },
+  setLayout: (on) => {
+    document.documentElement.dataset.app = on ? 'course' : 'free';
+    document.documentElement.classList.remove('lib-open');
+    stopEverything();
+    if (!on) { // back to free practice: the mode and the piece the player had
+      mode = savedMode();
+      const before = catalog.find((p) => p.id === safeGet('piece')) ?? catalog[0];
+      if (before) void before.open();
+    }
+  },
+  stopEverything,
+  say: (text, tone) => showResult(text, tone === 'bad'),
+  exportBackup: downloadBackup,
+  importBackup: loadBackup,
+});
+
+type AppMode = 'free' | 'course';
+function applyApp(next: AppMode, remember: boolean): void {
+  for (const b of document.querySelectorAll<HTMLButtonElement>('#app-mode button')) b.setAttribute('aria-pressed', String(b.dataset.app === next));
+  if (remember) safeSet('app', next);
+  if (next === 'course') courseCtl.show(); else courseCtl.hide();
+}
+$('app-mode').addEventListener('click', (e) => {
+  const b = (e.target as HTMLElement).closest<HTMLButtonElement>('button[data-app]');
+  if (b) applyApp(b.dataset.app as AppMode, true);
+});
+
 // ───────────── MIDI status ─────────────
 bus.onStatus((devices, error) => {
   const el = $('midi-status');
@@ -1047,7 +1227,9 @@ bus.onStatus((devices, error) => {
   el.textContent = devices.length ? `MIDI: ${devices.join(', ')}` : error ? error : 'MIDI: no piano found (keyboard and mouse work)';
 });
 $('midi-retry').addEventListener('click', () => void bus.connectMidi());
+$('midi-status').addEventListener('click', () => { if (view === 'minimal') void bus.connectMidi(); }); // the minimal view has no Reconnect button
 
+applyView(view, false);
 bindThemes($('themes'));
 bindTempoDial();
 bindComputerKeyboard(bus);
@@ -1059,3 +1241,6 @@ renderLatency();
 renderSightLast();
 const last = catalog.find((p) => p.id === safeGet('piece')) ?? catalog[0];
 if (last) void last.open();
+applyApp(safeGet('app') === 'free' ? 'free' : 'course', false); // the course is the main way in; Free is remembered once chosen
+void navigator.storage?.persist?.(); // ask the browser not to clear what the app remembers
+if (import.meta.env.DEV) (window as unknown as Record<string, unknown>).__piano = { course: courseCtl, bus, log, score }; // for the browser tests, never in the build

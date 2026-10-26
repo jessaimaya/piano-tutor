@@ -16,8 +16,8 @@ export interface Piece {
   stage: number;
   skills: string[];
   license: License;
-  /** Set for generated technique exercises (scales, arpeggios); they get their own collapsible section in the library. */
-  group?: 'scales' | 'arpeggios';
+  /** Set for generated technique exercises (scales, arpeggios, five-finger positions); they get their own collapsible section in the library. */
+  group?: 'scales' | 'arpeggios' | 'positions';
   /** The tempo (quarter notes per minute) at which three clean runs finish the piece. */
   targetBpm: number;
   /** Which hands have notes; also the hands setting that counts toward "done". */
@@ -40,6 +40,14 @@ type Source = Omit<Piece, 'hands' | 'notation'> & { notation: Omit<NotationPiece
 const sources: Source[] = [
   // ───────── Stage 0: hands take turns ─────────
   {
+    id: 's0-rh-walk', targetBpm: 56, title: 'Right-Hand Walk', composer: 'Original exercise', stage: 0,
+    skills: ['right-hand', 'five-finger-C', 'steps', 'quarter-notes', 'half-notes'], license: 'own',
+    notation: {
+      timeSig: [4, 4], fifths: 0,
+      rh: 'C4:q/1 D4:q/2 E4:q/3 F4:q/4 | G4:h/5 E4:h/3 | F4:q/4 E4:q/3 D4:q/2 C4:q/1 | D4:h/2 C4:h/1 | E4:q/3 E4:q/3 F4:q/4 G4:q/5 | G4:q/5 F4:q/4 E4:q/3 D4:q/2 | C4:h/1 E4:h/3 | C4:w/1 |',
+    },
+  },
+  {
     id: 's0-turns', targetBpm: 56, title: 'Hands Take Turns', composer: 'Original exercise', stage: 0,
     skills: ['alternating-hands', 'five-finger-C', 'quarter-notes'], license: 'own',
     notation: {
@@ -54,7 +62,7 @@ const sources: Source[] = [
     notation: {
       timeSig: [4, 4], fifths: 0,
       rh: 'C4:q/1 E4:q/3 G4:h/5 | R:w | D4:q/2 F4:q/4 E4:h/3 | R:w | C4:w/1 |',
-      lh: 'R:w | C3:q/5 E3:q/3 G3:h/1 | R:w | D3:q/4 F3:q/2 E3:h/3 | C3:w/5 |',
+      lh: 'R:w | C3:q/5 E3:q/3 G3:h/1 | R:w | D3:q/4 F3:q/2 E3:h/3 | R:w |', // the hands never play in the same bar in stage 0
     },
   },
 
@@ -77,6 +85,17 @@ const sources: Source[] = [
     },
   },
   {
+    id: 's0-sixteen', targetBpm: 60, title: 'Sixteen Bars', composer: 'Original exercise', stage: 0,
+    skills: ['alternating-hands', 'five-finger-C', 'quarter-notes', 'half-notes', '16-bars'], license: 'own',
+    notation: {
+      timeSig: [4, 4], fifths: 0,
+      rh: 'C4:q/1 D4:q/2 E4:q/3 G4:q/5 | G4:h/5 E4:h/3 | R:w | R:w | F4:q/4 E4:q/3 D4:q/2 C4:q/1 | E4:h/3 G4:h/5 | R:w | R:w |' +
+        ' E4:q/3 E4:q/3 F4:q/4 G4:q/5 | G4:h/5 F4:h/4 | R:w | R:w | G4:q/5 F4:q/4 E4:q/3 D4:q/2 | C4:h/1 E4:h/3 | R:w | R:w |',
+      lh: 'R:w | R:w | G3:q/1 F3:q/2 E3:q/3 D3:q/4 | C3:h/5 E3:h/3 | R:w | R:w | E3:q/3 D3:q/4 C3:q/5 D3:q/4 | E3:h/3 D3:h/4 |' +
+        ' R:w | R:w | C3:q/5 D3:q/4 E3:q/3 F3:q/2 | G3:h/1 E3:h/3 | R:w | R:w | D3:q/4 E3:q/3 D3:q/4 C3:q/5 | C3:w/5 |',
+    },
+  },
+  {
     id: 's0-march-lh', targetBpm: 60, title: 'Left-Hand March', composer: 'Original exercise', stage: 0,
     skills: ['left-hand', 'five-finger-C', 'quarter-notes', 'half-rests'], license: 'own',
     notation: {
@@ -88,11 +107,11 @@ const sources: Source[] = [
   // ───────── Stage 1: five-finger positions ─────────
   {
     id: 's1-ode-rh', targetBpm: 72, title: 'Ode to Joy (right hand)', composer: 'Beethoven', stage: 1,
-    skills: ['five-finger-C', 'dotted-quarter', 'melody'], license: 'public-domain',
+    skills: ['five-finger-C', 'melody'], license: 'public-domain',
     notation: {
       timeSig: [4, 4], fifths: 0,
-      rh: 'E4:q/3 E4:q F4:q G4:q/5 | G4:q F4:q E4:q D4:q/2 | C4:q/1 C4:q D4:q E4:q/3 | E4:q. D4:e D4:h |' +
-        ' E4:q E4:q F4:q G4:q | G4:q F4:q E4:q D4:q | C4:q C4:q D4:q E4:q | D4:q. C4:e C4:h |',
+      rh: 'E4:q/3 E4:q F4:q G4:q/5 | G4:q F4:q E4:q D4:q/2 | C4:q/1 C4:q D4:q E4:q/3 | E4:q D4:q D4:h |' +
+        ' E4:q E4:q F4:q G4:q | G4:q F4:q E4:q D4:q | C4:q C4:q D4:q E4:q | D4:q C4:q C4:h |',
     },
   },
   {
@@ -124,11 +143,11 @@ const sources: Source[] = [
   },
   {
     id: 's1-ode-ht', targetBpm: 72, title: 'Ode to Joy (hands together)', composer: 'Beethoven', stage: 1,
-    skills: ['held-note', 'five-finger-C', 'hands-together', 'dotted-quarter'], license: 'public-domain',
+    skills: ['held-note', 'five-finger-C', 'hands-together'], license: 'public-domain',
     notation: {
       timeSig: [4, 4], fifths: 0,
-      rh: 'E4:q/3 E4:q F4:q G4:q/5 | G4:q F4:q E4:q D4:q/2 | C4:q/1 C4:q D4:q E4:q/3 | E4:q. D4:e D4:h |' +
-        ' E4:q E4:q F4:q G4:q | G4:q F4:q E4:q D4:q | C4:q C4:q D4:q E4:q | D4:q. C4:e C4:h |',
+      rh: 'E4:q/3 E4:q F4:q G4:q/5 | G4:q F4:q E4:q D4:q/2 | C4:q/1 C4:q D4:q E4:q/3 | E4:q D4:q D4:h |' +
+        ' E4:q E4:q F4:q G4:q | G4:q F4:q E4:q D4:q | C4:q C4:q D4:q E4:q | D4:q C4:q C4:h |',
       lh: 'C3:w | G2:w | C3:w | C3:h G2:h | C3:w | G2:w | C3:w | G2:h C3:h |',
     },
   },

@@ -1,5 +1,510 @@
 [
   {
+    "id": "x-faber-chant-of-the-monk",
+    "file": "faber-chant-of-the-monk.musicxml",
+    "title": "Chant of the Monk",
+    "composer": "Nancy and Randall Faber",
+    "stage": 0,
+    "skills": [
+      "reading"
+    ],
+    "targetBpm": 60,
+    "hands": "rh",
+    "license": "unverified-arrangement",
+    "source": "Faber Adult Piano Adventures Book 1, p. 42",
+    "difficulty": 11
+  },
+  {
+    "id": "x-faber-midnight-ride",
+    "file": "faber-midnight-ride.musicxml",
+    "title": "Midnight Ride",
+    "composer": "Nancy and Randall Faber",
+    "stage": 0,
+    "skills": [
+      "3/4"
+    ],
+    "targetBpm": 60,
+    "hands": "both",
+    "license": "unverified-arrangement",
+    "source": "Faber Adult Piano Adventures Book 1, p. 38-39",
+    "difficulty": 13
+  },
+  {
+    "id": "x-faber-chant-of-the-monks",
+    "file": "faber-chant-of-the-monks.musicxml",
+    "title": "Chant of the Monks",
+    "composer": "Nancy and Randall Faber",
+    "stage": 0,
+    "skills": [
+      "reading"
+    ],
+    "targetBpm": 60,
+    "hands": "both",
+    "license": "unverified-arrangement",
+    "source": "Faber Adult Piano Adventures Book 1, p. 43",
+    "difficulty": 18
+  },
+  {
+    "id": "x-faber-shining-stars",
+    "file": "faber-shining-stars.musicxml",
+    "title": "Shining Stars",
+    "composer": "Nancy and Randall Faber",
+    "stage": 0,
+    "skills": [
+      "reading"
+    ],
+    "targetBpm": 60,
+    "hands": "both",
+    "license": "unverified-arrangement",
+    "source": "Faber Adult Piano Adventures Book 1, p. 44-45",
+    "difficulty": 22
+  },
+  {
+    "id": "x-faber-roman-trumpets",
+    "file": "faber-roman-trumpets.musicxml",
+    "title": "Roman Trumpets",
+    "composer": "Nancy and Randall Faber",
+    "stage": 0,
+    "skills": [
+      "reading"
+    ],
+    "targetBpm": 60,
+    "hands": "both",
+    "license": "unverified-arrangement",
+    "source": "Faber Adult Piano Adventures Book 1, p. 46-47",
+    "difficulty": 29
+  },
+  {
+    "id": "x-traditional-russian-folk-song",
+    "file": "traditional-russian-folk-song.musicxml",
+    "title": "Russian Folk Song",
+    "composer": "Traditional",
+    "stage": 0,
+    "skills": [
+      "reading"
+    ],
+    "targetBpm": 60,
+    "hands": "both",
+    "license": "unverified-arrangement",
+    "source": "Faber Adult Piano Adventures Book 1, p. 36-37",
+    "difficulty": 34
+  },
+  {
+    "id": "x-traditional-all-through-the-night",
+    "file": "traditional-all-through-the-night.musicxml",
+    "title": "All Through the Night",
+    "composer": "Traditional",
+    "stage": 1,
+    "skills": [
+      "reading"
+    ],
+    "targetBpm": 60,
+    "hands": "lh",
+    "license": "unverified-arrangement",
+    "source": "Faber Adult Piano Adventures Book 1, p. 63",
+    "difficulty": 8
+  },
+  {
+    "id": "x-beethoven-ode-to-joy-bass-clef",
+    "file": "beethoven-ode-to-joy-bass-clef.musicxml",
+    "title": "Ode to Joy (bass clef)",
+    "composer": "Ludwig van Beethoven",
+    "stage": 1,
+    "skills": [
+      "reading"
+    ],
+    "targetBpm": 60,
+    "hands": "lh",
+    "license": "unverified-arrangement",
+    "source": "Faber Adult Piano Adventures Book 1, p. 63",
+    "difficulty": 11
+  },
+  {
+    "id": "x-brahms-hungarian-dance",
+    "file": "brahms-hungarian-dance.musicxml",
+    "title": "Hungarian Dance",
+    "composer": "Johannes Brahms",
+    "stage": 1,
+    "skills": [
+      "reading"
+    ],
+    "targetBpm": 60,
+    "hands": "both",
+    "license": "unverified-arrangement",
+    "source": "Faber Adult Piano Adventures Book 1, p. 65",
+    "difficulty": 12
+  },
+  {
+    "id": "x-traditional-lightly-row",
+    "file": "traditional-lightly-row.musicxml",
+    "title": "Lightly Row",
+    "composer": "Traditional",
+    "stage": 1,
+    "skills": [
+      "reading"
+    ],
+    "targetBpm": 60,
+    "hands": "lh",
+    "license": "unverified-arrangement",
+    "source": "Faber Adult Piano Adventures Book 1, p. 63",
+    "difficulty": 12
+  },
+  {
+    "id": "x-mozart-eine-kleine-nachtmusik",
+    "file": "mozart-eine-kleine-nachtmusik.musicxml",
+    "title": "Eine Kleine Nachtmusik",
+    "composer": "Wolfgang Amadeus Mozart",
+    "stage": 1,
+    "skills": [
+      "reading"
+    ],
+    "targetBpm": 60,
+    "hands": "both",
+    "license": "unverified-arrangement",
+    "source": "Faber Adult Piano Adventures Book 1, p. 52-53",
+    "difficulty": 13
+  },
+  {
+    "id": "x-traditional-500-year-old-melody",
+    "file": "traditional-500-year-old-melody.musicxml",
+    "title": "500-Year-Old Melody",
+    "composer": "Traditional",
+    "stage": 1,
+    "skills": [
+      "reading"
+    ],
+    "targetBpm": 60,
+    "hands": "both",
+    "license": "unverified-arrangement",
+    "source": "Faber Adult Piano Adventures Book 1, p. 84-85",
+    "difficulty": 20,
+    "notes": "the repeat of bars 9-12 in the book is not played back: it plays once through"
+  },
+  {
+    "id": "x-anonymous-musette",
+    "file": "anonymous-musette.musicxml",
+    "title": "Musette",
+    "composer": "Anonymous",
+    "stage": 1,
+    "skills": [
+      "reading"
+    ],
+    "targetBpm": 60,
+    "hands": "both",
+    "license": "unverified-arrangement",
+    "source": "Faber Adult Piano Adventures Book 1, p. 98",
+    "difficulty": 24
+  },
+  {
+    "id": "x-rameau-french-minuet",
+    "file": "rameau-french-minuet.musicxml",
+    "title": "French Minuet",
+    "composer": "Jean-Philippe Rameau",
+    "stage": 1,
+    "skills": [
+      "3/4"
+    ],
+    "targetBpm": 60,
+    "hands": "both",
+    "license": "unverified-arrangement",
+    "source": "Faber Adult Piano Adventures Book 1, p. 71",
+    "difficulty": 24
+  },
+  {
+    "id": "x-dvorak-new-world-symphony-theme",
+    "file": "dvorak-new-world-symphony-theme.musicxml",
+    "title": "New World Symphony Theme",
+    "composer": "Antonín Dvořák",
+    "stage": 1,
+    "skills": [
+      "reading"
+    ],
+    "targetBpm": 60,
+    "hands": "both",
+    "license": "unverified-arrangement",
+    "source": "Faber Adult Piano Adventures Book 1, p. 54-55",
+    "difficulty": 27
+  },
+  {
+    "id": "x-traditional-when-the-saints-go-marching-in",
+    "file": "traditional-when-the-saints-go-marching-in.musicxml",
+    "title": "When the Saints Go Marching In",
+    "composer": "Traditional",
+    "stage": 1,
+    "skills": [
+      "reading"
+    ],
+    "targetBpm": 60,
+    "hands": "both",
+    "license": "unverified-arrangement",
+    "source": "Faber Adult Piano Adventures Book 1, p. 91",
+    "difficulty": 29
+  },
+  {
+    "id": "x-faber-moon-on-the-water",
+    "file": "faber-moon-on-the-water.musicxml",
+    "title": "Moon on the Water",
+    "composer": "Nancy and Randall Faber",
+    "stage": 1,
+    "skills": [
+      "3/4"
+    ],
+    "targetBpm": 60,
+    "hands": "both",
+    "license": "unverified-arrangement",
+    "source": "Faber Adult Piano Adventures Book 1, p. 82-83",
+    "difficulty": 31
+  },
+  {
+    "id": "x-traditional-english-folk-song",
+    "file": "traditional-english-folk-song.musicxml",
+    "title": "English Folk Song",
+    "composer": "Traditional",
+    "stage": 1,
+    "skills": [
+      "3/4",
+      "chords"
+    ],
+    "targetBpm": 60,
+    "hands": "both",
+    "license": "unverified-arrangement",
+    "source": "Faber Adult Piano Adventures Book 1, p. 76",
+    "difficulty": 33
+  },
+  {
+    "id": "x-beethoven-shepherd-s-song",
+    "file": "beethoven-shepherd-s-song.musicxml",
+    "title": "Shepherd's Song",
+    "composer": "Ludwig van Beethoven",
+    "stage": 1,
+    "skills": [
+      "3/4",
+      "chords"
+    ],
+    "targetBpm": 60,
+    "hands": "both",
+    "license": "unverified-arrangement",
+    "source": "Faber Adult Piano Adventures Book 1, p. 66-67",
+    "difficulty": 34
+  },
+  {
+    "id": "x-faber-royal-procession",
+    "file": "faber-royal-procession.musicxml",
+    "title": "Royal Procession",
+    "composer": "Nancy and Randall Faber",
+    "stage": 1,
+    "skills": [
+      "chords"
+    ],
+    "targetBpm": 60,
+    "hands": "both",
+    "license": "unverified-arrangement",
+    "source": "Faber Adult Piano Adventures Book 1, p. 58-59",
+    "difficulty": 34
+  },
+  {
+    "id": "x-haydn-theme-from-the-surprise-symphony",
+    "file": "haydn-theme-from-the-surprise-symphony.musicxml",
+    "title": "Theme from the Surprise Symphony",
+    "composer": "Joseph Haydn",
+    "stage": 1,
+    "skills": [
+      "chords"
+    ],
+    "targetBpm": 60,
+    "hands": "both",
+    "license": "unverified-arrangement",
+    "source": "Faber Adult Piano Adventures Book 1, p. 64",
+    "difficulty": 34
+  },
+  {
+    "id": "x-faber-may-dance",
+    "file": "faber-may-dance.musicxml",
+    "title": "May Dance",
+    "composer": "Nancy and Randall Faber",
+    "stage": 1,
+    "skills": [
+      "3/4"
+    ],
+    "targetBpm": 60,
+    "hands": "both",
+    "license": "unverified-arrangement",
+    "source": "Faber Adult Piano Adventures Book 1, p. 90",
+    "difficulty": 35
+  },
+  {
+    "id": "x-grieg-morning",
+    "file": "grieg-morning.musicxml",
+    "title": "Morning",
+    "composer": "Edvard Grieg",
+    "stage": 1,
+    "skills": [
+      "3/4",
+      "chords"
+    ],
+    "targetBpm": 60,
+    "hands": "both",
+    "license": "unverified-arrangement",
+    "source": "Faber Adult Piano Adventures Book 1, p. 72-73",
+    "difficulty": 35
+  },
+  {
+    "id": "x-traditional-american-fiddle-tune",
+    "file": "traditional-american-fiddle-tune.musicxml",
+    "title": "American Fiddle Tune",
+    "composer": "Traditional",
+    "stage": 1,
+    "skills": [
+      "chords"
+    ],
+    "targetBpm": 60,
+    "hands": "both",
+    "license": "unverified-arrangement",
+    "source": "Faber Adult Piano Adventures Book 1, p. 99",
+    "difficulty": 35
+  },
+  {
+    "id": "x-mozart-theme-by-mozart",
+    "file": "mozart-theme-by-mozart.musicxml",
+    "title": "Theme by Mozart",
+    "composer": "Wolfgang Amadeus Mozart",
+    "stage": 1,
+    "skills": [
+      "3/4",
+      "chords"
+    ],
+    "targetBpm": 60,
+    "hands": "both",
+    "license": "unverified-arrangement",
+    "source": "Faber Adult Piano Adventures Book 1, p. 100-101",
+    "difficulty": 37
+  },
+  {
+    "id": "x-handel-gavotte",
+    "file": "handel-gavotte.musicxml",
+    "title": "Gavotte",
+    "composer": "George Frideric Handel",
+    "stage": 1,
+    "skills": [
+      "chords"
+    ],
+    "targetBpm": 60,
+    "hands": "both",
+    "license": "unverified-arrangement",
+    "source": "Faber Adult Piano Adventures Book 1, p. 77",
+    "difficulty": 39
+  },
+  {
+    "id": "x-traditional-simple-gifts",
+    "file": "traditional-simple-gifts.musicxml",
+    "title": "Simple Gifts",
+    "composer": "Traditional",
+    "stage": 1,
+    "skills": [
+      "chords"
+    ],
+    "targetBpm": 60,
+    "hands": "both",
+    "license": "unverified-arrangement",
+    "source": "Faber Adult Piano Adventures Book 1, p. 79",
+    "difficulty": 43
+  },
+  {
+    "id": "x-traditional-african-celebration",
+    "file": "traditional-african-celebration.musicxml",
+    "title": "African Celebration",
+    "composer": "Traditional",
+    "stage": 1,
+    "skills": [
+      "chords"
+    ],
+    "targetBpm": 60,
+    "hands": "both",
+    "license": "unverified-arrangement",
+    "source": "Faber Adult Piano Adventures Book 1, p. 92-93",
+    "difficulty": 47
+  },
+  {
+    "id": "x-mozart-romance-eine-kleine-nachtmusik",
+    "file": "mozart-romance-eine-kleine-nachtmusik.musicxml",
+    "title": "Romance (Eine kleine Nachtmusik)",
+    "composer": "Wolfgang Amadeus Mozart",
+    "stage": 2,
+    "skills": [
+      "reading"
+    ],
+    "targetBpm": 66,
+    "hands": "both",
+    "license": "unverified-arrangement",
+    "source": "Faber Adult Piano Adventures Book 1, p. 109",
+    "difficulty": 14,
+    "notes": "read by OMR and compared with the page by eye, not bar by bar: tell me if a note looks wrong"
+  },
+  {
+    "id": "x-tchaikovsky-sleeping-beauty-waltz",
+    "file": "tchaikovsky-sleeping-beauty-waltz.musicxml",
+    "title": "Sleeping Beauty Waltz",
+    "composer": "Peter Ilyich Tchaikovsky",
+    "stage": 2,
+    "skills": [
+      "3/4"
+    ],
+    "targetBpm": 66,
+    "hands": "both",
+    "license": "unverified-arrangement",
+    "source": "Faber Adult Piano Adventures Book 1, p. 110-111",
+    "difficulty": 29,
+    "notes": "read by OMR and compared with the page by eye, not bar by bar: tell me if a note looks wrong"
+  },
+  {
+    "id": "x-faber-half-time-band",
+    "file": "faber-half-time-band.musicxml",
+    "title": "Half-Time Band",
+    "composer": "Nancy and Randall Faber",
+    "stage": 2,
+    "skills": [
+      "reading"
+    ],
+    "targetBpm": 66,
+    "hands": "both",
+    "license": "unverified-arrangement",
+    "source": "Faber Adult Piano Adventures Book 1, p. 105",
+    "difficulty": 31,
+    "notes": "read by OMR and compared with the page by eye, not bar by bar: tell me if a note looks wrong"
+  },
+  {
+    "id": "x-faber-scale-waltz",
+    "file": "faber-scale-waltz.musicxml",
+    "title": "Scale Waltz",
+    "composer": "Nancy and Randall Faber",
+    "stage": 2,
+    "skills": [
+      "3/4"
+    ],
+    "targetBpm": 66,
+    "hands": "both",
+    "license": "unverified-arrangement",
+    "source": "Faber Adult Piano Adventures Book 1, p. 132",
+    "difficulty": 31,
+    "notes": "read by OMR and compared with the page by eye, not bar by bar: tell me if a note looks wrong"
+  },
+  {
+    "id": "x-clarke-trumpet-voluntary",
+    "file": "clarke-trumpet-voluntary.musicxml",
+    "title": "Trumpet Voluntary",
+    "composer": "Jeremiah Clarke",
+    "stage": 2,
+    "skills": [
+      "chords"
+    ],
+    "targetBpm": 66,
+    "hands": "both",
+    "license": "unverified-arrangement",
+    "source": "Faber Adult Piano Adventures Book 1, p. 135",
+    "difficulty": 56,
+    "notes": "read by OMR and compared with the page by eye, not bar by bar: tell me if a note looks wrong"
+  },
+  {
     "id": "x-carol-bells-easy",
     "file": "carol-bells-easy.mxl",
     "title": "Carol of the Bells (easy)",
@@ -185,6 +690,22 @@
     "difficulty": 76
   },
   {
+    "id": "x-bach-air-g",
+    "file": "bach-air-g.mxl",
+    "title": "Air on the G String",
+    "composer": "Bach",
+    "stage": 4,
+    "skills": [
+      "sustained-melody",
+      "sustain-pedal"
+    ],
+    "targetBpm": 52,
+    "hands": "both",
+    "license": "unverified-arrangement",
+    "source": "musetrainer/library",
+    "difficulty": 78
+  },
+  {
     "id": "x-satie-gymnopedie-1",
     "file": "satie-gymnopedie-1.mxl",
     "title": "Gymnopédie No. 1",
@@ -202,22 +723,6 @@
     "source": "musetrainer/library",
     "difficulty": 78,
     "notes": "File replaced by a musescore.com download (78 bars)"
-  },
-  {
-    "id": "x-bach-air-g",
-    "file": "bach-air-g.mxl",
-    "title": "Air on the G String",
-    "composer": "Bach",
-    "stage": 4,
-    "skills": [
-      "sustained-melody",
-      "sustain-pedal"
-    ],
-    "targetBpm": 52,
-    "hands": "both",
-    "license": "unverified-arrangement",
-    "source": "musetrainer/library",
-    "difficulty": 78
   },
   {
     "id": "x-canon-d-medium",
@@ -650,21 +1155,6 @@
     "notes": "9/8: the beat is a dotted quarter, three to a bar. A long-term goal"
   },
   {
-    "id": "x-sugar-plum",
-    "file": "sugar-plum.mxl",
-    "title": "Dance of the Sugar Plum Fairy",
-    "composer": "Tchaikovsky",
-    "stage": 6,
-    "skills": [
-      "staccato"
-    ],
-    "targetBpm": 56,
-    "hands": "both",
-    "license": "unverified-arrangement",
-    "source": "musetrainer/library",
-    "difficulty": 159
-  },
-  {
     "id": "x-beethoven-moonlight-3",
     "file": "beethoven-moonlight-3.mxl",
     "title": "Moonlight Sonata, 3rd mvt",
@@ -674,6 +1164,21 @@
       "concert-piece"
     ],
     "targetBpm": 120,
+    "hands": "both",
+    "license": "unverified-arrangement",
+    "source": "musetrainer/library",
+    "difficulty": 159
+  },
+  {
+    "id": "x-sugar-plum",
+    "file": "sugar-plum.mxl",
+    "title": "Dance of the Sugar Plum Fairy",
+    "composer": "Tchaikovsky",
+    "stage": 6,
+    "skills": [
+      "staccato"
+    ],
+    "targetBpm": 56,
     "hands": "both",
     "license": "unverified-arrangement",
     "source": "musetrainer/library",

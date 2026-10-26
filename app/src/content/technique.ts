@@ -209,3 +209,76 @@ export function buildTechniquePieces(): Piece[] {
 }
 
 export const techniquePieces: Piece[] = buildTechniquePieces();
+
+/**
+ * Five-finger positions: the warm-up of stages 0 and 1, before there are scales. Both hands play the same pattern an octave apart
+ * (right hand from the tonic above Middle C, left hand from the tonic below it), fingers 1–5 in the right hand and 5–1 in the left.
+ * Eight bars of 4/4: up and down in steps, skips of a third, half notes, a short turn, and the tonic held.
+ * Positions C and G have no accidentals (G position is G A B C D); F needs B♭ and D needs F♯, so those take their key signature.
+ */
+const POSITIONS = [
+  { tonic: 'C', fifths: 0, stage: 0 },
+  { tonic: 'G', fifths: 0, stage: 1 }, // G A B C D: no black key, so the key signature stays C major
+  { tonic: 'F', fifths: -1, stage: 1 },
+  { tonic: 'D', fifths: 2, stage: 1 },
+] as const;
+
+type PositionBars = readonly (readonly [readonly number[], 'q' | 'h' | 'w'])[];
+
+/**
+ * Four versions of the exercise, easiest first, so the warm-up can grow with the days of a unit (course.json lists them in that order).
+ * Degrees (1–5) per bar and the duration of each note. Every bar is 4 beats and each version ends on the tonic held.
+ *  steps:  only neighbouring fingers, quarter notes
+ *  holds:  half notes first, then quarter-note steps: a held note while the next finger gets ready
+ *  thirds: skipping a finger (1-3-2-4): the hand learns to jump a third
+ *  mixed:  all of it, with a short turn (the version this exercise started with, kept under its first id)
+ */
+const POSITION_PATTERNS: Record<'steps' | 'holds' | 'thirds' | 'mixed', PositionBars> = {
+  steps: [
+    [[1, 2, 3, 4], 'q'], [[5, 4, 3, 2], 'q'], [[1, 2, 3, 4], 'q'], [[5, 4, 3, 2], 'q'],
+    [[1, 2, 3, 4], 'q'], [[5, 4, 3, 2], 'q'], [[1, 2, 3, 2], 'q'], [[1], 'w'],
+  ],
+  holds: [
+    [[1, 2], 'h'], [[3, 4], 'h'], [[5, 4], 'h'], [[3, 2], 'h'],
+    [[1, 2, 3, 4], 'q'], [[5, 4, 3, 2], 'q'], [[1, 3], 'h'], [[1], 'w'],
+  ],
+  thirds: [
+    [[1, 3, 2, 4], 'q'], [[3, 5, 4, 2], 'q'], [[1, 3, 2, 4], 'q'], [[3, 5, 4, 2], 'q'],
+    [[5, 3, 4, 2], 'q'], [[1, 3, 5, 3], 'q'], [[4, 2, 3, 1], 'q'], [[1], 'w'],
+  ],
+  mixed: [
+    [[1, 2, 3, 4], 'q'], [[5, 4, 3, 2], 'q'], [[1, 3, 2, 4], 'q'], [[3, 5, 4, 2], 'q'],
+    [[1, 3], 'h'], [[5, 3], 'h'], [[1, 2, 3, 2], 'q'], [[1], 'w'],
+  ],
+};
+
+/** The first five notes of the major scale on `tonic`: G A B C D, F G A B♭ C, D E F♯ G A. */
+const positionNotes = (tonic: string, base: number): Note[] => spell(tonic, base, [0, 2, 4, 5, 7], [0, 1, 2, 3, 4]);
+
+export function buildPositionPieces(): Piece[] {
+  return POSITIONS.flatMap(({ tonic, fifths, stage }) => {
+    const rhBase = tonicMidi(tonic) < 60 ? tonicMidi(tonic) + 12 : 60; // the tonic from Middle C up, so G position is treble-clef G
+    const rh = positionNotes(tonic, rhBase);
+    const lh = positionNotes(tonic, rhBase - 12);
+    const name = `${pretty(tonic)} position`;
+    return (Object.keys(POSITION_PATTERNS) as (keyof typeof POSITION_PATTERNS)[]).map((kind): Piece => {
+      const bars = (notes: Note[], finger: (degree: number) => number) =>
+        POSITION_PATTERNS[kind].map(([degrees, dur]) => degrees.map((d) => token(notes[d - 1]!, dur, finger(d))).join(' ')).join(' | ') + ' |';
+      const title = kind === 'mixed' ? `Five fingers: ${name}` : `Five fingers: ${name} · ${kind}`;
+      return {
+        id: kind === 'mixed' ? `t-five-${tonic.toLowerCase()}` : `t-five-${tonic.toLowerCase()}-${kind}`,
+        title,
+        composer: 'Technique',
+        stage,
+        group: 'positions',
+        skills: ['five-finger', `five-finger-${tonic}`, 'fingering'],
+        license: 'own',
+        targetBpm: 72,
+        hands: 'both',
+        notation: { title, composer: 'Technique', timeSig: [4, 4], fifths, rh: bars(rh, (d) => d), lh: bars(lh, (d) => 6 - d) },
+      };
+    });
+  });
+}
+
+export const positionPieces: Piece[] = buildPositionPieces();
