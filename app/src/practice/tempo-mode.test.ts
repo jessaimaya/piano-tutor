@@ -28,8 +28,8 @@ describe('windowFor', () => {
 describe('TempoRun scoring', () => {
   it('scores notes inside their window and reports signed offsets (late = positive)', () => {
     const r = run([step(0, 0, 60), step(1, 1, 62)]);
-    expect(r.press(60, 2000)).toEqual({ kind: 'hit', note: 60, offsetMs: 0 });
-    expect(r.press(62, 3040)).toEqual({ kind: 'hit', note: 62, offsetMs: 40 });
+    expect(r.press(60, 2000)).toEqual({ kind: 'hit', note: 60, offsetMs: 0, stepIdx: 0 });
+    expect(r.press(62, 3040)).toEqual({ kind: 'hit', note: 62, offsetMs: 40, stepIdx: 1 });
     const u = r.update(3100);
     expect(u.phase).toBe('done');
     expect(u.summary).toMatchObject({ steps: 2, firstTry: 2, wrong: 0, matched: 2, bpm: 60, meanAbsOffsetMs: 20, biasMs: 20 });
@@ -310,15 +310,22 @@ describe('levels', () => {
 
 describe('a player rushing ahead of the beat', () => {
   it('is told a later note was right but early, not that it was the wrong pitch', () => {
-    const steps = [step(0, 0, 64), step(1, 1, 62), step(2, 2, 60)];
+    const steps = [step(0, 0, 64), step(1, 3, 62), step(2, 4, 60)];
     const r = run(steps, 60, 2);
-    // E4 is still open (due at 2000); D4 comes ~1 s before its time of 3000
-    const d = r.press(62, r.timeOfBeat(1) - 900);
-    expect(d).toMatchObject({ kind: 'extra', offsetMs: -900 });
+    // E4 is still open but long past; D4 comes 1.2 beats before its time
+    expect(r.press(62, r.timeOfBeat(3) - 1200)).toMatchObject({ kind: 'extra', offsetMs: -1200 });
   });
-  it('a pitch two beats or more away is still a wrong note', () => {
-    const steps = [step(0, 0, 64), step(1, 1, 62), step(2, 2, 60)];
+  it('but a key that is another note\'s pitch while that note is due is a wrong pitch', () => {
+    const steps = [step(0, 0, 69), step(1, 1, 67)];
     const r = run(steps, 60, 2);
-    expect(r.press(60, r.timeOfBeat(0))).not.toHaveProperty('offsetMs');
+    // G4 pressed on the beat where A4 is due, a beat before G4's own time
+    const p = r.press(67, r.timeOfBeat(0) + 10);
+    expect(p).toMatchObject({ kind: 'extra', wanted: [69] });
+    expect(p).not.toHaveProperty('offsetMs');
+  });
+  it('a hit says which step it belonged to', () => {
+    const steps = [step(0, 0, 60), step(1, 1, 62)];
+    const r = run(steps, 60, 2);
+    expect(r.press(62, r.timeOfBeat(1) - 60)).toMatchObject({ kind: 'hit', stepIdx: 1 });
   });
 });

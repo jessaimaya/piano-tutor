@@ -22,7 +22,7 @@ import { Synth } from './ui/audio';
 import { bindTempoDial } from './ui/dial';
 import { KeyboardView } from './ui/keyboard';
 import { filterLibrary, isFiltering, NO_FILTER, type LibraryFilter, type SortBy } from './ui/library-filter';
-import { ScoreView } from './ui/score';
+import { ScoreView, type NoteAnchor } from './ui/score';
 import { playheadAt, type Spot } from './ui/playhead';
 import { bindThemes } from './ui/theme';
 
@@ -71,6 +71,8 @@ interface TempoState {
   lastRaw: number;
   /** Where each step sits on the page, for the moving line (indexed like `steps`). */
   spots: Spot[];
+  /** Where each step's notes sit on the page (indexed like `steps`), so a hit is marked on its own note even when you are early. */
+  anchors: (NoteAnchor | undefined)[];
 }
 
 let current: Current | undefined;
@@ -428,24 +430,30 @@ function startTempo(): void {
     countInMs: r1(run.beatZeroAt - t0), audio: synth.info,
     schedule: run.schedule.map((e) => ({ note: nm(e.note), beat: e.beat, rel: r1(e.time - run.beatZeroAt) })),
   });
-  const spots = stepSpots(cursor, steps);
-  tempo = { run, cursor, steps, bpm, cancelClicks, raf: 0, lastRaw: 0, spots };
+  const { spots, anchors } = stepPlaces(cursor, steps);
+  tempo = { run, cursor, steps, bpm, cancelClicks, raf: 0, lastRaw: 0, spots, anchors };
   cursor.reset();
   renderControls();
   tick();
 }
 
 /** Walk the score once to learn where each step sits on the page. */
-function stepSpots(cursor: RangeCursor, steps: TimedStep[]): Spot[] {
-  const byRaw = new Map<number, Spot>();
+function stepPlaces(cursor: RangeCursor, steps: TimedStep[]): { spots: Spot[]; anchors: (NoteAnchor | undefined)[] } {
+  const spotsByRaw = new Map<number, Spot>();
+  const anchorsByRaw = new Map<number, NoteAnchor>();
   cursor.reset();
   for (let raw = 0; !cursor.done; raw++) {
     const spot = score.spot(cursor.beat());
-    if (spot) byRaw.set(raw, spot);
+    const anchor = score.anchor();
+    if (spot) spotsByRaw.set(raw, spot);
+    if (anchor) anchorsByRaw.set(raw, anchor);
     cursor.next();
   }
   cursor.reset();
-  return steps.flatMap((s) => byRaw.get(s.rawIndex) ?? []);
+  return {
+    spots: steps.flatMap((s) => spotsByRaw.get(s.rawIndex) ?? []),
+    anchors: steps.map((s) => anchorsByRaw.get(s.rawIndex)),
+  };
 }
 
 function logPress(run: TempoRun, midi: number, source: string, stamp: number, r: ReturnType<TempoRun['press']>): void {
@@ -896,7 +904,7 @@ bus.on((event, source) => {
     logPress(tempo.run, event.note, source, stamp, r);
     if (r.kind === 'hit') {
       keyboard.flash('hit', event.note);
-      score.showRight(event.note, at);
+      score.showRight(event.note, tempo.anchors[r.stepIdx] ?? at); // on its own note: the cursor may not have reached it yet
     }
     if (r.kind === 'extra') {
       keyboard.flash('wrong', event.note);

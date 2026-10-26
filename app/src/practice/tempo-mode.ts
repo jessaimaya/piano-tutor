@@ -25,7 +25,8 @@ export const LEVELS: Record<Level, { fraction: number; min: number; max: number 
 };
 
 export type TempoPress =
-  | { kind: 'hit'; note: number; offsetMs: number }
+  /** `stepIdx` is the step the note belonged to, which is not always where the clock's cursor is (you may be early). */
+  | { kind: 'hit'; note: number; offsetMs: number; stepIdx: number }
   | {
       kind: 'extra';
       note: number;
@@ -147,7 +148,7 @@ export class TempoRun {
     best.matched = true;
     const offsetMs = nowMs - best.time;
     this.offsets.push(offsetMs);
-    return { kind: 'hit', note, offsetMs };
+    return { kind: 'hit', note, offsetMs, stepIdx: best.stepIdx };
   }
 
   update(nowMs: number): TempoUpdate {
@@ -193,7 +194,9 @@ export class TempoRun {
     if (next && nextSame) return { wanted: this.upcoming(), offsetMs: nowMs - nextSame.time };
 
     // Right pitch, close to its time: a little late, or up to 1.5 beats early (rushing ahead of the beat).
-    const lateSame = unplayed.filter((e) => e.note === note && dist(e) <= (e.time > nowMs ? 1.5 : 0.75) * this.beatMs).sort((a, b) => dist(a) - dist(b))[0];
+    // Early only counts when no other note is due right now: pressing G4 when A4 is due is a wrong pitch, not an early G4.
+    const dueNow = unplayed.some((e) => e.note !== note && dist(e) <= this.windowMs);
+    const lateSame = unplayed.filter((e) => e.note === note && dist(e) <= (e.time > nowMs ? (dueNow ? 0 : 1.5) : 0.75) * this.beatMs).sort((a, b) => dist(a) - dist(b))[0];
     if (lateSame) return { wanted: stepNotes(lateSame.stepIdx), offsetMs: nowMs - lateSame.time };
 
     if (next && dist(next) <= 2 * this.beatMs) return { wanted: this.upcoming() };
