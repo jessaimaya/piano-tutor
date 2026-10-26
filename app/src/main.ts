@@ -328,6 +328,7 @@ function renderControls(): void {
 
 function resetPractice(): void {
   cancelLoop();
+  firstStep = undefined;
   stopTempo();
   cancelListen();
   clearFeedback();
@@ -445,6 +446,7 @@ function tick(): void {
 
 function stopTempo(): void {
   cancelLoop();
+  firstStep = undefined;
   if (!tempo) return;
   cancelAnimationFrame(tempo.raf);
   tempo.cancelClicks();
@@ -836,8 +838,28 @@ bus.on((event, source) => {
       );
     }
     refreshKeys();
+  } else if (mode === 'tempo' && current) {
+    // Tempo mode before Start: no run, no clock. Check the key against the first notes so you can still see where it sits on the staff.
+    const wanted = firstStepNotes();
+    if (wanted.includes(event.note)) keyboard.flash('hit', event.note);
+    else if (wanted.length) {
+      keyboard.flash('wrong', event.note);
+      score.showWrong(event.note);
+      setFeedback(describeWrongNote(event.note, wanted));
+    }
   }
 });
+
+let firstStep: { key: string; notes: number[] } | undefined;
+/**
+ * The notes to play first for the chosen hand(s) and bar range. Looked up once, so the cursor moves to that step on the first key
+ * and then stays, which keeps earlier red notes on screen. Starting a run puts the cursor back at the start.
+ */
+function firstStepNotes(): readonly number[] {
+  const key = `${current?.id}|${hands}|${barRange?.from}-${barRange?.to}`;
+  if (firstStep?.key !== key) firstStep = { key, notes: [...new Session(activeCursor(), hands).expected] };
+  return firstStep.notes;
+}
 
 // ───────────── controls ─────────────
 $('hands').addEventListener('click', (e) => {
