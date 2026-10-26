@@ -14,9 +14,11 @@ export interface LibraryItem {
   difficulty?: number;
   /** Generated scales and arpeggios. */
   technique: boolean;
+  /** Score of the latest full run, if the piece has been played. */
+  score?: number;
 }
 
-export type SortBy = 'course' | 'difficulty' | 'title';
+export type SortBy = 'course' | 'difficulty' | 'title' | 'practice';
 
 export interface LibraryFilter {
   query: string;
@@ -56,5 +58,7 @@ export function filterLibrary(items: readonly LibraryItem[], f: LibraryFilter): 
   if (f.sort === 'title') return out.sort((a, b) => a.title.localeCompare(b.title));
   // Easiest first; pieces with no measurement (our own, which are easy by construction) come before measured ones.
   if (f.sort === 'difficulty') return out.sort((a, b) => (a.difficulty ?? 0) - (b.difficulty ?? 0) || a.stage - b.stage || a.title.localeCompare(b.title));
+  // Lowest latest score first, so what needs work is on top; pieces never played go last, in course order.
+  if (f.sort === 'practice') return out.sort((a, b) => (a.score === undefined ? 1 : 0) - (b.score === undefined ? 1 : 0) || (a.score ?? 0) - (b.score ?? 0));
   return out;
 }

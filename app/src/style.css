@@ -259,3 +259,26 @@ main { min-width: 0; }
 
 /* the line that moves across the score at the tempo: press the key when it reaches the note */
 .playhead { stroke: var(--accent); stroke-linecap: round; opacity: 0.85; pointer-events: none; }
+
+/* scores: the result card, the progress strip under the title, and the chip in the library */
+.good { --tone: var(--good); } .fine { --tone: var(--accent); } .warn { --tone: var(--warn); } .bad { --tone: var(--bad); }
+.score-card { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 12px; margin-bottom: 6px; }
+.score-num { font-weight: 200; font-size: 54px; line-height: 1; color: var(--tone, var(--accent)); letter-spacing: -0.02em; }
+.score-of { font: 12px var(--mono); color: var(--muted); margin-left: -8px; }
+.score-stars { font-size: 22px; letter-spacing: 3px; color: var(--tone, var(--accent)); }
+.score-word { font-weight: 600; color: var(--tone, var(--accent)); }
+.score-delta { flex-basis: 100%; font: 12.5px var(--mono); color: var(--muted); }
+.result:has(.score-card.warn) { border-left-color: var(--warn); }
+.result:has(.score-card.bad) { border-left-color: var(--bad); }
+.result p { margin: 0; }
+
+.progress { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 16px; margin: 8px 0 0; font: 12.5px var(--mono); color: var(--muted); }
+.progress strong { color: var(--ink); font-size: 15px; }
+.progress-last strong, .progress-last .stars { color: var(--tone, var(--accent)); }
+.progress-flag { color: var(--warn); border: 1px solid var(--warn); border-radius: 999px; padding: 0 9px; }
+.spark { width: 84px; height: 24px; overflow: visible; }
+.spark polyline { stroke: var(--accent); }
+.spark circle { fill: var(--accent); }
+
+.score-chip { font: 600 11px var(--mono); border-radius: 999px; padding: 0 7px; color: var(--tone, var(--muted)); border: 1px solid color-mix(in srgb, var(--tone, var(--muted)) 50%, transparent); }
+.score-chip.needs { background: color-mix(in srgb, var(--tone) 14%, transparent); }

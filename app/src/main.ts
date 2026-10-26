@@ -12,7 +12,8 @@ import { clampRange, isWholePiece, RangedCursor, type BarRange, type RangeCursor
 import { CALIBRATION_TAPS, clampLatency, estimateLatency, matchTaps } from './practice/calibration';
 import { beatUnitOfXml, bpmRange, QUARTER_BEAT, type BeatUnit } from './practice/meter';
 import { describeMissed, describeOffTime, describeWrongNote } from './practice/feedback';
-import { CLEAN_ACCURACY, CLEAN_RUNS_TO_FINISH, PracticeLog, type Hands, type PieceStatus } from './practice/log';
+import { CLEAN_ACCURACY, CLEAN_RUNS_TO_FINISH, PracticeLog, type Hands, type PieceStatus, type RunRecord } from './practice/log';
+import { compareWithHistory, needsPractice, progressOf, runScore, starsFor, verdict } from './practice/scoring';
 import { Session, type RunSummary } from './practice/session';
 import { describeOutcome, PASS_ACCURACY, recordResult, startTest, type SightState } from './practice/sight-test';
 import { TempoRun, type Level, type TempoSummary } from './practice/tempo-mode';
@@ -117,10 +118,12 @@ let filter: LibraryFilter = { ...NO_FILTER };
 const openSections = new Set<string>(); // technique sections the player has expanded
 
 function renderLibrary(): void {
+  renderProgress(); // every place that changes the log or the piece redraws the list, so the strip follows
   const host = $('library');
   host.replaceChildren();
   const statusOf = new Map(catalog.map((i) => [i.id, log.status(i.id, i.hands, i.targetBpm)] as const));
-  const shown = filterLibrary(catalog.map((i) => ({ ...i, status: statusOf.get(i.id)! })), filter).map((i) => i.id);
+  const progressById = new Map(catalog.map((i) => [i.id, progressOf(log.forPiece(i.id))] as const));
+  const shown = filterLibrary(catalog.map((i) => ({ ...i, status: statusOf.get(i.id)!, score: progressById.get(i.id)!.lastScore })), filter).map((i) => i.id);
   const filtering = isFiltering(filter);
   $('lib-count').textContent = filtering ? `${shown.length} of ${catalog.length}` : `${catalog.length} pieces`;
   if (shown.length === 0) {
@@ -145,6 +148,14 @@ function renderLibrary(): void {
     if (flat || filtering) {
       const bits = [piece.technique ? null : piece.composer, `stage ${piece.stage}`, piece.difficulty !== undefined ? `difficulty ${piece.difficulty}` : null];
       btn.querySelector('.meta')!.textContent = bits.filter(Boolean).join(' · ');
+    }
+    const prog = progressById.get(piece.id)!;
+    if (prog.lastScore !== undefined) {
+      const chip = document.createElement('span');
+      chip.className = `score-chip ${toneOf(prog.lastScore)}${needsPractice(prog) ? ' needs' : ''}`;
+      chip.textContent = String(prog.lastScore);
+      chip.title = `Last ${prog.lastScore} · best ${prog.best} · ${prog.runs} run${prog.runs === 1 ? '' : 's'}${needsPractice(prog) ? ' · keep practising' : ''}`;
+      btn.querySelector('.name')!.after(chip);
     }
     const badge = btn.querySelector('.badge')!;
     badge.textContent = status;
@@ -224,6 +235,67 @@ function showResult(text: string, isError = false): void {
   el.hidden = false;
   el.className = 'result' + (isError ? ' error' : '');
   el.textContent = text;
+}
+
+const starText = (score: number) => '★'.repeat(starsFor(score)) + '☆'.repeat(3 - starsFor(score));
+const toneOf = (score: number) => (score >= 90 ? 'good' : score >= 75 ? 'fine' : score >= 50 ? 'warn' : 'bad');
+
+/** The result of a run: a big score with stars and how it compares with earlier runs, then the explanation. */
+function showRunResult(text: string, run: RunRecord, earlier: readonly RunRecord[]): void {
+  const score = runScore(run);
+  const { previous, bestBefore } = compareWithHistory(earlier, run);
+  const el = $('result');
+  el.hidden = false;
+  el.className = 'result';
+  const card = document.createElement('div');
+  card.className = `score-card ${toneOf(score)}`;
+  const el$ = (cls: string, txt: string) => { const e = document.createElement('span'); e.className = cls; e.textContent = txt; return e; };
+  const delta = previous === undefined ? 'First run of this kind'
+    : score === previous ? 'Same as last time'
+    : `${score > previous ? '▲' : '▼'} ${Math.abs(score - previous)} ${score > previous ? 'better' : 'lower'} than last time (${previous})`;
+  const best = bestBefore === undefined ? '' : score > bestBefore ? ' · New best!' : ` · Best ${bestBefore}`;
+  card.append(
+    el$('score-num', String(score)), el$('score-of', '/100'),
+    el$('score-stars', starText(score)), el$('score-word', verdict(score)),
+    el$('score-delta', delta + best + (run.bars ? ` · bars ${run.bars[0]}–${run.bars[1]}` : '')),
+  );
+  const p = document.createElement('p');
+  p.textContent = text;
+  el.replaceChildren(card, p);
+}
+
+/** Last, best and a sparkline of the latest scores for the open piece, under its title. */
+function renderProgress(): void {
+  const el = $('progress');
+  if (!current) { el.hidden = true; return; }
+  const p = progressOf(log.forPiece(current.id));
+  el.hidden = false;
+  el.replaceChildren();
+  if (p.lastScore === undefined || p.best === undefined || !p.last) {
+    const none = document.createElement('span');
+    none.className = 'progress-none';
+    none.textContent = 'Not played yet: your scores will show here.';
+    el.append(none);
+    return;
+  }
+  const bit = (cls: string, html: string) => { const e = document.createElement('span'); e.className = cls; e.innerHTML = html; return e; };
+  el.append(
+    bit(`progress-last ${toneOf(p.lastScore)}`, `Last <strong>${p.lastScore}</strong> <span class="stars">${starText(p.lastScore)}</span>`),
+    bit('progress-best', `Best <strong>${p.best}</strong>`),
+    bit('progress-runs', `${p.runs} run${p.runs === 1 ? '' : 's'}${p.last.mode === 'tempo' && p.last.bpm ? ` · last at ${p.last.bpm} bpm` : ''}`),
+  );
+  if (needsPractice(p)) el.append(bit('progress-flag', 'Keep practising'));
+  if (p.recent.length > 1) {
+    const W = 84, H = 24, n = p.recent.length;
+    const pts = p.recent.map((v, i) => `${(i / (n - 1)) * W},${H - 2 - (v / 100) * (H - 4)}`).join(' ');
+    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    svg.setAttribute('class', 'spark');
+    svg.setAttribute('viewBox', `-3 0 ${W + 6} ${H}`);
+    svg.setAttribute('role', 'img');
+    svg.setAttribute('aria-label', `Scores of the last ${n} runs: ${p.recent.join(', ')}`);
+    svg.innerHTML = `<polyline points="${pts}" fill="none" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/><circle cx="${W}" cy="${pts.split(' ').at(-1)!.split(',')[1]}" r="2.4"/>`;
+    el.append(svg);
+  }
 }
 
 let feedbackTimer: ReturnType<typeof setTimeout> | undefined;
@@ -370,11 +442,13 @@ function renderStatus(): void {
 
 function finishWaitRun(summary: RunSummary): void {
   if (!current) return;
-  log.add({ ...summary, mode: 'wait', pieceId: current.id, at: new Date().toISOString(), ...barsField() });
+  const rec: RunRecord = { ...summary, mode: 'wait', pieceId: current.id, at: new Date().toISOString(), ...barsField() };
+  const earlier = log.forPiece(current.id);
+  log.add(rec);
   const pct = Math.round(accuracy(summary) * 100);
   const secs = Math.max(1, Math.round(summary.durationMs / 1000));
-  showResult(`Finished: ${pct}% first try, ${summary.wrong} wrong note${summary.wrong === 1 ? '' : 's'}, ${secs}s. ` +
-    (loopOn() ? ' Looping: play it again.' : pct >= 90 ? 'Ready to try Tempo mode.' : 'Press Restart to go again.'));
+  showRunResult(`${pct}% first try, ${summary.wrong} wrong note${summary.wrong === 1 ? '' : 's'}, ${secs}s. ` +
+    (loopOn() ? 'Looping: play it again.' : pct >= 90 ? 'Ready to try Tempo mode.' : 'Press Restart to go again.'), rec, earlier);
   renderLibrary();
   if (loopOn()) { session?.restart(); renderStatus(); refreshKeys(); }
 }
@@ -538,11 +612,13 @@ function finishTempoRun(s: TempoSummary): void {
   }
   const runBpm = Math.round(s.bpm / current.unit.quarters); // in the piece's own beats, like the target
   if (sight) { finishSightRun(s); return; }
-  log.add({
+  const rec: RunRecord = {
     pieceId: current.id, at: new Date().toISOString(), hands, mode: 'tempo', bpm: runBpm,
     steps: s.steps, firstTry: s.firstTry, wrong: s.wrong, durationMs: s.durationMs,
-    meanAbsOffsetMs: s.meanAbsOffsetMs, biasMs: s.biasMs, ...barsField(),
-  });
+    meanAbsOffsetMs: s.meanAbsOffsetMs, biasMs: s.biasMs, score: s.score, level, ...barsField(),
+  };
+  const earlier = log.forPiece(current.id);
+  log.add(rec);
   const pct = Math.round(accuracy(s) * 100);
   const clean = accuracy(s) >= CLEAN_ACCURACY;
   const status = log.status(current.id, current.handsAvailable, current.targetBpm);
@@ -563,7 +639,7 @@ function finishTempoRun(s: TempoSummary): void {
     $<HTMLInputElement>('bpm').value = String(down);
     next = ` That was fast for now. Try ${down} bpm.`;
   }
-  showResult(`${runBpm} bpm: ${pct}% of steps in time (${s.missed} missed, ${s.extra} extra), ${describeTiming(s)}.${next}`);
+  showRunResult(`${runBpm} bpm: ${pct}% of steps in time (${s.missed} missed, ${s.extra} extra), ${describeTiming(s)}.${next}`, rec, earlier);
   safeSet('bpm:' + current.id, $<HTMLInputElement>('bpm').value);
   renderLibrary();
   renderStatus();

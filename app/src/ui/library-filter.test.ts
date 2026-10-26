@@ -40,3 +40,11 @@ describe('library filter', () => {
     expect(items.map((i) => i.id)).toEqual(['gym', 'fur', 'mary', 'scale']);
   });
 });
+
+describe('sort by what needs practice', () => {
+  const scored = (id: string, score?: number) => item({ id, score });
+  it('puts the lowest scores first and unplayed pieces last, keeping course order among them', () => {
+    const out = filterLibrary([scored('a'), scored('b', 90), scored('c', 40), scored('d'), scored('e', 70)], { ...NO_FILTER, sort: 'practice' });
+    expect(out.map((i) => i.id)).toEqual(['c', 'e', 'b', 'a', 'd']);
+  });
+});

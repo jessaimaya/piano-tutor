@@ -42,6 +42,7 @@ The three dots at the top right switch between the Warm, Cold blues and Night th
 - **Sight-reading test.** Seven levels of freshly generated pieces you can't have seen. 80% in time passes a level.
 - **Latency calibration.** Tap along to a click and the app corrects for your keyboard's delay.
 - **Scales and arpeggios.** Generated for 23 keys, with fingering, run through the same tempo ladder.
+- **Scores.** Every run gets a 0–100 score and up to three stars, with how it compares to your last run and your best. Under each piece's title you see last score, best, run count and a sparkline; the library shows each piece's last score, and "Needs practice first" sorts the weakest to the top.
 - **Practice log.** Every run is saved in your browser, and each piece is marked new, practicing or done.
 - **Library search.** Filter by title, composer, skill, stage or status, and sort by course order or difficulty.
 - **Adding music.** Drop MusicXML files in `inbox/` and run one script. It checks each file, rates its difficulty, assigns a stage and rejects duplicates and pop.
@@ -137,7 +138,7 @@ The app README ([app/README.md](app/README.md)) has the module-by-module detail.
 ## Roadmap
 
 Wait mode, tempo mode, hands, listen, ranges and looping, the sight-reading test, calibration, search and the import workflow are done.
-Ideas that haven't been scheduled: clicking the score to set a bar range, a tempo ladder that resumes where you left off, pedal marks in Listen, and
+Next, with high priority: saving the practice log somewhere more durable than the browser (a local database or export/import). Ideas that haven't been scheduled: clicking the score to set a bar range, a tempo ladder that resumes where you left off, pedal marks in Listen, and
 an import tool for single [Mutopia](https://www.mutopiaproject.org/) pieces. Things that were considered and dropped, with the reasons, are listed in
 [06-app-notes.md](06-app-notes.md).
 

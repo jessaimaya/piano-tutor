@@ -13,6 +13,10 @@ export interface RunRecord extends WaitStats {
   meanAbsOffsetMs?: number;
   /** Positive = late, negative = early. */
   biasMs?: number;
+  /** 0–100, see scoring.ts. Absent on runs recorded before scores existed. */
+  score?: number;
+  /** Timing level the run was played at (tempo mode). */
+  level?: string;
   /** Set when only bars `from`..`to` were played: such runs show progress but never finish a piece. */
   bars?: [from: number, to: number];
 }

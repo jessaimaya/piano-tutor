@@ -1,3 +1,4 @@
+import { tempoScore } from './scoring';
 import type { TimedStep } from './timeline';
 
 /**
@@ -53,6 +54,8 @@ export interface TempoSummary {
   meanAbsOffsetMs: number;
   /** Average signed offset: positive = late, negative = early. */
   biasMs: number;
+  /** 0–100, see scoring.ts. */
+  score: number;
 }
 
 export interface TempoUpdate {
@@ -241,6 +244,7 @@ export class TempoRun {
       bpm: this.opts.bpm,
       meanAbsOffsetMs: n ? Math.round(sum(this.offsets.map(Math.abs)) / n) : 0,
       biasMs: n ? Math.round(sum(this.offsets) / n) : 0,
+      score: tempoScore(this.offsets, this.expected.length, this.extra),
     };
   }
 }

@@ -43,7 +43,7 @@
             <option value="all">Any hands</option><option value="both">Both hands</option><option value="rh">Right hand</option><option value="lh">Left hand</option>
           </select>
           <select id="lib-sort" aria-label="Sort">
-            <option value="course">Course order</option><option value="difficulty">Easiest first</option><option value="title">A–Z</option>
+            <option value="course">Course order</option><option value="difficulty">Easiest first</option><option value="practice">Needs practice first</option><option value="title">A–Z</option>
           </select>
         </div>
         <div class="lib-row">
@@ -69,6 +69,7 @@
         <div class="hero-text">
           <h2 class="piece-title"><span id="piece-title">Pick a piece</span></h2>
           <p id="piece-meta" class="piece-meta"></p>
+          <div id="progress" class="progress" hidden></div>
         </div>
         <svg class="blob" viewBox="0 0 420 170" aria-hidden="true" focusable="false">
           <path class="blob-shape" d="M120 0C150 34 96 52 126 88c22 27 74 12 116 30 38 16 54 38 90 52H420V0Z"/>
