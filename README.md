@@ -3,7 +3,8 @@
 A practice app and a self-study plan for learning piano from real sheet music, with no teacher and no subscription.
 
 The app shows a score, listens to your keyboard over USB-MIDI, and tells you what you got right and wrong. The plan is a
-set of Markdown files covering the method, a staged syllabus, repertoire, and a daily 25-minute routine. Both are built for
+set of Markdown files covering the method, a staged syllabus, repertoire, and a daily 25-minute routine, and **Course mode** turns that
+routine into a session you open and play, one step at a time. Both are built for
 one learner: a total beginner with a Yamaha P-115 who wants to play neoclassical and classical music. The app works with any
 MIDI keyboard, and you can also play with your computer keyboard or the mouse.
 
@@ -30,6 +31,41 @@ MIDI keyboard, and you can also play with your computer keyboard or the mouse.
 
 The three dots at the top right switch between the Warm, Cold blues and Night themes, and the choice is remembered. The screenshots use a stand-in for the piano connection, so the top bar shows a P-115.
 
+## Course mode and the minimal view
+
+**Course mode** is a daily session in the style of Duolingo: open the app, press one button, and work through today's steps. One dot per
+step shows where you are. The course starts with a seven-day **introduction week** (right hand, then left, then basic exercises with
+both, before any reading) and goes on through Stage 0 (the hands take turns), Stage 1 (five-finger positions, first hands together) and
+the start of Stage 2. Each unit lists its own exercises, reading and note cards, and the generated reading gets harder one step at a time but never
+runs ahead of the lesson ([12-lesson-ladder.md](12-lesson-ladder.md), [13-progression-review.md](13-progression-review.md)).
+
+The **minimal view** is the same app for a small, black and white e-ink screen such as the Minimal Phone (4.3", 600×800): the score,
+the tempo and Start, big buttons, no animation. Open `?view=minimal` once to bookmark it, or tap the button at the top right of the full view.
+It is built for the phone on the music stand, held sideways: the score takes the whole height on the left and the controls stack in a column on the
+right. Held upright it works too (last row below). The staff is drawn at the width of the screen and shrinks until two rows fit, so you always
+see the line after the one you are reading, and the page turns exactly at the start of a line, never through one.
+
+<table>
+<tr>
+<td width="50%"><img src="docs/screenshots/minimal-warmup.webp" alt="Introduction week, left hand: the warm-up with the right hand's staff faded"><br><sub><b>A warm-up, one hand.</b> The hand you are not asked to play is faded. The dots across the top are today's steps.</sub></td>
+<td width="50%"><img src="docs/screenshots/minimal-reading.webp" alt="Reading step: a generated piece where the hands take turns"><br><sub><b>Reading.</b> A freshly generated piece at the step the unit has reached, here the hands taking turns. Listen is off: you read it cold.</sub></td>
+</tr>
+<tr>
+<td width="50%"><img src="docs/screenshots/minimal-cards.webp" alt="A note card: one note on the grand staff"><br><sub><b>Note cards</b> (Stage 0). A note appears, you play it. Under two seconds counts as fast. New notes arrive one a day.</sub></td>
+<td width="50%"><img src="docs/screenshots/minimal-wait.webp" alt="Wait mode in the minimal view: a right note filled in, a wrong note dashed"><br><sub><b>Free mode, wait mode.</b> What you play shows on the staff: filled when right, dashed when wrong, with no colour needed.</sub></td>
+</tr>
+</table>
+
+<table>
+<tr>
+<td width="50%" align="center"><img src="docs/screenshots/minimal-course-home.webp" alt="The course page: streak, time today and the six steps" width="300"><br><sub><b>The course page.</b> Your streak, the time you have today (10 to 45 minutes) and the steps.</sub></td>
+<td width="50%" align="center"><img src="docs/screenshots/minimal-portrait.webp" alt="The reading step held upright" width="300"><br><sub><b>Held upright.</b> The same reading step in portrait.</sub></td>
+</tr>
+</table>
+
+These screenshots show only the app's own exercises and generated pieces, with a stand-in for the piano connection and sample course history.
+`node tools/screenshots/minimal.mjs` takes them again (see its header).
+
 ## What the app does
 
 - **Reads real notation.** It loads MusicXML (`.mxl`, `.musicxml`) and draws it with
@@ -49,6 +85,10 @@ The three dots at the top right switch between the Warm, Cold blues and Night th
 - **Scores.** Every run gets a 0–100 score and up to three stars, with how it compares to your last run and your best. Under each piece's title you see last score, best, run count and a sparkline; the library shows each piece's last score, and "Needs practice first" sorts the weakest to the top.
 - **Practice log.** Every run is saved in your browser, and each piece is marked new, practicing or done.
 - **Library search.** Filter by title, composer, skill, stage or status, and sort by course order or difficulty.
+- **Course mode.** A daily session built from the syllabus: warm-up, reading, new bars, a steady run, review and play, scaled to 10, 15, 20, 25, 30 or 45 minutes. It adapts: reading climbs after two good days, units end when their exit is met, and a streak counts the days. It starts with a seven-day introduction week. Progress can be saved to a file and loaded back (**Backup**).
+- **Reading ladder.** The Reading step is a generated piece from a ladder of 28 rungs, each adding one thing (one new note, a skip, a meter, a rhythm), tied to the unit you are in, so it never asks for something the lessons have not shown.
+- **Note cards.** In Stage 0, a note on the staff that you play within two seconds; the deck grows with the units and shows new notes more often.
+- **Minimal view.** A black and white layout for small and e-ink screens (see above), with a paged score instead of scrolling.
 - **Adding music.** Drop MusicXML files in `inbox/` and run one script. It checks each file, rates its difficulty, assigns a stage and rejects duplicates and pop.
 
 All the grading runs in your browser. There is no server, no account and no network use after the page loads.
@@ -61,8 +101,11 @@ You need a current Node.js (developed on 24) and Chrome or Edge, because Web MID
 git clone <this repo>
 cd piano-tutor/app
 npm install
-npm run dev        # open http://localhost:5173
+npm run dev        # https://localhost:5173 (a self-signed certificate: accept the browser's warning once)
 ```
+
+`npm run dev` serves over **https** on every network address, because Web MIDI only works on a secure page: that lets a phone on the same wifi open
+`https://<your laptop's address>:5173/?view=minimal` and use its own USB-MIDI. `npm run dev:http` is the plain `http://localhost:5173` server.
 
 Plug in a MIDI keyboard before you open the page. The device name appears in the top bar and the pedal value is shown live.
 With no keyboard, play with the computer keys (shown in the sidebar) or click the on-screen keys.
@@ -82,12 +125,16 @@ steps, and [tools/midi-check.html](tools/midi-check.html) is a stand-alone page 
 
 This repository contains **no copyrighted sheet music**.
 
-- **Built in:** 31 short lessons and 46 scale and arpeggio exercises, all original or public domain, written in a compact notation
+- **Built in:** 38 short lessons, 20 five-finger warm-ups and 46 scale and arpeggio exercises, all original or public domain, written in a compact notation
   (`C4:q/1 D4:q/2 E4:h/3 |`) that the tests check bar by bar.
 - **Included files:** two MusicXML files that state they are public domain (Bach, Minuet in G; Chopin, Prelude in E minor).
 - **Your own scores:** `app/scores/library.json` lists a larger library, but entries whose file is missing are skipped. Add the files
   yourself, from [IMSLP](https://imslp.org/), [OpenScore](https://musescore.com/openscore) or your own MuseScore exports, and the
   entries appear. Only add what you have the right to use, and check each file's licence.
+
+To turn a PDF of a book you own into MusicXML on your own computer, `tools/omr/` wraps an optical music recognition model ([homr](https://github.com/liebharc/homr))
+with the checks that make its output usable (bars that add up, hands in the right voices, a comparison against the page). The converted files stay local and are
+never committed. See [tools/omr/README.md](tools/omr/README.md) and [11-ingestion-ledger.md](11-ingestion-ledger.md), which records what is converted and what is missing.
 
 To add scores:
 
@@ -116,6 +163,10 @@ The plan is a series of short documents. The app follows them but doesn't depend
 | [07-setup-p115.md](07-setup-p115.md) | What the P-115 sends over USB-MIDI, and its panel settings |
 | [08-videos.md](08-videos.md) | Checked YouTube links on posture, practice, hands together, sight-reading and pedal |
 | [09-library-catalog.md](09-library-catalog.md) | What each method book is for, by stage |
+| [10-course-mode-plan.md](10-course-mode-plan.md) | The plan for Course mode and how it was built |
+| [11-ingestion-ledger.md](11-ingestion-ledger.md) | Which books are converted to MusicXML and which are still missing |
+| [12-lesson-ladder.md](12-lesson-ladder.md) | The units: the introduction week, then Stages 0 to 2, with their pieces, exercises and exits |
+| [13-progression-review.md](13-progression-review.md) | The review that tied generated content to the lessons, with the books and research behind it |
 
 The core idea is to use one published adult method as the spine (Faber *Adult Piano Adventures*, then a graded syllabus), read new music
 every day, bring in pieces you love early, and let the app be the feedback loop rather than the curriculum. The plan refers to commercial
@@ -127,10 +178,16 @@ books by name. They aren't included, so you need your own copies.
 app/                    Vite + TypeScript app
   src/midi/             Web MIDI parsing and the single input bus (piano, keyboard, mouse)
   src/practice/         Wait mode, tempo mode, timeline, calibration, ranges, log, sight-reading test
-  src/content/          Notation compiler, MXL reader, built-in lessons, technique generator, score manifest
-  src/ui/               Score view, on-screen keyboard, synth, library filter
+  src/content/          Notation compiler, MXL reader, built-in lessons, technique generator, reading ladder, score manifest
+  src/ui/               Score view (paged and fitted in the minimal view), on-screen keyboard, synth, library filter, view switch
+  src/course/           Course mode: state, day planner, note cards, the course page
+  src/storage/          Backup and restore of everything the app remembers
+  course/course.json    The units: exercises, reading rungs, cards, exits
   scores/library.json   Manifest of imported scores (files are not tracked)
-tools/                  import-scores.py, score-difficulty.py, midi-check.html
+tools/                  import-scores.py, score-difficulty.py, midi-check.html, ledger.py
+tools/omr/              PDF to MusicXML (homr plus checks), local only
+tools/screenshots/      Takes the minimal-view screenshots for this README
+docs/screenshots/       The images above
 inbox/                  Drop new scores here, then run ./ingest.sh
 .claude/skills/         The import-scores skill for Claude Code
 0X-*.md                 The learning plan
@@ -141,8 +198,11 @@ The app README ([app/README.md](app/README.md)) has the module-by-module detail.
 
 ## Roadmap
 
-Wait mode, tempo mode, hands, listen, ranges and looping, the sight-reading test, calibration, search and the import workflow are done.
-Next, with high priority: saving the practice log somewhere more durable than the browser (a local database or export/import). Ideas that haven't been scheduled: clicking the score to set a bar range, a tempo ladder that resumes where you left off, pedal marks in Listen, and
+Wait mode, tempo mode, hands, listen, ranges and looping, the sight-reading test, calibration, search, the import workflow, Course mode
+(with its introduction week and reading ladder), the minimal view and backup files are done. The course reaches unit 2.3; the
+next job is **more content**: Faber Book 1 Units 14 to 16 and four lyric-heavy pieces to transcribe by hand, then Book 2 for Stage 3 (what is converted and
+what is missing is in [11-ingestion-ledger.md](11-ingestion-ledger.md)). Also open: a finer placement test, a rhythm-only step before reading, a history page, and
+storage more durable than the browser (the backup file is the safeguard for now). Ideas that haven't been scheduled: clicking the score to set a bar range, pedal marks in Listen, and
 an import tool for single [Mutopia](https://www.mutopiaproject.org/) pieces. Things that were considered and dropped, with the reasons, are listed in
 [06-app-notes.md](06-app-notes.md).
 
@@ -157,4 +217,4 @@ Code and written plan: [MIT](LICENSE). Sheet music you add keeps its own licence
 
 Built with [OpenSheetMusicDisplay](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay), [JSZip](https://stuk.github.io/jszip/),
 [Vite](https://vite.dev/), [TypeScript](https://www.typescriptlang.org/) and [Vitest](https://vitest.dev/). The scale-and-arpeggio idea came from
-reading piano-ml, a GPL-3.0 project. No code was copied from it.
+reading piano-ml, a GPL-3.0 project. No code was copied from it. `tools/omr/` installs [homr](https://github.com/liebharc/homr) (AGPL-3.0) as a separate local tool; it is not part of this repository.

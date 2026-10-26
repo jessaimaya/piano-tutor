@@ -490,7 +490,10 @@ html[data-app='course'][data-step='test'] #mode, html[data-app='course'][data-st
   html[data-view='minimal'] #score { grid-column: 1; grid-row: 1 / -1; align-self: start; position: sticky; top: 0; height: calc(100dvh - 8px); min-height: 0; margin: 4px 0; contain: size; }
   html[data-view='minimal'] .result { grid-column: 1; grid-row: 1 / -1; align-self: end; }
   html[data-view='minimal'] #course, html[data-view='minimal'][data-phase='home'] #course { grid-row: 2; margin: 4px 0 0; overflow: visible; }
+  /* the course page has no score beside it: the top bar goes back to one row across the top and the page takes the rest */
   html[data-view='minimal'][data-phase='home'] #course { grid-column: 1 / -1; grid-row: 2 / -1; }
+  html[data-view='minimal'][data-phase='home'] .topbar { grid-column: 1 / -1; flex-wrap: nowrap; padding: 4px 0; }
+  html[data-view='minimal'][data-phase='home'] #midi-status { order: 0; flex: 0 1 auto; max-width: 40vw; }
   html[data-view='minimal'] .hero { grid-row: 3; overflow: visible; }
   html[data-view='minimal'] .hero-text { padding: 2px 0; }
   html[data-view='minimal'] .piece-title { font-size: 14px; white-space: normal; }

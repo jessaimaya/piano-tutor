@@ -19,7 +19,8 @@ USB-MIDI (Web MIDI), and has two practice modes:
 ```bash
 cd app
 npm install
-npm run dev        # http://localhost:5173 in Chrome or Edge
+npm run dev        # https://localhost:5173 in Chrome or Edge (self-signed: accept the warning once)
+npm run dev:http   # the plain http://localhost:5173 server
 npm test           # unit tests (vitest)
 npm run build      # typecheck + production build
 ```
@@ -82,8 +83,11 @@ stays in the full view. Built for a monochrome e-ink screen such as the Minimal 
 - right notes show as a filled head on the staff, wrong ones as a dashed hollow head (no colour);
 - tap the result card to put it away; tap the MIDI label to reconnect.
 
-Web MIDI only works on `localhost` or `https`. From a phone, either `adb reverse tcp:5173 tcp:5173` and open `http://localhost:5173`, or
-host the `npm run build` output over https.
+Web MIDI only works on `localhost` or `https`. `npm run dev` already serves https on every network address, so on a phone on the same wifi open
+`https://<laptop address>:5173/?view=minimal` and accept the certificate warning once. Or `adb reverse tcp:5173 tcp:5173` and open
+`http://localhost:5173` (use `npm run dev:http`), or host the `npm run build` output over https. If the page is not a secure origin the top bar says so.
+
+Screenshots of the minimal view are in the main README (`../docs/screenshots/minimal-*.webp`); `node ../tools/screenshots/minimal.mjs` takes them again.
 
 ## What's in it
 
