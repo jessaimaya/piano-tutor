@@ -33,13 +33,33 @@ export class KeyboardView {
     svg.setAttribute('role', 'img');
     svg.setAttribute('aria-label', 'On-screen piano keyboard');
 
+    // Soft top-to-bottom shading so the keys read as raised; the colours come from the theme (style.css).
+    const defs = document.createElementNS(NS, 'defs');
+    const gradient = (id: string, stops: [number, string][]) => {
+      const g = document.createElementNS(NS, 'linearGradient');
+      g.id = id;
+      g.setAttribute('x1', '0'); g.setAttribute('y1', '0'); g.setAttribute('x2', '0'); g.setAttribute('y2', '1');
+      for (const [offset, cls] of stops) {
+        const s = document.createElementNS(NS, 'stop');
+        s.setAttribute('offset', String(offset));
+        s.classList.add(cls);
+        g.append(s);
+      }
+      return g;
+    };
+    defs.append(
+      gradient('pt-key-white', [[0, 'kw-top'], [0.9, 'kw-mid'], [1, 'kw-lip']]),
+      gradient('pt-key-black', [[0, 'kb-top'], [0.85, 'kb-mid'], [1, 'kb-lip']]),
+    );
+    svg.append(defs);
+
     const xOfWhite = new Map(whites.map((n, i) => [n, i * WHITE_W]));
     const make = (n: number, x: number, w: number, h: number, black: boolean) => {
       const rect = document.createElementNS(NS, 'rect');
       rect.setAttribute('x', String(x));
       rect.setAttribute('width', String(w));
       rect.setAttribute('height', String(h));
-      rect.setAttribute('rx', '2');
+      rect.setAttribute('rx', black ? '2.5' : '3');
       rect.classList.add('key', black ? 'black' : 'white');
       rect.dataset.note = String(n);
       const title = document.createElementNS(NS, 'title');

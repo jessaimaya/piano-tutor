@@ -31,3 +31,6 @@ inbox/*
 .vscode/
 *.log
 .claude/settings.local.json
+
+# Design references (other people's work)
+ref*.webp

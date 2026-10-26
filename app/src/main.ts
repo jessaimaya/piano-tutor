@@ -1,3 +1,4 @@
+import '@fontsource-variable/outfit';
 import './style.css';
 import { readScoreFile } from './content/mxl';
 import { scoreEntries, scoreEntryXml, type ScoreEntry } from './content/scores';
@@ -18,9 +19,11 @@ import { TempoRun, type TempoSummary } from './practice/tempo-mode';
 import { readTimeline, type TimedStep } from './practice/timeline';
 import { accuracy } from './practice/wait-mode';
 import { Synth } from './ui/audio';
+import { bindTempoDial } from './ui/dial';
 import { KeyboardView } from './ui/keyboard';
 import { filterLibrary, isFiltering, NO_FILTER, type LibraryFilter, type SortBy } from './ui/library-filter';
 import { ScoreView } from './ui/score';
+import { bindThemes } from './ui/theme';
 
 const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
 
@@ -890,6 +893,8 @@ bus.onStatus((devices, error) => {
 });
 $('midi-retry').addEventListener('click', () => void bus.connectMidi());
 
+bindThemes($('themes'));
+bindTempoDial();
 bindComputerKeyboard(bus);
 void bus.connectMidi();
 bindLibraryFilter();

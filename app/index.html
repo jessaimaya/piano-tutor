@@ -5,12 +5,22 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Piano Tutor</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' rx='3' fill='%232f6fde'/%3E%3Crect x='3' y='3' width='2' height='10' fill='white'/%3E%3Crect x='7' y='3' width='2' height='10' fill='white'/%3E%3Crect x='11' y='3' width='2' height='10' fill='white'/%3E%3C/svg%3E">
+  <script>
+    (function () {
+      var t = null;
+      try { t = localStorage.getItem('piano-tutor:theme'); } catch (e) {}
+      if (t !== 'warm' && t !== 'cold' && t !== 'night') t = matchMedia('(prefers-color-scheme: dark)').matches ? 'night' : 'warm';
+      document.documentElement.dataset.theme = t;
+    })();
+  </script>
   <script type="module" src="/src/main.ts"></script>
 </head>
 <body>
+<div class="shell">
   <header class="topbar">
-    <h1>Piano Tutor</h1>
+    <h1>Piano Tutor<i class="mark" aria-hidden="true"></i></h1>
     <div class="spacer"></div>
+    <div id="themes" class="themes" role="group" aria-label="Theme"></div>
     <span id="pedal" class="pill" title="Sustain pedal (CC64)">Pedal <b id="pedal-val">–</b></span>
     <span id="midi-status" class="pill">MIDI: starting…</span>
     <button id="midi-retry" type="button">Reconnect</button>
@@ -55,9 +65,28 @@
     </aside>
 
     <main>
+      <section class="hero">
+        <div class="hero-text">
+          <h2 class="piece-title"><span id="piece-title">Pick a piece</span></h2>
+          <p id="piece-meta" class="piece-meta"></p>
+        </div>
+        <svg class="blob" viewBox="0 0 420 170" aria-hidden="true" focusable="false">
+          <path class="blob-shape" d="M120 0C150 34 96 52 126 88c22 27 74 12 116 30 38 16 54 38 90 52H420V0Z"/>
+          <g fill="none" stroke-width="1" stroke-linecap="round">
+            <path class="line-a" d="M170 126C230 92 262 140 330 98S396 40 420 52"/>
+            <path class="line-b" d="M190 60C240 80 280 30 340 56S400 110 420 96"/>
+            <path class="line-c" d="M150 150C220 128 300 160 420 128"/>
+          </g>
+          <circle class="dot-a" cx="268" cy="88" r="4.5"/>
+          <circle class="dot-b" cx="352" cy="32" r="6"/>
+          <circle class="dot-c" cx="206" cy="112" r="3"/>
+          <rect class="sq-a" x="300" y="64" width="9" height="9" transform="rotate(45 304 68)"/>
+          <rect class="sq-b" x="236" y="38" width="8" height="8" transform="rotate(45 240 42)"/>
+          <rect class="sq-c" x="378" y="104" width="8" height="8" transform="rotate(45 382 108)"/>
+        </svg>
+      </section>
+
       <div class="controls transport">
-        <div class="piece-title"><strong id="piece-title">Pick a piece</strong> <span id="piece-meta" class="muted"></span></div>
-        <div class="spacer"></div>
         <div class="segmented" id="mode" role="group" aria-label="Mode">
           <button type="button" data-mode="wait" title="The score waits for you">Wait</button>
           <button type="button" data-mode="tempo" title="The score keeps time; you play in time">Tempo</button>
@@ -67,33 +96,53 @@
           <button type="button" data-hands="lh">Left</button>
           <button type="button" data-hands="both">Both</button>
         </div>
+        <div class="spacer"></div>
         <button id="listen" type="button" title="Hear the piece at the tempo below, with the cursor following">▶ Listen</button>
-        <button id="restart" type="button">Restart</button>
+        <button id="restart" type="button" class="primary">Restart</button>
         <button id="stop" type="button" class="stop" hidden>Stop</button>
       </div>
 
-      <div id="pace-controls" class="controls tempo-controls">
-        <label>Tempo <input id="bpm" type="number" min="30" max="160" step="2" value="60"> <span id="bpm-unit">bpm</span></label>
-        <span id="target" class="muted"></span>
-        <span id="beat-hint" class="muted"></span>
-        <label><input id="listen-clicks" type="checkbox" checked> Clicks while listening</label>
-        <span class="range" title="Practise just some bars: the cursor, wait mode, tempo mode and Listen all follow it">
-          Bars <input id="bar-from" type="number" min="1" value="1" aria-label="First bar"> to
-          <input id="bar-to" type="number" min="1" value="1" aria-label="Last bar"> of <span id="bar-total">–</span>
-          <button id="bar-all" type="button">Whole piece</button>
-        </span>
-        <label title="Play it again straight away, over and over, until you press Stop (or Escape)"><input id="loop" type="checkbox"> Loop</label>
-      </div>
+      <section id="pace-controls" class="controls panel pace">
+        <div class="group dial">
+          <div class="cap"><span>Tempo</span></div>
+          <div class="dial-row">
+            <button id="bpm-dec" type="button" class="round" aria-label="Slower">−</button>
+            <div class="bpm-stack">
+              <input id="bpm" type="number" min="30" max="160" step="2" value="60" aria-label="Tempo">
+              <span id="bpm-unit">bpm</span>
+            </div>
+            <button id="bpm-inc" type="button" class="round" aria-label="Faster">+</button>
+          </div>
+          <div class="ruler" aria-hidden="true"><i class="fill"></i><i class="notch"></i></div>
+          <div class="ruler-labels"><span id="bpm-min">30</span><span id="target" class="muted"></span><span id="bpm-max">160</span></div>
+          <span id="beat-hint" class="muted"></span>
+        </div>
+        <div class="group opts">
+          <div class="cap"><span>Practise</span></div>
+          <span class="range" title="Practise just some bars: the cursor, wait mode, tempo mode and Listen all follow it">
+            Bars <input id="bar-from" type="number" min="1" value="1" aria-label="First bar"> to
+            <input id="bar-to" type="number" min="1" value="1" aria-label="Last bar"> of <span id="bar-total">–</span>
+            <button id="bar-all" type="button">Whole piece</button>
+          </span>
+          <label title="Play it again straight away, over and over, until you press Stop (or Escape)"><input id="loop" type="checkbox"> Loop</label>
+          <label><input id="listen-clicks" type="checkbox" checked> Clicks while listening</label>
+        </div>
+      </section>
 
-      <div id="tempo-controls" class="controls tempo-controls" hidden>
-        <label><input id="metronome" type="checkbox" checked> Metronome while playing</label>
-        <label><input id="showNext" type="checkbox" checked> Show the next key</label>
-        <span class="calib">
-          <button id="calibrate" type="button" title="Tap along with 16 clicks to measure the delay of your speakers and piano">Calibrate timing</button>
-          <button id="calib-reset" type="button" hidden>Reset</button>
-          <span id="latency" class="muted"></span>
-        </span>
-      </div>
+      <section id="tempo-controls" class="controls panel tempo-controls" hidden>
+        <div class="group">
+          <div class="cap"><span>Timing</span></div>
+          <div class="row">
+            <label><input id="metronome" type="checkbox" checked> Metronome while playing</label>
+            <label><input id="showNext" type="checkbox" checked> Show the next key</label>
+            <span class="calib">
+              <button id="calibrate" type="button" title="Tap along with 16 clicks to measure the delay of your speakers and piano">Calibrate timing</button>
+              <button id="calib-reset" type="button" hidden>Reset</button>
+              <span id="latency" class="muted"></span>
+            </span>
+          </div>
+        </div>
+      </section>
 
       <div id="sr-panel" class="sr-panel" hidden>
         <div id="sr-text"></div>
@@ -110,5 +159,6 @@
       <div id="keyboard"></div>
     </main>
   </div>
+</div>
 </body>
 </html>

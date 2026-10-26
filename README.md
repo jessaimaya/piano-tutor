@@ -12,19 +12,19 @@ MIDI keyboard, and you can also play with your computer keyboard or the mouse.
 
 ## Screenshots
 
-**Wait mode.** The cursor waits for the right notes. A wrong key gets a plain explanation, and the keyboard shows what you played.
+**Wait mode** (Warm theme). The cursor waits for the right notes. A wrong key gets a plain explanation, and the keyboard shows what you played.
 
-![Wait mode on Ode to Joy, with feedback on a wrong note](docs/screenshots/wait-mode.png)
+![Wait mode on Ode to Joy, with feedback on a wrong note](docs/screenshots/wait-mode.webp)
 
-**Tempo mode.** A metronome sets the pace and every note has a timing window. The key you should have played is outlined in green, and the status line counts what was in time, missed or extra.
+**Tempo mode** (Night theme). A metronome sets the pace and every note has a timing window. The key you should have played is outlined in green, and the status line counts what was in time, missed or extra.
 
-![Tempo mode with a missed note and an extra note](docs/screenshots/tempo-mode.png)
+![Tempo mode with a missed note and an extra note](docs/screenshots/tempo-mode.webp)
 
-**Sight-reading test.** Freshly generated pieces in seven levels, so you never see the same one twice.
+**Sight-reading test** (Cold blues theme). Freshly generated pieces in seven levels, so you never see the same one twice.
 
-![Sight-reading test, level 1](docs/screenshots/sight-reading.png)
+![Sight-reading test, level 1](docs/screenshots/sight-reading.webp)
 
-(The screenshots use a stand-in for the piano connection, so the top bar shows a P-115.)
+The three dots at the top right switch between the Warm, Cold blues and Night themes, and the choice is remembered. The screenshots use a stand-in for the piano connection, so the top bar shows a P-115.
 
 ## What the app does
 
@@ -36,6 +36,7 @@ MIDI keyboard, and you can also play with your computer keyboard or the mouse.
   The tempo counts the piece's own beat, so 6/8 is counted in dotted quarters.
 - **Listen.** Plays the piece (one hand or both) after a count-in, with the cursor and the keys lit, so you can hear the rhythm before you try it.
 - **Bar ranges and looping.** Practise bars 5 to 8 only, and loop them at a rising tempo.
+- **Tempo readout.** A big thin numeral with − and + buttons and a tick ruler that fills up to your tempo, with a notch at the piece's target.
 - **Hand selection.** Practise the right hand, the left hand, or both. The app plays the other hand.
 - **Sight-reading test.** Seven levels of freshly generated pieces you can't have seen. 80% in time passes a level.
 - **Latency calibration.** Tap along to a click and the app corrects for your keyboard's delay.
