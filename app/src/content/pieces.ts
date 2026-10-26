@@ -40,6 +40,46 @@ type Source = Omit<Piece, 'hands' | 'notation'> & { notation: Omit<NotationPiece
 const sources: Source[] = [
   // ───────── Stage 0: hands take turns ─────────
   {
+    id: 's0-two-notes', targetBpm: 52, title: 'Two Notes', composer: 'Original exercise', stage: 0,
+    skills: ['right-hand', 'C-D', 'quarter-notes', 'half-notes', 'whole-notes'], license: 'own',
+    notation: {
+      timeSig: [4, 4], fifths: 0,
+      rh: 'C4:w/1 | D4:w/2 | C4:h/1 D4:h/2 | D4:q/2 C4:q/1 D4:q/2 C4:q/1 | C4:w/1 |',
+    },
+  },
+  {
+    id: 's0-hot-cross', targetBpm: 54, title: 'Hot Cross Buns (easy)', composer: 'Traditional', stage: 0,
+    skills: ['right-hand', 'C-D-E', 'quarter-notes', 'half-notes'], license: 'traditional',
+    notation: {
+      timeSig: [4, 4], fifths: 0,
+      rh: 'E4:q/3 D4:q/2 C4:h/1 | E4:q/3 D4:q/2 C4:h/1 | C4:q/1 C4:q/1 C4:q/1 C4:q/1 | D4:q/2 D4:q/2 D4:q/2 D4:q/2 | E4:q/3 D4:q/2 C4:h/1 |',
+    },
+  },
+  {
+    id: 's0-down-stairs', targetBpm: 54, title: 'Down the Stairs', composer: 'Original exercise', stage: 0,
+    skills: ['right-hand', 'C-D-E-F', 'steps', 'quarter-notes', 'half-notes'], license: 'own',
+    notation: {
+      timeSig: [4, 4], fifths: 0,
+      rh: 'F4:q/4 E4:q/3 D4:q/2 C4:q/1 | F4:h/4 C4:h/1 | C4:q/1 D4:q/2 E4:q/3 F4:q/4 | F4:h/4 E4:h/3 | F4:q/4 E4:q/3 D4:q/2 C4:q/1 | D4:q/2 E4:q/3 F4:h/4 | F4:h/4 D4:h/2 | C4:w/1 |',
+    },
+  },
+  {
+    id: 's0-lh-three', targetBpm: 52, title: 'Three Steps Down', composer: 'Original exercise', stage: 0,
+    skills: ['left-hand', 'middle-C-position', 'C-B-A', 'quarter-notes', 'half-notes'], license: 'own',
+    notation: {
+      timeSig: [4, 4], fifths: 0,
+      lh: 'C4:q/1 B3:q/2 A3:q/3 B3:q/2 | C4:h/1 A3:h/3 | A3:q/3 B3:q/2 C4:q/1 B3:q/2 | A3:h/3 B3:h/2 | C4:w/1 |',
+    },
+  },
+  {
+    id: 's0-lh-walk', targetBpm: 56, title: 'Left-Hand Walk', composer: 'Original exercise', stage: 0,
+    skills: ['left-hand', 'middle-C-position', 'steps', 'quarter-notes', 'half-notes'], license: 'own',
+    notation: {
+      timeSig: [4, 4], fifths: 0,
+      lh: 'C4:q/1 B3:q/2 A3:q/3 G3:q/4 | F3:h/5 A3:h/3 | G3:q/4 A3:q/3 B3:q/2 C4:q/1 | B3:h/2 C4:h/1 | A3:q/3 A3:q/3 G3:q/4 F3:q/5 | F3:q/5 G3:q/4 A3:q/3 B3:q/2 | C4:h/1 A3:h/3 | C4:w/1 |',
+    },
+  },
+  {
     id: 's0-rh-walk', targetBpm: 56, title: 'Right-Hand Walk', composer: 'Original exercise', stage: 0,
     skills: ['right-hand', 'five-finger-C', 'steps', 'quarter-notes', 'half-notes'], license: 'own',
     notation: {
@@ -53,7 +93,7 @@ const sources: Source[] = [
     notation: {
       timeSig: [4, 4], fifths: 0,
       rh: 'C4:q/1 D4:q/2 E4:h/3 | R:w | E4:q/3 D4:q/2 C4:h/1 | R:w |',
-      lh: 'R:w | G3:q/1 F3:q/2 E3:h/3 | R:w | C3:q/5 D3:q/4 C3:h/5 |',
+      lh: 'R:w | C4:q/1 B3:q/2 A3:h/3 | R:w | F3:q/5 A3:q/3 C4:h/1 |',
     },
   },
   {
@@ -62,7 +102,7 @@ const sources: Source[] = [
     notation: {
       timeSig: [4, 4], fifths: 0,
       rh: 'C4:q/1 E4:q/3 G4:h/5 | R:w | D4:q/2 F4:q/4 E4:h/3 | R:w | C4:w/1 |',
-      lh: 'R:w | C3:q/5 E3:q/3 G3:h/1 | R:w | D3:q/4 F3:q/2 E3:h/3 | R:w |', // the hands never play in the same bar in stage 0
+      lh: 'R:w | F3:q/5 A3:q/3 C4:h/1 | R:w | G3:q/4 B3:q/2 A3:h/3 | R:w |', // the hands never play in the same bar in stage 0
     },
   },
 
@@ -72,7 +112,7 @@ const sources: Source[] = [
     notation: {
       timeSig: [3, 4], fifths: 0,
       rh: 'C4:q/1 D4:q/2 E4:q/3 | G4:h./5 | R:h. | R:h. | E4:q/3 D4:q/2 C4:q/1 | C4:h./1 |',
-      lh: 'R:h. | R:h. | C3:q/5 E3:q/3 G3:q/1 | G3:h./1 | R:h. | R:h. |',
+      lh: 'R:h. | R:h. | F3:q/5 A3:q/3 C4:q/1 | C4:h./1 | R:h. | R:h. |',
     },
   },
   {
@@ -81,7 +121,7 @@ const sources: Source[] = [
     notation: {
       timeSig: [4, 4], fifths: 0,
       rh: 'G4:h/5 E4:h/3 | R:w | F4:h/4 D4:h/2 | R:w |',
-      lh: 'R:w | G3:h/1 E3:h/3 | R:w | F3:h/2 C3:h/5 |',
+      lh: 'R:w | C4:h/1 A3:h/3 | R:w | B3:h/2 C4:h/1 |',
     },
   },
   {
@@ -91,8 +131,8 @@ const sources: Source[] = [
       timeSig: [4, 4], fifths: 0,
       rh: 'C4:q/1 D4:q/2 E4:q/3 G4:q/5 | G4:h/5 E4:h/3 | R:w | R:w | F4:q/4 E4:q/3 D4:q/2 C4:q/1 | E4:h/3 G4:h/5 | R:w | R:w |' +
         ' E4:q/3 E4:q/3 F4:q/4 G4:q/5 | G4:h/5 F4:h/4 | R:w | R:w | G4:q/5 F4:q/4 E4:q/3 D4:q/2 | C4:h/1 E4:h/3 | R:w | R:w |',
-      lh: 'R:w | R:w | G3:q/1 F3:q/2 E3:q/3 D3:q/4 | C3:h/5 E3:h/3 | R:w | R:w | E3:q/3 D3:q/4 C3:q/5 D3:q/4 | E3:h/3 D3:h/4 |' +
-        ' R:w | R:w | C3:q/5 D3:q/4 E3:q/3 F3:q/2 | G3:h/1 E3:h/3 | R:w | R:w | D3:q/4 E3:q/3 D3:q/4 C3:q/5 | C3:w/5 |',
+      lh: 'R:w | R:w | C4:q/1 B3:q/2 A3:q/3 G3:q/4 | F3:h/5 A3:h/3 | R:w | R:w | A3:q/3 G3:q/4 F3:q/5 G3:q/4 | A3:h/3 G3:h/4 |' +
+        ' R:w | R:w | F3:q/5 G3:q/4 A3:q/3 B3:q/2 | C4:h/1 A3:h/3 | R:w | R:w | A3:q/3 B3:q/2 A3:q/3 B3:q/2 | C4:w/1 |',
     },
   },
   {
@@ -100,7 +140,7 @@ const sources: Source[] = [
     skills: ['left-hand', 'five-finger-C', 'quarter-notes', 'half-rests'], license: 'own',
     notation: {
       timeSig: [4, 4], fifths: 0,
-      lh: 'G3:q/1 F3:q/2 E3:q/3 D3:q/4 | C3:h/5 R:h | D3:q/4 E3:q/3 F3:q/2 G3:q/1 | C3:w/5 |',
+      lh: 'C4:q/1 B3:q/2 A3:q/3 G3:q/4 | F3:h/5 R:h | G3:q/4 A3:q/3 B3:q/2 C4:q/1 | C4:w/1 |',
     },
   },
 

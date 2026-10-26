@@ -51,7 +51,7 @@ Saturday replaces "New bars" and "Make it steady" with **replay**: every "kept u
 ## 2. What the app picks each step
 
 - **Warm-up:** the unit's exercises, easiest first: two warm-up days on each, then the next (units 1.5 and 2.1 go round instead). Five-finger positions come in four versions (steps, holds, thirds, mixed). Hands rotate by unit (right, left, turns, then both). Today the app has scales and arpeggios in 23 keys (stages 2+). **For Stages 0–1 the app has no pure five-finger-pattern exercise yet**; until I generate them (C, G, F, D positions, same machinery as the scales), Stage 0–1 warm-ups use the unit's easiest piece with a metronome.
-- **Reading:** a rung of the reading ladder (`content/reading.ts`, 25 rungs, each adding one thing). Every unit covers a few rungs (`reading.from` to `reading.to`): you start on the first and climb by reading well (two days at 80% up, a day under 50% down), never past the unit's last rung, so reading cannot run ahead of the lesson. The seven-level test only places a new player.
+- **Reading:** a rung of the reading ladder (`content/reading.ts`, 28 rungs, each adding one thing). Every unit covers a few rungs (`reading.from` to `reading.to`): you start on the first and climb by reading well (two days at 80% up, a day under 50% down), never past the unit's last rung, so reading cannot run ahead of the lesson. The seven-level test only places a new player.
 - **Review pool:** finished pieces, oldest play first, so each comes round about once a week.
 - **Stretch piece:** the unit's last piece, or the first Einaudi/Pärt-type target of the stage when one exists in the library.
 
@@ -65,13 +65,13 @@ Syllabus goal: names notes in the Middle C range, hands take turns, steady ♩=6
 
 | Unit | Focus | Main pieces (in order) | Reading rungs | Exit |
 |---|---|---|---|---|
-| 0.1 | Right hand, Middle C position | Chant of the Monk · Right-Hand Walk | 1–3 | Chant of the Monk finished |
-| 0.2 | Left hand, bass staff | Left-Hand March · Echo | 4–6 | Left-Hand March finished |
-| 0.3 | Hands take turns, 4/4 | Hands Take Turns · Question and Answer | 7–9 | Question and Answer finished |
-| 0.4 | 3/4 and the dotted half | Three Beats · Midnight Ride | 10–11 | Midnight Ride finished |
-| 0.5 | Stage exit | Shining Stars · Sixteen Bars | 12–13 | **Stage exit** (below) |
+| 0.1 | Right hand, Middle C position | Two Notes · Hot Cross Buns (easy) · Down the Stairs · Chant of the Monk · Right-Hand Walk | 1–5 | Chant of the Monk finished |
+| 0.2 | Left hand, Middle C and down | Three Steps Down · Left-Hand March · Left-Hand Walk · Echo | 6–9 | Left-Hand March finished |
+| 0.3 | Hands take turns, 4/4 | Hands Take Turns · Question and Answer | 10–12 | Question and Answer finished |
+| 0.4 | 3/4 and the dotted half | Three Beats · Midnight Ride | 13–14 | Midnight Ride finished |
+| 0.5 | Stage exit | Shining Stars · Sixteen Bars | 15–16 | **Stage exit** (below) |
 
-**Stage 0 exit:** a 16-bar hands-alternating piece without stopping in time (Sixteen Bars, a tempo run at 80%+ of steps in time) · reading rung 13 reached · name notes in the Middle C range within 2 seconds (not measurable by the app yet: a flash-card step would do it).
+**Stage 0 exit:** a 16-bar hands-alternating piece without stopping in time (Sixteen Bars, a tempo run at 80%+ of steps in time) · reading rung 16 reached · name notes in the Middle C range within 2 seconds (not measurable by the app yet: a flash-card step would do it).
 
 ### Stage 1: Five-finger positions (months 1–3)
 
@@ -79,13 +79,13 @@ Syllabus goal: first hands together (octaves apart → one holds → contrary mo
 
 | Unit | Focus | Main pieces | Reading rungs | Exit |
 |---|---|---|---|---|
-| 1.1 | Hands in octaves, treble and bass | Octaves Apart · Chant of the Monks · Ode to Joy (RH) · Ode to Joy (bass clef) · Lightly Row · All Through the Night | 14–15 | Chant of the Monks finished |
-| 1.2 | One hand holds, the other moves | Ode to Joy (hands together) · Roman Trumpets · Hungarian Dance · Eine Kleine Nachtmusik · 500-Year-Old Melody · Russian Folk Song · Royal Procession | 16–17 | Royal Procession finished |
-| 1.3 | Contrary motion, other positions | Opening and Closing · Home in G · Home in F · Au clair de la lune · Mary Had a Little Lamb · Theme from the Surprise Symphony · New World Symphony Theme | 18–19 | Opening and Closing, Home in G, Home in F finished |
-| 1.4 | Eighth notes, rests, upbeats, 3/4 | Hot Cross Buns · French Minuet · Musette · Shepherd's Song · Simple Gifts · Gavotte · Morning | 20–21 | Gavotte finished |
-| 1.5 | Stage exit | Theme by Mozart · Moon on the Water · English Folk Song · Low Voice · Breathe · May Dance · American Fiddle Tune · When the Saints · African Celebration | 21–22 | **Stage exit** (below) |
+| 1.1 | Hands in octaves, treble and bass | Octaves Apart · Chant of the Monks · Ode to Joy (RH) · Ode to Joy (bass clef) · Lightly Row · All Through the Night | 17–18 | Chant of the Monks finished |
+| 1.2 | One hand holds, the other moves | Ode to Joy (hands together) · Roman Trumpets · Hungarian Dance · Eine Kleine Nachtmusik · 500-Year-Old Melody · Russian Folk Song · Royal Procession | 19–20 | Royal Procession finished |
+| 1.3 | Contrary motion, other positions | Opening and Closing · Home in G · Home in F · Au clair de la lune · Mary Had a Little Lamb · Theme from the Surprise Symphony · New World Symphony Theme | 21–22 | Opening and Closing, Home in G, Home in F finished |
+| 1.4 | Eighth notes, rests, upbeats, 3/4 | Hot Cross Buns · French Minuet · Musette · Shepherd's Song · Simple Gifts · Gavotte · Morning | 23–24 | Gavotte finished |
+| 1.5 | Stage exit | Theme by Mozart · Moon on the Water · English Folk Song · Low Voice · Breathe · May Dance · American Fiddle Tune · When the Saints · African Celebration | 24–25 | **Stage exit** (below) |
 
-**Stage 1 exit:** reading rung 22 reached (the syllabus says "a Mikrokosmos piece at 90%"; the app's generated levels stand in for it) · five-finger patterns hands together in four keys (C, G, F, D: needs the missing warm-up exercises) · 8 pieces of the stage in the "kept up" pool.
+**Stage 1 exit:** reading rung 25 reached (the syllabus says "a Mikrokosmos piece at 90%"; the app's generated levels stand in for it) · five-finger patterns hands together in four keys (C, G, F, D: needs the missing warm-up exercises) · 8 pieces of the stage in the "kept up" pool.
 
 ### Stage 2: Leaving the position (months 3–7)
 
@@ -142,3 +142,5 @@ Not built yet: the Stage 0 flash cards beyond ten per day, a history page, "Prac
 ## 7. Reviewed 2026-10-27: generated content follows the lesson
 
 Reading, warm-ups, note cards and the Review and Play fallbacks were audited against the books and rebuilt so that each is tied to the unit and grows over its days. Several pieces moved because Faber's early pieces put the hands together sooner than this syllabus does. The audit, the evidence and the open questions are in [13-progression-review.md](13-progression-review.md).
+
+A second pass the same day, after reading the three beginner books, moved the left hand's first position to Middle C and down (F3–C4) and made the first two units introduce one note at a time (new pieces: Two Notes, Hot Cross Buns (easy), Down the Stairs, Three Steps Down, Left-Hand Walk): [13-progression-review.md](13-progression-review.md) section 4.

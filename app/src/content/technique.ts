@@ -281,4 +281,35 @@ export function buildPositionPieces(): Piece[] {
   });
 }
 
-export const positionPieces: Piece[] = buildPositionPieces();
+/**
+ * The same four exercises in the first position every beginner book starts with: both thumbs on Middle C, the right hand reaching up
+ * (C D E F G) and the left hand reaching down (C B A G F). Fingers 1–5 are the same in both hands, so the hands are played one at a
+ * time in stage 0; played together they move in contrary motion. From unit 1.1 the exercises above (the left hand an octave under
+ * the right) take over.
+ */
+const MIDDLE_C_LEFT: Note[] = [
+  { name: 'C4', midi: 60 }, { name: 'B3', midi: 59 }, { name: 'A3', midi: 57 }, { name: 'G3', midi: 55 }, { name: 'F3', midi: 53 },
+];
+
+export function buildMiddleCPieces(): Piece[] {
+  const rh = positionNotes('C', 60);
+  return (Object.keys(POSITION_PATTERNS) as (keyof typeof POSITION_PATTERNS)[]).map((kind): Piece => {
+    const bars = (notes: Note[]) =>
+      POSITION_PATTERNS[kind].map(([degrees, dur]) => degrees.map((d) => token(notes[d - 1]!, dur, d)).join(' ')).join(' | ') + ' |';
+    const title = kind === 'mixed' ? 'Five fingers: Middle C position' : `Five fingers: Middle C position · ${kind}`;
+    return {
+      id: kind === 'mixed' ? 't-mid-c' : `t-mid-c-${kind}`,
+      title,
+      composer: 'Technique',
+      stage: 0,
+      group: 'positions',
+      skills: ['five-finger', 'five-finger-C', 'middle-C-position', 'fingering'],
+      license: 'own',
+      targetBpm: 66,
+      hands: 'both',
+      notation: { title, composer: 'Technique', timeSig: [4, 4], fifths: 0, rh: bars(rh), lh: bars(MIDDLE_C_LEFT) },
+    };
+  });
+}
+
+export const positionPieces: Piece[] = [...buildMiddleCPieces(), ...buildPositionPieces()];

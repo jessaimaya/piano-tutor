@@ -1,6 +1,6 @@
 # Progression review: is everything generated or picked for the day in step with the lesson?
 
-Status: **done for stages 0–2, 2026-10-27.** Part of [10-course-mode-plan.md](10-course-mode-plan.md); the units are in [12-lesson-ladder.md](12-lesson-ladder.md).
+Status: **done for stages 0–2, 2026-10-27; second pass on stage 0 the same day, after reading the three beginner books (section 4).** Part of [10-course-mode-plan.md](10-course-mode-plan.md); the units are in [12-lesson-ladder.md](12-lesson-ladder.md).
 The question: *every generated piece, warm-up and card must match the player's current unit, and get harder gradually over the days of a unit.*
 This file is the audit that answered it, the reasoning behind the fixes, and what is still open.
 
@@ -39,34 +39,34 @@ This file is the audit that answered it, the reasoning behind the fixes, and wha
 
 ### 3.1 The reading ladder (`content/reading.ts`)
 
-25 rungs. Each adds **one** thing to the rung before. Each unit names the rungs it covers (`reading: { from, to }` in `course.json`); the player starts a unit on its first rung and climbs by reading well (two days at 80% up, one day under 50% down), **never past the unit's last rung**, so reading cannot outrun the lesson. The monthly sight-reading test no longer moves the rung; it only places a new player and dates the next test.
+28 rungs. Each adds **one** thing to the rung before. Each unit names the rungs it covers (`reading: { from, to }` in `course.json`); the player starts a unit on its first rung and climbs by reading well (two days at 80% up, one day under 50% down), **never past the unit's last rung**, so reading cannot outrun the lesson. The monthly sight-reading test no longer moves the rung; it only places a new player and dates the next test.
 
 | Rungs | Unit | New at each rung |
 |---|---|---|
-| 1 · 2 · 3 | 0.1 | right hand C D E → all five notes → skips of a third |
-| 4 · 5 · 6 | 0.2 | the same, left hand |
-| 7 · 8 · 9 | 0.3 | hands take turns (2 bars each) → with thirds → 8 bars |
-| 10 · 11 | 0.4 | 3/4 → dotted half notes, both meters |
-| 12 · 13 | 0.5 | rests inside the tune → 12 bars |
-| 14 · 15 | 1.1 | both hands an octave apart → 8 bars, both meters |
-| 16 · 17 | 1.2 | one hand holds a note → a sixth wide, both meters |
-| 18 · 19 | 1.3 | contrary motion → positions G and F |
-| 20 · 21 | 1.4 | eighth notes in pairs → with rests |
-| 22 | 1.5 | a moving left hand, keys C G F D |
-| 23 · 24 · 25 | 2.1–2.3 | sharps and flats, a seventh wide → the octave, scale runs → left-hand chords I, IV, V |
+| 1 · 2 · 3 · 4 · 5 | 0.1 | right hand C D → C D E → C D E F → all five notes → skips of a third |
+| 6 · 7 · 8 · 9 | 0.2 | left hand from Middle C down: C B A → G joins → all five (F to C) → skips of a third |
+| 10 · 11 · 12 | 0.3 | hands take turns (2 bars each) → with thirds → 8 bars |
+| 13 · 14 | 0.4 | 3/4 → dotted half notes, both meters |
+| 15 · 16 | 0.5 | rests inside the tune → 12 bars |
+| 17 · 18 | 1.1 | both hands an octave apart (left hand now also in the low C position) → 8 bars, both meters |
+| 19 · 20 | 1.2 | one hand holds a note → a sixth wide, both meters |
+| 21 · 22 | 1.3 | contrary motion → positions G and F |
+| 23 · 24 | 1.4 | eighth notes in pairs → with rests |
+| 25 | 1.5 | a moving left hand, keys C G F D |
+| 26 · 27 · 28 | 2.1–2.3 | sharps and flats, a seventh wide → the octave, scale runs → left-hand chords I, IV, V |
 
 The first rung of each unit overlaps the last of the one before where that makes sense, so a unit starts easy. A test (`reading.test.ts`) generates 40 pieces for every rung and checks the notes stay in the rung's range, only the rhythms and meters taught by then appear, the texture is what it says (turns never overlap, the octave unison is exact, contrary motion is contrary, chords are chords), and every bar adds up. A second test (`ladder.test.ts`) fails if a unit uses a rung that a later unit teaches.
 
 ### 3.2 Warm-ups (`technique.ts`, `plan.ts`)
 
-- Each five-finger position has four versions, easiest first: **steps** (neighbouring fingers, quarters) → **holds** (half notes) → **thirds** (skip a finger) → **mixed** (the original).
+- Each five-finger position has four versions, easiest first (stage 0 uses the **Middle C position**, thumbs on Middle C, right hand up and left hand down, played one hand at a time; from unit 1.1 the left hand sits an octave under the right): **steps** (neighbouring fingers, quarters) → **holds** (half notes) → **thirds** (skip a finger) → **mixed** (the original).
 - Each unit lists its exercises easiest first and the warm-up **climbs** the list: two warm-up days on each, then the next. Stage 1 and 2 units that revisit every key (1.5, 2.1) go round instead.
 - The hands rotate by unit: right only (0.1), left only (0.2), right and left turns (0.3–0.5), right, left, then both (1.1), both from 1.2.
 - A new `unitDays` counter (days that counted since entering the unit) drives both the warm-up and the cards.
 
 ### 3.3 Note cards (`cards.ts`)
 
-- The deck is **every note introduced up to the current unit**, from `course.json`: treble C D E F G (0.1), bass C D E F G (0.2), bass A B C (0.4). It is exactly the notes the unit pieces use, and a test checks it against every stage 0 own piece.
+- The deck is **every note introduced up to the current unit**, from `course.json`: treble C D E F G (0.1), then bass C B A G F (0.2), in the order the books teach them. A unit's own notes arrive **one a day** (two on the first day), so the deck grows with the days. It is exactly the notes the unit pieces use, and a test checks it against every stage 0 own piece.
 - A note you have not yet answered fast and right three times comes up three times as often; known notes stay in the mix (a light spaced repetition). A miss takes one count away.
 
 ### 3.4 Order of concepts is now enforced (`concepts.test.ts`)
@@ -87,12 +87,30 @@ I followed the syllabus's coordination order (turns → octaves → one hand hol
 | Hot Cross Buns | 1.3 | **1.4** | eighth notes |
 | Shining Stars | 0.4 | 0.5 | the hands answer each other inside the bar |
 | May Dance, American Fiddle Tune, When the Saints, African Celebration (Faber Units 8–9) | in no unit | 1.5 | converted but never used |
-| *new:* Right-Hand Walk | – | 0.1 | a second right-hand-only piece for the first unit |
+| *new, one note at a time:* Two Notes (C D), Hot Cross Buns (easy, C D E), Down the Stairs (C–F), Right-Hand Walk | – | 0.1 | the right hand's notes arrive one at a time, as in Milnes and Ferrante |
+| *new:* Three Steps Down (C B A), Left-Hand Walk | – | 0.2 | the left hand's notes arrive one at a time, from Middle C down |
+| Left-hand parts of Left-Hand March, Echo, Hands Take Turns, Question and Answer, Three Beats, Sixteen Bars | low C position (C3–G3) | **Middle C position (F3–C4)**, same fingers | see section 4 |
 | *new:* Sixteen Bars | – | 0.5 (the stage exit) | a 16-bar hands-alternating piece, as the syllabus asks. Midnight Ride (20 bars, the hands never overlap) is the 0.4 exit |
 
-Two own exercises were simplified (Ode to Joy lost its dotted rhythm in bars 4 and 8; Echo's last bar is now a rest in the left hand).
+Left-hand tunes now end on Middle C (where the thumb is) instead of on the lowest note. Two own exercises were simplified (Ode to Joy lost its dotted rhythm in bars 4 and 8; Echo's last bar is now a rest in the left hand).
 
-## 4. Open decisions and gaps
+## 4. Second pass: what the three beginner books agree on
+
+Read after the first pass (they are in the repo root, as images without text: Milnes, all 42 pages; Ferrante, its contents and first lessons; Williams, a skim).
+
+- **Milnes, *Learn to Play Piano*.** Right hand one note at a time: C (four beats each), C D, E, F, then G, each with two or three tiny tunes made only of the notes so far (Hot Cross Buns appears with E). Then rests and the dotted half. **Left hand: A, G, B, then Middle C, then F** (the hand reaches down from Middle C); the low C D E comes near the end of the book, after hands together, chords and sharps. **Hands take turns first** (Happily Up and Down, Au Clair de la Lune, Frère Jacques, Twinkle, with one hand resting in each bar), then 3/4 and the upbeat, tie, sharp, pause, eighth notes ("quavers"), and only then hands together (slow steps, then Ode to Joy with the left hand holding whole notes), chords, flats, the dotted quarter.
+- **Ferrante, *Piano Book for Kids*.** Treble C D E, then C D E F, then G and A; bass **C, B, A**, then C B A G, then F G A B C; then the grand staff; sharps and flats and easy chords only after that.
+- **Williams** is theory (staff, clefs, scales): no playing order to take.
+
+All three put the left hand **around Middle C first**, introduce notes one or two at a time, and keep the hands apart before putting them together. That confirmed the course's order (turns first, then octaves, then one hand holds) and showed three things the first pass got wrong:
+
+1. The left hand's first position was the low C position (C3–G3), which none of the three books use first. It is now **Middle C and down** (F3–C4), with the low position coming at unit 1.1 where the hands play an octave apart.
+2. The first rung was three notes at once. It is now two (C D), then one note more at a time.
+3. The note cards showed the whole position at once. A unit's notes now arrive one a day.
+
+Faber agrees on the left hand too (its unit 2 pieces use A3–C4), so these pieces needed no change.
+
+## 5. Open decisions and gaps
 
 1. **Faber against the syllabus.** If you would rather follow Faber's pace (hands together from unit 2), the stage 0 pieces move back; say so and I will undo section 3.5. I chose the syllabus because "hands never together" in stage 0 is the one rule written for a total beginner.
 2. **The seven-level placement test** is unchanged and coarse (level 2 to 3 is a big step). It only decides where you start, and it is conservative. A finer test could reuse the 25 rungs.
@@ -101,4 +119,4 @@ Two own exercises were simplified (Ode to Joy lost its dotted rhythm in bars 4 a
 5. **Stage 3 and later** have no ladder yet: the course ends at unit 2.3.
 6. **The evidence is thin.** The studies are small and mostly not piano beginners; use them as a direction.
 
-**More literature that would help** (you offered): a second adult method with a different order, such as *Alfred's Adult All-in-One* Level 1, to see where the two disagree; the Paul Harris Level 1–3 books **as text** (or I can run OCR on the scans); and Bartók *Mikrokosmos* Vol. 1 read for its order. I have not mined the three beginner books in the repo root (Milnes, Williams, Ferrante) for their note-introduction order; I can do that next.
+**More literature that would help** (you offered): a second adult method with a different order, such as *Alfred's Adult All-in-One* Level 1, to see where it disagrees with Faber; the Paul Harris Level 1–3 books **as text** (or I can run OCR on the scans); and Bartók *Mikrokosmos* Vol. 1 read for its order. The three beginner books in the repo root are now read (section 4); Williams has nothing to add.

@@ -14,8 +14,8 @@ describe('the deck follows the units', () => {
   });
 
   it('adds the left hand’s notes in the unit that teaches the left hand', () => {
-    expect(names(deckFor(course, '0.2'), 'bass')).toEqual(['C3', 'D3', 'E3', 'F3', 'G3']);
-    expect(newCards(course.units.find((u) => u.id === '0.2')!).map(cardKey)).toEqual(['bass:C3', 'bass:D3', 'bass:E3', 'bass:F3', 'bass:G3']);
+    expect(names(deckFor(course, '0.2'), 'bass')).toEqual(['C4', 'B3', 'A3', 'G3', 'F3']); // Middle C and down, the order all three beginner books use
+    expect(newCards(course.units.find((u) => u.id === '0.2')!).map(cardKey)).toEqual(['bass:C4', 'bass:B3', 'bass:A3', 'bass:G3', 'bass:F3']);
   });
 
   it('grows as the units go and never loses a note', () => {
@@ -25,7 +25,7 @@ describe('the deck follows the units', () => {
       expect(size, u.id).toBeGreaterThanOrEqual(last);
       last = size;
     }
-    expect(names(deckFor(course, '0.5'), 'bass')).toEqual(['C3', 'D3', 'E3', 'F3', 'G3', 'A3', 'B3', 'C4']);
+    expect(names(deckFor(course, '0.5'), 'bass')).toEqual(['C4', 'B3', 'A3', 'G3', 'F3']);
   });
 
   it('holds every note the stage 0 exercises use, by the unit that uses it, in the clef it is written in', () => {
@@ -42,6 +42,22 @@ describe('the deck follows the units', () => {
         }
       }
     }
+  });
+});
+
+describe('notes arrive one at a time', () => {
+  it('starts a unit with two of its notes and adds one a day', () => {
+    const treble = (days: number) => names(deckFor(course, '0.1', days), 'treble');
+    expect(treble(0)).toEqual(['C4', 'D4']);
+    expect(treble(1)).toEqual(['C4', 'D4', 'E4']);
+    expect(treble(2)).toEqual(['C4', 'D4', 'E4', 'F4']);
+    expect(treble(3)).toEqual(['C4', 'D4', 'E4', 'F4', 'G4']);
+    expect(treble(40)).toEqual(['C4', 'D4', 'E4', 'F4', 'G4']);
+  });
+
+  it('keeps every note of the units before, whatever the day', () => {
+    expect(names(deckFor(course, '0.2', 0), 'treble')).toEqual(['C4', 'D4', 'E4', 'F4', 'G4']);
+    expect(names(deckFor(course, '0.2', 0), 'bass')).toEqual(['C4', 'B3']);
   });
 });
 

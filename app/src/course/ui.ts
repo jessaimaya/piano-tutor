@@ -422,7 +422,7 @@ export function createCourse(host: Host) {
     if (!t) return;
     const done = t.states[view] === 'done';
     if (done) { host.setKeyHandler(undefined); return; }
-    const card = drawCard(Math.random, deckFor(host.course, state.unitId), cardsOn?.card, state.cardFast);
+    const card = drawCard(Math.random, deckFor(host.course, state.unitId, state.unitDays), cardsOn?.card, state.cardFast);
     await host.showCard(cardXml(card));
     cardsOn = { card, t0: performance.now() };
     msg(`Card ${(t.progress[view] ?? 0) + 1} of ${CARDS_PER_STEP}: play the note.`);

@@ -21,11 +21,25 @@ export const cardKey = (c: Card): string => `${c.clef}:${c.name}`;
 /** The notes a unit introduces, as cards. */
 export const newCards = (unit: Unit): Card[] => [...make('treble', unit.cards?.treble ?? []), ...make('bass', unit.cards?.bass ?? [])];
 
-/** The deck at a unit: every note introduced up to and including it, in the order they came. */
-export function deckFor(c: Course, unitId: string): Card[] {
+/** Notes of the unit's own list that are in the deck on its n-th day: two to begin with, one more each day (a unit's notes arrive one at a time). */
+export const revealed = (unitDays: number): number => 2 + Math.max(0, unitDays);
+
+/**
+ * The deck at a unit: every note introduced before it, and the unit's own notes in the order its list gives them, as many as the days
+ * spent in the unit allow (`unitDays`, left out for the whole list). The order is the order the books teach them: C D E F G in the
+ * right hand; Middle C, B, A, G, F in the left.
+ */
+export function deckFor(c: Course, unitId: string, unitDays = Infinity): Card[] {
   const upto = c.units.findIndex((u) => u.id === unitId);
+  const units = c.units.slice(0, upto < 0 ? c.units.length : upto + 1);
   const seen = new Set<string>();
-  return c.units.slice(0, upto < 0 ? c.units.length : upto + 1).flatMap(newCards).filter((card) => !seen.has(cardKey(card)) && seen.add(cardKey(card)));
+  const out: Card[] = [];
+  units.forEach((u, i) => {
+    const mine = newCards(u);
+    const own = i === units.length - 1 && upto >= 0 ? [...mine.filter((x) => x.clef === 'treble').slice(0, revealed(unitDays)), ...mine.filter((x) => x.clef === 'bass').slice(0, revealed(unitDays))] : mine;
+    for (const card of own) if (!seen.has(cardKey(card))) { seen.add(cardKey(card)); out.push(card); }
+  });
+  return out;
 }
 
 /** Fast and right answers needed in total before a card counts as known. */

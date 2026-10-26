@@ -11,6 +11,9 @@ const pitches = (text: string | undefined): number[] =>
   bars(text).flatMap(tokens).filter((t) => !t.startsWith('R:')).flatMap((t) => t.split(':')[0]!.split('+').map((n) => midiOf(n.replace(/\/\d$/, ''))));
 const durations = (text: string | undefined): string[] => bars(text).flatMap(tokens).map((t) => t.split(':')[1]!.split('/')[0]!);
 
+/** The left hand's first position: fingers 1 to 5 play C4, B3, A3, G3, F3. */
+const LEFT_FINGERS = [60, 59, 57, 55, 53];
+
 /** MIDI of the key's tonic in `octave`, and of the note `degree` steps up the major scale from it. */
 const degreeMidi = (keyName: string, octave: number, degree: number): number => {
   const key = KEYS[keyName]!;
@@ -20,8 +23,8 @@ const degreeMidi = (keyName: string, octave: number, degree: number): number => 
 };
 
 describe('the reading ladder', () => {
-  it('has 25 rungs in the order of the units, each one different from the one before', () => {
-    expect(MAX_RUNG).toBe(25);
+  it('has 28 rungs in the order of the units, each one different from the one before', () => {
+    expect(MAX_RUNG).toBe(28);
     RUNGS.forEach((r, i) => expect(r.n).toBe(i + 1));
     const order = RUNGS.map((r) => r.unit.split('.').map(Number));
     order.forEach((u, i) => { if (i) expect(u[0]! * 10 + u[1]!, `rung ${i + 1} comes after rung ${i}`).toBeGreaterThanOrEqual(order[i - 1]![0]! * 10 + order[i - 1]![1]!); });
@@ -31,6 +34,22 @@ describe('the reading ladder', () => {
   it('clamps an out-of-range rung instead of failing', () => {
     expect(rungOf(0).n).toBe(1);
     expect(rungOf(99).n).toBe(MAX_RUNG);
+  });
+
+  it('brings the left hand in from Middle C: C, B, A first, then G, then F', () => {
+    const notes = (n: number) => new Set(SEEDS.flatMap((s) => pitches(generateReading(n, s).notation.lh)));
+    expect([...notes(6)].sort()).toEqual([57, 59, 60]);
+    expect([...notes(7)].sort()).toEqual([55, 57, 59, 60]);
+    expect([...notes(8)].sort()).toEqual([53, 55, 57, 59, 60]);
+    for (const n of [6, 7, 8, 9]) expect(generateReading(n, 3).notation.lh!.trim().endsWith('C4:w |')).toBe(true); // a tune ends where the thumb is
+  });
+
+  it('brings the right hand in a note at a time: C D, then E, then F, then G', () => {
+    const notes = (n: number) => new Set(SEEDS.flatMap((s) => pitches(generateReading(n, s).notation.rh)));
+    expect([...notes(1)].sort()).toEqual([60, 62]);
+    expect([...notes(2)].sort()).toEqual([60, 62, 64]);
+    expect([...notes(3)].sort()).toEqual([60, 62, 64, 65]);
+    expect([...notes(4)].sort()).toEqual([60, 62, 64, 65, 67]);
   });
 
   it('makes the same piece from the same seed, and another from another', () => {
@@ -57,8 +76,11 @@ describe('the reading ladder', () => {
           if (spec.texture === 'rh' || spec.texture === 'held' || spec.texture === 'alternate' || spec.texture === 'chords') {
             for (const m of pitches(p.notation.rh)) expect(m, `${p.id} right hand`).toBeLessThanOrEqual(hi);
           }
-          const hand = ['lh', 'turns', 'unison', 'contrary'].includes(spec.texture);
-          if (hand) {
+          if (spec.texture === 'lh' || spec.texture === 'turns') {
+            // the left hand's first position: finger 1 on Middle C, reaching down to F3
+            const allowed = LEFT_FINGERS.slice(spec.range[0], spec.range[1] + 1);
+            for (const m of pitches(p.notation.lh)) expect(allowed, `${p.id} left hand`).toContain(m);
+          } else if (spec.texture === 'unison' || spec.texture === 'contrary') {
             const llo = degreeMidi(key, 3, spec.range[0]);
             const lhi = degreeMidi(key, 3, spec.range[1]);
             for (const m of pitches(p.notation.lh)) { expect(m, p.id).toBeGreaterThanOrEqual(llo); expect(m, p.id).toBeLessThanOrEqual(lhi); }

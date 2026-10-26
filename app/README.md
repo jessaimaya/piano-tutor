@@ -36,8 +36,8 @@ step** moves on, and **Menu** goes back to the course page. A day counts for the
 
 | Dot | Step | Min (at 25) |
 |---|---|---|
-| 1 | Warm-up: the unit's five-finger exercise, easiest version first and one hand at a time in stage 0, or ten **note cards** every second day in stage 0 (the deck is the notes taught so far; a note on the staff, you play it, under 2 s is fast) | 3 |
-| 2 | Reading: two generated pieces from the reading ladder (25 rungs, one new thing each). You start a unit on its first rung and climb after two good days, never past the unit's last, so reading never outruns the lesson | 5 |
+| 1 | Warm-up: the unit's five-finger exercise (in the Middle C position in stage 0), easiest version first and one hand at a time in stage 0, or ten **note cards** every second day in stage 0 (the deck is the notes taught so far, a new note each day; a note on the staff, you play it, under 2 s is fast) | 3 |
+| 2 | Reading: two generated pieces from the reading ladder (28 rungs, one new thing each). You start a unit on its first rung and climb after two good days, never past the unit's last, so reading never outruns the lesson | 5 |
 | 3 | New bars: today's piece in wait mode; right hand on its first day, left hand on the second, both on the third | 6 |
 | 4 | Make it steady: the same piece in tempo mode, +4 bpm per clean run | 6 |
 | 5 | Review: the finished piece that has waited longest | 3 |
@@ -58,10 +58,10 @@ Stage 2 stops at unit 2.3 (Faber Book 1 Units 10–13); later music is not conve
 | `src/course/state.ts` | the saved state: today's plan, streak, reading level, cards, unit exits (all pure functions) | ✅ |
 | `src/course/plan.ts` | builds a day: steps, time scaling, which hand, review pool, Saturday | ✅ |
 | `src/course/cards.ts` | the note cards: the deck for a unit, weighted draws, a card as a one-bar score, judging key and time | ✅ |
-| `src/content/reading.ts` | the reading ladder: 25 rungs and the generator for each | ✅ |
+| `src/content/reading.ts` | the reading ladder: 28 rungs and the generator for each | ✅ |
 | `src/course/ui.ts` | the course page and the dots bar; asks `main.ts` to open pieces | browser |
 | `src/storage/backup.ts` | **Backup** (in the course page): everything the app remembers as one JSON file, loaded back by replacing what is there | ✅ |
-| `technique.ts` `positionPieces` | the five-finger warm-ups (C, G, F, D, each in four versions: steps, holds, thirds, mixed), library section "Technique · Five fingers" | ✅ |
+| `technique.ts` `positionPieces` | the five-finger warm-ups (the Middle C position, then C, G, F, D, each in four versions: steps, holds, thirds, mixed), library section "Technique · Five fingers" | ✅ |
 
 In `npm run dev` the page exposes `window.__piano` (the course, the input bus, the log) for browser tests; the production build does not.
 

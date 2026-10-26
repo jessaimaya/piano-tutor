@@ -210,7 +210,7 @@ describe('reading', () => {
   });
 
   it('names what the rung adds in the step title', () => {
-    expect(buildDay(input({}, { ...newState('u'), readingLevel: 2 }))[1]!.title).toBe('Reading: Right hand: all five notes C to G');
+    expect(buildDay(input({}, { ...newState('u'), readingLevel: 2 }))[1]!.title).toBe('Reading: Right hand: C D E');
   });
 
   it('becomes the sight-reading test every four weeks', () => {

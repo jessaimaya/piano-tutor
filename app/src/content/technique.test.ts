@@ -122,10 +122,31 @@ describe('technique exercises', () => {
   });
 });
 
+describe('the Middle C position', () => {
+  const mid = positionPieces.filter((p) => p.id.startsWith('t-mid-c'));
+
+  it('puts both thumbs on Middle C: the right hand reaches up to G, the left down to F, on the same fingers', () => {
+    for (const p of mid) {
+      const rh = tokens(p.notation.rh), lh = tokens(p.notation.lh);
+      expect(new Set(rh.map((t) => t.name))).toEqual(new Set(['C4', 'D4', 'E4', 'F4', 'G4']));
+      expect(new Set(lh.map((t) => t.name))).toEqual(new Set(['C4', 'B3', 'A3', 'G3', 'F3'].filter((n) => lh.some((t) => t.name === n))));
+      expect(lh.map((t) => t.finger), p.id).toEqual(rh.map((t) => t.finger)); // finger n plays degree n in both hands
+      for (const t of lh) expect(t.midi).toBe(60 - [0, 1, 3, 5, 7][t.finger! - 1]!);
+      expect(p.stage).toBe(0);
+    }
+  });
+
+  it('has the same four versions as the other positions, in the same order', () => {
+    expect(mid.map((p) => p.id)).toEqual(['t-mid-c-steps', 't-mid-c-holds', 't-mid-c-thirds', 't-mid-c']);
+    for (const p of mid) expect(buildMusicXml(p.notation)).toContain('<score-partwise');
+  });
+});
+
 describe('five-finger positions', () => {
   it('has C, G, F and D, each in four versions with a unique id, building valid MusicXML', () => {
-    expect(positionPieces.map((p) => p.id)).toEqual(['c', 'g', 'f', 'd'].flatMap((k) => [`t-five-${k}-steps`, `t-five-${k}-holds`, `t-five-${k}-thirds`, `t-five-${k}`]));
-    expect(new Set(positionPieces.map((p) => p.id)).size).toBe(16);
+    const tiers = (prefix: string) => [`${prefix}-steps`, `${prefix}-holds`, `${prefix}-thirds`, prefix];
+    expect(positionPieces.map((p) => p.id)).toEqual([...tiers('t-mid-c'), ...['c', 'g', 'f', 'd'].flatMap((k) => tiers(`t-five-${k}`))]);
+    expect(new Set(positionPieces.map((p) => p.id)).size).toBe(20);
     for (const p of positionPieces) expect(buildMusicXml(p.notation)).toContain('<score-partwise');
   });
 
@@ -148,7 +169,7 @@ describe('five-finger positions', () => {
   });
 
   it('puts the left hand an octave below the right and fingers it 5-4-3-2-1 from the bottom', () => {
-    for (const p of positionPieces) {
+    for (const p of positionPieces.filter((x) => !x.id.startsWith('t-mid-'))) {
       const rh = tokens(p.notation.rh);
       const lh = tokens(p.notation.lh);
       expect(lh.map((t) => t.midi + 12)).toEqual(rh.map((t) => t.midi));

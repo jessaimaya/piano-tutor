@@ -6,11 +6,11 @@
       "id": "0.1",
       "stage": 0,
       "title": "Right hand, Middle C position",
-      "reading": { "from": 1, "to": 3 },
-      "warmup": ["t-five-c-steps", "t-five-c-holds"],
+      "reading": { "from": 1, "to": 5 },
+      "warmup": ["t-mid-c-steps", "t-mid-c-holds"],
       "warmupHands": ["rh"],
       "cards": { "treble": ["C4", "D4", "E4", "F4", "G4"] },
-      "main": ["x-faber-chant-of-the-monk", "s0-rh-walk"],
+      "main": ["s0-two-notes", "s0-hot-cross", "s0-down-stairs", "x-faber-chant-of-the-monk", "s0-rh-walk"],
       "exit": {
         "finished": ["x-faber-chant-of-the-monk"]
       }
@@ -18,12 +18,12 @@
     {
       "id": "0.2",
       "stage": 0,
-      "title": "Left hand, bass staff",
-      "reading": { "from": 4, "to": 6 },
-      "warmup": ["t-five-c-steps", "t-five-c-holds"],
+      "title": "Left hand, Middle C and down",
+      "reading": { "from": 6, "to": 9 },
+      "warmup": ["t-mid-c-steps", "t-mid-c-holds"],
       "warmupHands": ["lh"],
-      "cards": { "bass": ["C3", "D3", "E3", "F3", "G3"] },
-      "main": ["s0-march-lh", "s0-echo"],
+      "cards": { "bass": ["C4", "B3", "A3", "G3", "F3"] },
+      "main": ["s0-lh-three", "s0-march-lh", "s0-lh-walk", "s0-echo"],
       "exit": {
         "finished": ["s0-march-lh"]
       }
@@ -32,8 +32,8 @@
       "id": "0.3",
       "stage": 0,
       "title": "Hands take turns, 4/4",
-      "reading": { "from": 7, "to": 9 },
-      "warmup": ["t-five-c-holds", "t-five-c-thirds"],
+      "reading": { "from": 10, "to": 12 },
+      "warmup": ["t-mid-c-holds", "t-mid-c-thirds"],
       "warmupHands": ["rh", "lh"],
       "main": ["s0-turns", "s0-question"],
       "exit": {
@@ -44,10 +44,9 @@
       "id": "0.4",
       "stage": 0,
       "title": "3/4 and the dotted half",
-      "reading": { "from": 10, "to": 11 },
-      "warmup": ["t-five-c-thirds", "t-five-c"],
+      "reading": { "from": 13, "to": 14 },
+      "warmup": ["t-mid-c-thirds", "t-mid-c"],
       "warmupHands": ["rh", "lh"],
-      "cards": { "bass": ["A3", "B3", "C4"] },
       "main": ["s0-three-four", "x-faber-midnight-ride"],
       "exit": {
         "finished": ["x-faber-midnight-ride"]
@@ -57,13 +56,13 @@
       "id": "0.5",
       "stage": 0,
       "title": "Stage 0 exit",
-      "reading": { "from": 12, "to": 13 },
-      "warmup": ["t-five-c-thirds", "t-five-c"],
+      "reading": { "from": 15, "to": 16 },
+      "warmup": ["t-mid-c-thirds", "t-mid-c"],
       "warmupHands": ["rh", "lh"],
       "main": ["x-faber-shining-stars", "s0-sixteen"],
       "exit": {
         "finished": ["s0-sixteen"],
-        "readingLevel": 13,
+        "readingLevel": 16,
         "cards": true
       }
     },
@@ -71,7 +70,7 @@
       "id": "1.1",
       "stage": 1,
       "title": "Hands in octaves, treble and bass",
-      "reading": { "from": 14, "to": 15 },
+      "reading": { "from": 17, "to": 18 },
       "warmup": ["t-five-c-steps", "t-five-c-thirds", "t-five-c"],
       "warmupHands": ["rh", "lh", "both"],
       "main": ["s1-unison", "x-faber-chant-of-the-monks", "s1-ode-rh", "x-beethoven-ode-to-joy-bass-clef", "x-traditional-lightly-row", "x-traditional-all-through-the-night"],
@@ -83,7 +82,7 @@
       "id": "1.2",
       "stage": 1,
       "title": "One hand holds, the other moves",
-      "reading": { "from": 16, "to": 17 },
+      "reading": { "from": 19, "to": 20 },
       "warmup": ["t-five-c-thirds", "t-five-c"],
       "main": ["s1-ode-ht", "x-faber-roman-trumpets", "x-brahms-hungarian-dance", "x-mozart-eine-kleine-nachtmusik", "x-traditional-500-year-old-melody", "x-traditional-russian-folk-song", "x-faber-royal-procession"],
       "exit": {
@@ -94,7 +93,7 @@
       "id": "1.3",
       "stage": 1,
       "title": "Contrary motion, other positions",
-      "reading": { "from": 18, "to": 19 },
+      "reading": { "from": 21, "to": 22 },
       "warmup": ["t-five-g-steps", "t-five-g-thirds", "t-five-f-steps", "t-five-f-thirds"],
       "main": ["s1-contrary", "s1-g-position", "s1-f-position", "s1-au-clair", "s1-mary", "x-haydn-theme-from-the-surprise-symphony", "x-dvorak-new-world-symphony-theme"],
       "exit": {
@@ -105,7 +104,7 @@
       "id": "1.4",
       "stage": 1,
       "title": "Eighth notes, rests, upbeats, 3/4",
-      "reading": { "from": 20, "to": 21 },
+      "reading": { "from": 23, "to": 24 },
       "warmup": ["t-five-g", "t-five-f", "t-five-d-steps"],
       "main": ["s1-hot-cross", "x-rameau-french-minuet", "x-anonymous-musette", "x-beethoven-shepherd-s-song", "x-traditional-simple-gifts", "x-handel-gavotte", "x-grieg-morning"],
       "exit": {
@@ -116,50 +115,50 @@
       "id": "1.5",
       "stage": 1,
       "title": "Stage 1 exit",
-      "reading": { "from": 21, "to": 22 },
+      "reading": { "from": 24, "to": 25 },
       "warmup": ["t-five-c", "t-five-g", "t-five-f", "t-five-d"],
       "warmupRotate": true,
       "main": ["x-mozart-theme-by-mozart", "x-faber-moon-on-the-water", "x-traditional-english-folk-song", "s1-low-voice", "s1-breathe", "x-faber-may-dance", "x-traditional-american-fiddle-tune", "x-traditional-when-the-saints-go-marching-in", "x-traditional-african-celebration"],
       "exit": {
         "finished": ["x-mozart-theme-by-mozart", "x-faber-moon-on-the-water"],
-        "readingLevel": 22
+        "readingLevel": 25
       }
     },
     {
       "id": "2.1",
       "stage": 2,
       "title": "Sharps, flats and naturals",
-      "reading": { "from": 22, "to": 23 },
+      "reading": { "from": 25, "to": 26 },
       "warmup": ["t-five-d", "t-five-f"],
       "warmupRotate": true,
       "main": ["x-faber-half-time-band", "x-mozart-romance-eine-kleine-nachtmusik", "x-tchaikovsky-sleeping-beauty-waltz"],
       "exit": {
         "finished": ["x-faber-half-time-band", "x-mozart-romance-eine-kleine-nachtmusik"],
-        "readingLevel": 23
+        "readingLevel": 26
       }
     },
     {
       "id": "2.2",
       "stage": 2,
       "title": "The C major scale",
-      "reading": { "from": 23, "to": 24 },
+      "reading": { "from": 26, "to": 27 },
       "warmup": ["t-five-c", "s2-scale-c-rh", "s2-scale-c-lh"],
       "main": ["s2-scale-c-rh", "s2-scale-c-lh", "s2-scale-c-ht", "s2-twinkle", "x-faber-scale-waltz", "s2-frere-jacques"],
       "exit": {
         "finished": ["s2-scale-c-ht", "x-faber-scale-waltz"],
-        "readingLevel": 24
+        "readingLevel": 27
       }
     },
     {
       "id": "2.3",
       "stage": 2,
       "title": "Chords: the G7 chord, G major and A minor",
-      "reading": { "from": 24, "to": 25 },
+      "reading": { "from": 27, "to": 28 },
       "warmup": ["s2-scale-c-ht", "s2-scale-g-rh", "s2-scale-g-lh"],
       "main": ["s2-chord-steps", "s2-scale-g-rh", "s2-scale-g-lh", "s2-scale-a-minor", "x-clarke-trumpet-voluntary"],
       "exit": {
         "finished": ["s2-chord-steps", "x-clarke-trumpet-voluntary"],
-        "readingLevel": 25
+        "readingLevel": 28
       }
     }
   ],
