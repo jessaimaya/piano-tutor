@@ -267,7 +267,7 @@ function showRunResult(text: string, run: RunRecord, earlier: readonly RunRecord
 /** Last, best and a sparkline of the latest scores for the open piece, under its title. */
 function renderProgress(): void {
   const el = $('progress');
-  if (!current) { el.hidden = true; return; }
+  if (!current || sight) { el.hidden = true; return; } // test runs are not logged: nothing to show
   const p = progressOf(log.forPiece(current.id));
   el.hidden = false;
   el.replaceChildren();

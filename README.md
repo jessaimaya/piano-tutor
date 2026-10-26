@@ -12,15 +12,19 @@ MIDI keyboard, and you can also play with your computer keyboard or the mouse.
 
 ## Screenshots
 
-**Wait mode** (Warm theme). The cursor waits for the right notes. A wrong key gets a plain explanation, and the keyboard shows what you played.
+**Wait mode** (Warm theme). The cursor waits for the right notes. The notes you play appear on the staff, green when right and red when wrong, at the height of the key you pressed, with a plain explanation underneath. The line under the title is the piece's score history.
 
-![Wait mode on Ode to Joy, with feedback on a wrong note](docs/screenshots/wait-mode.webp)
+![Wait mode on Ode to Joy: a right chord in green, a wrong key in red, and the feedback line](docs/screenshots/wait-mode.webp)
 
-**Tempo mode** (Night theme). A metronome sets the pace and every note has a timing window. The key you should have played is outlined in green, and the status line counts what was in time, missed or extra.
+**Tempo mode** (Night theme). A metronome sets the pace and every note has a timing window. The thin line crossing the staves moves at your tempo, so you can see when to press. The key you should play next is outlined in green, and the status line counts what was in time, missed or extra.
 
-![Tempo mode with a missed note and an extra note](docs/screenshots/tempo-mode.webp)
+![Tempo mode with the moving line, a green hit and a red wrong key](docs/screenshots/tempo-mode.webp)
 
-**Sight-reading test** (Cold blues theme). Freshly generated pieces in seven levels, so you never see the same one twice.
+**Scores** (Cold blues theme). Every run gets a score out of 100 and up to three stars, with how it compares to your last run and your best. The library shows the last score of each piece you have played, and the sort "Needs practice first" puts the weakest at the top. The history in these screenshots is sample data.
+
+![Result card after a run: 90 out of 100, three stars, 14 better than last time](docs/screenshots/scores.webp)
+
+**Sight-reading test** (Warm theme). Freshly generated pieces in seven levels, so you never see the same one twice.
 
 ![Sight-reading test, level 1](docs/screenshots/sight-reading.webp)
 

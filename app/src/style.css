@@ -273,6 +273,7 @@ main { min-width: 0; }
 .result p { margin: 0; }
 
 .progress { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 16px; margin: 8px 0 0; font: 12.5px var(--mono); color: var(--muted); }
+.progress[hidden] { display: none; }
 .progress strong { color: var(--ink); font-size: 15px; }
 .progress-last strong, .progress-last .stars { color: var(--tone, var(--accent)); }
 .progress-flag { color: var(--warn); border: 1px solid var(--warn); border-radius: 999px; padding: 0 9px; }
