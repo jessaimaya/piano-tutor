@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { TempoRun, windowFor, MAX_WINDOW_MS, MIN_WINDOW_MS } from './tempo-mode';
+import { TempoRun, windowFor, LEVELS, MAX_WINDOW_MS, MIN_WINDOW_MS } from './tempo-mode';
 import type { TimedStep } from './timeline';
 
 // 60 bpm → 1 beat = 1000 ms. Count-in of 2 beats starting at t=0 → beat 0 sounds at t=2000.
@@ -277,5 +277,48 @@ describe('a player who keeps a steady offset from the clock', () => {
     const r = run(piece, 44, 4);
     const drift = [0, 150, 340].map((d, i) => r.press([60, 62, 64][i]!, r.timeOfBeat(i) + d).kind);
     expect(drift).toEqual(['hit', 'hit', 'extra']);
+  });
+});
+
+describe('levels', () => {
+  const piece = [step(0, 0, 60), step(1, 1, 62), step(2, 2, 64)];
+  const at = (level: 'beginner' | 'intermediate' | 'advanced', offsetMs: number) => {
+    const r = new TempoRun(piece, { bpm: 60, countInBeats: 4, level });
+    r.start(0);
+    return r.press(62, r.timeOfBeat(1) + offsetMs).kind;
+  };
+
+  it('windows grow from advanced to beginner', () => {
+    const w = (l: 'beginner' | 'intermediate' | 'advanced') => windowFor(60, piece, 1, l);
+    expect(w('advanced')).toBeLessThan(w('intermediate'));
+    expect(w('intermediate')).toBeLessThan(w('beginner'));
+    expect(w('advanced')).toBe(LEVELS.advanced.max);
+    expect(w('beginner')).toBe(LEVELS.beginner.max);
+  });
+  it('a note 323 ms early scores for a beginner only', () => {
+    expect(at('beginner', -323)).toBe('hit');
+    expect(at('intermediate', -323)).toBe('extra');
+    expect(at('advanced', -323)).toBe('extra');
+  });
+  it('a note 200 ms late scores for beginner and intermediate, not advanced', () => {
+    expect(at('beginner', 200)).toBe('hit');
+    expect(at('intermediate', 200)).toBe('hit');
+    expect(at('advanced', 200)).toBe('extra');
+  });
+  it('defaults to intermediate', () => expect(windowFor(60, piece)).toBe(windowFor(60, piece, 1, 'intermediate')));
+});
+
+describe('a player rushing ahead of the beat', () => {
+  it('is told a later note was right but early, not that it was the wrong pitch', () => {
+    const steps = [step(0, 0, 64), step(1, 1, 62), step(2, 2, 60)];
+    const r = run(steps, 60, 2);
+    // E4 is still open (due at 2000); D4 comes ~1 s before its time of 3000
+    const d = r.press(62, r.timeOfBeat(1) - 900);
+    expect(d).toMatchObject({ kind: 'extra', offsetMs: -900 });
+  });
+  it('a pitch two beats or more away is still a wrong note', () => {
+    const steps = [step(0, 0, 64), step(1, 1, 62), step(2, 2, 60)];
+    const r = run(steps, 60, 2);
+    expect(r.press(60, r.timeOfBeat(0))).not.toHaveProperty('offsetMs');
   });
 });

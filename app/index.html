@@ -133,6 +133,11 @@
         <div class="group">
           <div class="cap"><span>Timing</span></div>
           <div class="row">
+            <div class="segmented" id="level" role="group" aria-label="Timing strictness" title="How exactly in time a note must be">
+              <button type="button" data-level="beginner" title="Wide window: about half a beat either side">Beginner</button>
+              <button type="button" data-level="intermediate" title="Medium window">Intermediate</button>
+              <button type="button" data-level="advanced" title="Strict: a small window around the beat">Advanced</button>
+            </div>
             <label><input id="metronome" type="checkbox" checked> Metronome while playing</label>
             <label><input id="showNext" type="checkbox" checked> Show the next key</label>
             <span class="calib">

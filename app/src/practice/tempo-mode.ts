@@ -12,7 +12,17 @@ export interface TempoOptions {
   countInBeats: number;
   /** Length of the piece's beat in quarter notes (1.5 in 6/8): only the count-in number and the timing window use it. Default 1. */
   beatQuarters?: number;
+  /** How forgiving the timing window is. Default 'intermediate'. */
+  level?: Level;
 }
+
+/** Player level: how wide the window around each note is (a fraction of the beat, kept between min and max in ms). */
+export type Level = 'beginner' | 'intermediate' | 'advanced';
+export const LEVELS: Record<Level, { fraction: number; min: number; max: number }> = {
+  beginner: { fraction: 0.55, min: 200, max: 450 },
+  intermediate: { fraction: 0.4, min: 120, max: 300 },
+  advanced: { fraction: 0.2, min: 60, max: 150 },
+};
 
 export type TempoPress =
   | { kind: 'hit'; note: number; offsetMs: number }
@@ -60,9 +70,10 @@ interface Expected { stepIdx: number; note: number; time: number; matched: boole
 export const MIN_WINDOW_MS = 120;
 export const MAX_WINDOW_MS = 300;
 
-export function windowFor(bpm: number, steps: TimedStep[], beatQuarters = 1): number {
+export function windowFor(bpm: number, steps: TimedStep[], beatQuarters = 1, level: Level = 'intermediate'): number {
   const beatMs = 60000 / bpm;
-  let window = Math.min(MAX_WINDOW_MS, Math.max(MIN_WINDOW_MS, 0.4 * beatMs * beatQuarters));
+  const { fraction, min, max } = LEVELS[level];
+  let window = Math.min(max, Math.max(min, fraction * beatMs * beatQuarters));
   const played = steps.filter((s) => s.notes.length > 0);
   for (let i = 1; i < played.length; i++) {
     const gapMs = (played[i]!.beat - played[i - 1]!.beat) * beatMs;
@@ -84,7 +95,7 @@ export class TempoRun {
 
   constructor(private steps: TimedStep[], private opts: TempoOptions) {
     this.beatMs = 60000 / opts.bpm;
-    this.windowMs = windowFor(opts.bpm, steps, opts.beatQuarters);
+    this.windowMs = windowFor(opts.bpm, steps, opts.beatQuarters, opts.level);
     steps.forEach((s, stepIdx) => {
       for (const note of s.notes) this.expected.push({ stepIdx, note, time: 0, matched: false, missed: false });
     });
@@ -181,7 +192,8 @@ export class TempoRun {
     const nextSame = next && this.expected.find((e) => e.stepIdx === next.stepIdx && !e.matched && !e.missed && e.note === note);
     if (next && nextSame) return { wanted: this.upcoming(), offsetMs: nowMs - nextSame.time };
 
-    const lateSame = unplayed.filter((e) => e.note === note && dist(e) <= 0.75 * this.beatMs).sort((a, b) => dist(a) - dist(b))[0];
+    // Right pitch, close to its time: a little late, or up to 1.5 beats early (rushing ahead of the beat).
+    const lateSame = unplayed.filter((e) => e.note === note && dist(e) <= (e.time > nowMs ? 1.5 : 0.75) * this.beatMs).sort((a, b) => dist(a) - dist(b))[0];
     if (lateSame) return { wanted: stepNotes(lateSame.stepIdx), offsetMs: nowMs - lateSame.time };
 
     if (next && dist(next) <= 2 * this.beatMs) return { wanted: this.upcoming() };

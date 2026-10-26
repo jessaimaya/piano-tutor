@@ -15,7 +15,7 @@ import { describeMissed, describeOffTime, describeWrongNote } from './practice/f
 import { CLEAN_ACCURACY, CLEAN_RUNS_TO_FINISH, PracticeLog, type Hands, type PieceStatus } from './practice/log';
 import { Session, type RunSummary } from './practice/session';
 import { describeOutcome, PASS_ACCURACY, recordResult, startTest, type SightState } from './practice/sight-test';
-import { TempoRun, type TempoSummary } from './practice/tempo-mode';
+import { TempoRun, type Level, type TempoSummary } from './practice/tempo-mode';
 import { readTimeline, type TimedStep } from './practice/timeline';
 import { accuracy } from './practice/wait-mode';
 import { Synth } from './ui/audio';
@@ -77,6 +77,7 @@ let current: Current | undefined;
 let session: Session | undefined; // wait mode
 let tempo: TempoState | undefined; // tempo mode, while a run is going
 let hands: Hands = 'both';
+let level: Level = ((l) => (l === 'intermediate' || l === 'advanced' ? l : 'beginner'))(safeGet('level'));
 let mode: Mode = (safeGet('mode') as Mode | null) === 'tempo' ? 'tempo' : 'wait';
 
 // ───────────── library ─────────────
@@ -316,6 +317,10 @@ function renderControls(): void {
     b.disabled = (available !== 'both' && h !== available) || !!sight; // the test is read with the hands it asks for
     b.setAttribute('aria-pressed', String(h === hands));
   }
+  for (const b of document.querySelectorAll<HTMLButtonElement>('#level button')) {
+    b.setAttribute('aria-pressed', String(b.dataset.level === level));
+    b.disabled = !!tempo; // not in the middle of a run
+  }
   for (const b of document.querySelectorAll<HTMLButtonElement>('#mode button')) {
     b.setAttribute('aria-pressed', String(b.dataset.mode === mode));
   }
@@ -404,7 +409,7 @@ function startTempo(): void {
   if (!sight) safeSet('bpm:' + current.id, String(bpm));
   // The player's tempo counts the piece's own beat; the run and the score count quarter notes.
   const { quarters: q, perBar } = current.unit;
-  const run = new TempoRun(steps, { bpm: bpm * q, countInBeats: perBar * q, beatQuarters: q });
+  const run = new TempoRun(steps, { bpm: bpm * q, countInBeats: perBar * q, beatQuarters: q, level });
   const t0 = performance.now();
   run.start(t0);
 
@@ -419,7 +424,7 @@ function startTempo(): void {
   const cancelClicks = synth.scheduleClicks(clicks);
 
   debug('start', {
-    piece: current.id, hands, bpm, beatMs: r1(run.beatMs), windowMs: r1(run.windowMs), latencyMs,
+    piece: current.id, hands, level, bpm, beatMs: r1(run.beatMs), windowMs: r1(run.windowMs), latencyMs,
     countInMs: r1(run.beatZeroAt - t0), audio: synth.info,
     schedule: run.schedule.map((e) => ({ note: nm(e.note), beat: e.beat, rel: r1(e.time - run.beatZeroAt) })),
   });
@@ -937,6 +942,14 @@ $('hands').addEventListener('click', (e) => {
   hands = b.dataset.hands as Hands;
   safeSet('hands:' + current.id, hands);
   resetPractice();
+});
+
+$('level').addEventListener('click', (e) => {
+  const b = (e.target as HTMLElement).closest<HTMLButtonElement>('button[data-level]');
+  if (!b || b.disabled) return;
+  level = b.dataset.level as Level;
+  safeSet('level', level);
+  renderControls();
 });
 
 $('mode').addEventListener('click', (e) => {
