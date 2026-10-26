@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Piano Tutor</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' rx='3' fill='%232f6fde'/%3E%3Crect x='3' y='3' width='2' height='10' fill='white'/%3E%3Crect x='7' y='3' width='2' height='10' fill='white'/%3E%3Crect x='11' y='3' width='2' height='10' fill='white'/%3E%3C/svg%3E">
+  <script type="module" src="/src/main.ts"></script>
+</head>
+<body>
+  <header class="topbar">
+    <h1>Piano Tutor</h1>
+    <div class="spacer"></div>
+    <span id="pedal" class="pill" title="Sustain pedal (CC64)">Pedal <b id="pedal-val">–</b></span>
+    <span id="midi-status" class="pill">MIDI: starting…</span>
+    <button id="midi-retry" type="button">Reconnect</button>
+  </header>
+
+  <div class="layout">
+    <aside class="library" aria-label="Library">
+      <div class="sr-launch">
+        <button id="sr-start" type="button" title="Read pieces you have never seen, from easy to harder, until reading gets difficult">Sight-reading test</button>
+        <span id="sr-last" class="muted"></span>
+      </div>
+      <div class="lib-tools">
+        <input id="lib-q" type="search" placeholder="Search title, composer, skill…" aria-label="Search the library" autocomplete="off">
+        <div class="lib-row">
+          <select id="lib-stage" aria-label="Stage"><option value="all">All stages</option></select>
+          <select id="lib-status" aria-label="Status">
+            <option value="all">Any status</option><option value="new">New</option><option value="practicing">Practicing</option><option value="done">Done</option>
+          </select>
+          <select id="lib-hands" aria-label="Hands">
+            <option value="all">Any hands</option><option value="both">Both hands</option><option value="rh">Right hand</option><option value="lh">Left hand</option>
+          </select>
+          <select id="lib-sort" aria-label="Sort">
+            <option value="course">Course order</option><option value="difficulty">Easiest first</option><option value="title">A–Z</option>
+          </select>
+        </div>
+        <div class="lib-row">
+          <label><input id="lib-pieces" type="checkbox"> Hide scales and arpeggios</label>
+          <span id="lib-count" class="hint"></span>
+          <button id="lib-clear" type="button">Clear</button>
+        </div>
+      </div>
+      <div id="library"></div>
+      <label class="import">
+        Open a MusicXML file
+        <input id="import" type="file" accept=".musicxml,.xml,.mxl">
+      </label>
+      <p class="hint">
+        No piano connected? Play with the computer keyboard.
+        Right hand: <kbd>A S D F G H J K L</kbd> = white keys from Middle C, <kbd>W E T Y U O P</kbd> = black keys.
+        Left hand: <kbd>Z X C V B N M</kbd> = C3–B3, hold <kbd>Shift</kbd> for the octave below.
+      </p>
+    </aside>
+
+    <main>
+      <div class="controls transport">
+        <div class="piece-title"><strong id="piece-title">Pick a piece</strong> <span id="piece-meta" class="muted"></span></div>
+        <div class="spacer"></div>
+        <div class="segmented" id="mode" role="group" aria-label="Mode">
+          <button type="button" data-mode="wait" title="The score waits for you">Wait</button>
+          <button type="button" data-mode="tempo" title="The score keeps time; you play in time">Tempo</button>
+        </div>
+        <div class="segmented" id="hands" role="group" aria-label="Hands">
+          <button type="button" data-hands="rh">Right</button>
+          <button type="button" data-hands="lh">Left</button>
+          <button type="button" data-hands="both">Both</button>
+        </div>
+        <button id="listen" type="button" title="Hear the piece at the tempo below, with the cursor following">▶ Listen</button>
+        <button id="restart" type="button">Restart</button>
+        <button id="stop" type="button" class="stop" hidden>Stop</button>
+      </div>
+
+      <div id="pace-controls" class="controls tempo-controls">
+        <label>Tempo <input id="bpm" type="number" min="30" max="160" step="2" value="60"> <span id="bpm-unit">bpm</span></label>
+        <span id="target" class="muted"></span>
+        <span id="beat-hint" class="muted"></span>
+        <label><input id="listen-clicks" type="checkbox" checked> Clicks while listening</label>
+        <span class="range" title="Practise just some bars: the cursor, wait mode, tempo mode and Listen all follow it">
+          Bars <input id="bar-from" type="number" min="1" value="1" aria-label="First bar"> to
+          <input id="bar-to" type="number" min="1" value="1" aria-label="Last bar"> of <span id="bar-total">–</span>
+          <button id="bar-all" type="button">Whole piece</button>
+        </span>
+        <label title="Play it again straight away, over and over, until you press Stop (or Escape)"><input id="loop" type="checkbox"> Loop</label>
+      </div>
+
+      <div id="tempo-controls" class="controls tempo-controls" hidden>
+        <label><input id="metronome" type="checkbox" checked> Metronome while playing</label>
+        <label><input id="showNext" type="checkbox" checked> Show the next key</label>
+        <span class="calib">
+          <button id="calibrate" type="button" title="Tap along with 16 clicks to measure the delay of your speakers and piano">Calibrate timing</button>
+          <button id="calib-reset" type="button" hidden>Reset</button>
+          <span id="latency" class="muted"></span>
+        </span>
+      </div>
+
+      <div id="sr-panel" class="sr-panel" hidden>
+        <div id="sr-text"></div>
+        <div class="sr-buttons">
+          <button id="sr-next" type="button" hidden>Next piece</button>
+          <button id="sr-quit" type="button">End test</button>
+        </div>
+      </div>
+
+      <div id="status" class="status" aria-live="polite"></div>
+      <div id="feedback" class="feedback" aria-live="polite"></div>
+      <div id="result" class="result" hidden></div>
+      <div id="score"></div>
+      <div id="keyboard"></div>
+    </main>
+  </div>
+</body>
+</html>

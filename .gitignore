@@ -1,0 +1,33 @@
+# Dependencies and build output
+node_modules/
+dist/
+*.tsbuildinfo
+__pycache__/
+*.pyc
+
+# Copyrighted books and scores. Never publish these.
+literacy/
+*.epub
+*.pdf
+
+# Imported scores stay local; the manifest (app/scores/library.json) is tracked and
+# skips any entry whose file is missing. Two files that state they are public domain are the exception.
+app/scores/*.mxl
+app/scores/*.musicxml
+app/scores/*.xml
+app/scores/incoming/
+!app/scores/bach-minuet-g.mxl
+!app/scores/chopin-prelude-e-minor.mxl
+
+# Inbox: only its README is tracked
+inbox/*
+!inbox/README.md
+
+# Local environment and editor files
+.env
+.env.*
+.DS_Store
+.idea/
+.vscode/
+*.log
+.claude/settings.local.json

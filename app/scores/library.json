@@ -1,0 +1,729 @@
+[
+  {
+    "id": "x-carol-bells-easy",
+    "file": "carol-bells-easy.mxl",
+    "title": "Carol of the Bells (easy)",
+    "composer": "Leontovych",
+    "stage": 3,
+    "skills": [
+      "3/4",
+      "ostinato"
+    ],
+    "targetBpm": 60,
+    "hands": "both",
+    "license": "unverified-arrangement",
+    "source": "musetrainer/library",
+    "difficulty": 32,
+    "notes": "Christmas tune"
+  },
+  {
+    "id": "x-swan-lake",
+    "file": "swan-lake.mxl",
+    "title": "Swan Lake theme (easy)",
+    "composer": "Tchaikovsky",
+    "stage": 3,
+    "skills": [
+      "melody"
+    ],
+    "targetBpm": 80,
+    "hands": "both",
+    "license": "unverified-arrangement",
+    "source": "musetrainer/library",
+    "difficulty": 41
+  },
+  {
+    "id": "x-fur-elise-easy",
+    "file": "fur-elise-easy.mxl",
+    "title": "Für Elise (easy)",
+    "composer": "Beethoven",
+    "stage": 3,
+    "skills": [
+      "A-minor",
+      "3/4",
+      "melody-over-accompaniment"
+    ],
+    "targetBpm": 72,
+    "hands": "both",
+    "license": "unverified-arrangement",
+    "source": "musetrainer/library",
+    "difficulty": 42
+  },
+  {
+    "id": "x-greensleeves-easy",
+    "file": "greensleeves-easy.mxl",
+    "title": "Greensleeves (easy)",
+    "composer": "Traditional",
+    "stage": 3,
+    "skills": [
+      "3/4",
+      "A-minor",
+      "melody-over-accompaniment"
+    ],
+    "targetBpm": 84,
+    "hands": "both",
+    "license": "unverified-arrangement",
+    "source": "musetrainer/library",
+    "difficulty": 43
+  },
+  {
+    "id": "x-ode-joy-variation",
+    "file": "ode-joy-variation.mxl",
+    "title": "Ode to Joy (easy variation)",
+    "composer": "Beethoven",
+    "stage": 3,
+    "skills": [
+      "G-major"
+    ],
+    "targetBpm": 112,
+    "hands": "both",
+    "license": "unverified-arrangement",
+    "source": "musetrainer/library",
+    "difficulty": 44
+  },
+  {
+    "id": "x-bach-minuet-g",
+    "file": "bach-minuet-g.mxl",
+    "title": "Minuet in G (BWV Anh. 114)",
+    "composer": "Bach (Petzold)",
+    "stage": 3,
+    "skills": [
+      "minuet",
+      "3/4",
+      "G-major",
+      "two-voices"
+    ],
+    "targetBpm": 96,
+    "hands": "both",
+    "license": "public-domain",
+    "source": "musetrainer/library",
+    "difficulty": 49
+  },
+  {
+    "id": "x-canon-d-easy",
+    "file": "canon-d-easy.mxl",
+    "title": "Canon in D (easy, fingered)",
+    "composer": "Pachelbel",
+    "stage": 3,
+    "skills": [
+      "D-major",
+      "ground-bass",
+      "fingering"
+    ],
+    "targetBpm": 72,
+    "hands": "both",
+    "license": "unverified-arrangement",
+    "source": "musetrainer/library",
+    "difficulty": 52
+  },
+  {
+    "id": "x-fur-elise-beginner",
+    "file": "fur-elise-beginner.mxl",
+    "title": "Für Elise (beginner, 3/8)",
+    "composer": "Beethoven",
+    "stage": 4,
+    "skills": [
+      "A-minor",
+      "3/8"
+    ],
+    "targetBpm": 84,
+    "hands": "both",
+    "license": "unverified-arrangement",
+    "source": "musetrainer/library",
+    "difficulty": 66,
+    "notes": "3/8: the beat is an eighth note, three to a bar. Target is a first estimate"
+  },
+  {
+    "id": "x-bach-prelude-c",
+    "file": "bach-prelude-c-bwv846.mxl",
+    "title": "Prelude in C, BWV 846",
+    "composer": "Bach",
+    "stage": 4,
+    "skills": [
+      "broken-chords",
+      "C-major",
+      "sustain-pedal"
+    ],
+    "targetBpm": 60,
+    "hands": "both",
+    "license": "unverified-arrangement",
+    "source": "musetrainer/library",
+    "difficulty": 67
+  },
+  {
+    "id": "x-danse-villageoise",
+    "file": "danse-villageoise.mxl",
+    "title": "Danse villageoise",
+    "composer": "Beethoven",
+    "stage": 4,
+    "skills": [
+      "D-major",
+      "3/4"
+    ],
+    "targetBpm": 120,
+    "hands": "both",
+    "license": "unverified-arrangement",
+    "source": "musetrainer/library",
+    "difficulty": 73,
+    "notes": "File carries a © mark"
+  },
+  {
+    "id": "x-chopin-nocturne-op9-2-easy",
+    "file": "chopin-nocturne-op9-2-easy.mxl",
+    "title": "Nocturne Op. 9 No. 2 (easy)",
+    "composer": "Chopin",
+    "stage": 4,
+    "skills": [
+      "Eb-major",
+      "3/4",
+      "sustain-pedal",
+      "ornaments"
+    ],
+    "targetBpm": 72,
+    "hands": "both",
+    "license": "unverified-arrangement",
+    "source": "musetrainer/library",
+    "difficulty": 76
+  },
+  {
+    "id": "x-satie-gymnopedie-1",
+    "file": "satie-gymnopedie-1.mxl",
+    "title": "Gymnopédie No. 1",
+    "composer": "Satie",
+    "stage": 4,
+    "skills": [
+      "3/4",
+      "D-major",
+      "sustain-pedal",
+      "slow-tempo"
+    ],
+    "targetBpm": 60,
+    "hands": "both",
+    "license": "unverified-arrangement",
+    "source": "musetrainer/library",
+    "difficulty": 78,
+    "notes": "File replaced by a musescore.com download (78 bars)"
+  },
+  {
+    "id": "x-bach-air-g",
+    "file": "bach-air-g.mxl",
+    "title": "Air on the G String",
+    "composer": "Bach",
+    "stage": 4,
+    "skills": [
+      "sustained-melody",
+      "sustain-pedal"
+    ],
+    "targetBpm": 52,
+    "hands": "both",
+    "license": "unverified-arrangement",
+    "source": "musetrainer/library",
+    "difficulty": 78
+  },
+  {
+    "id": "x-canon-d-medium",
+    "file": "canon-d-medium.mxl",
+    "title": "Canon in D (medium)",
+    "composer": "Pachelbel",
+    "stage": 4,
+    "skills": [
+      "D-major",
+      "ground-bass"
+    ],
+    "targetBpm": 56,
+    "hands": "both",
+    "license": "unverified-arrangement",
+    "source": "musetrainer/library",
+    "difficulty": 82
+  },
+  {
+    "id": "x-chopin-waltz-a-minor",
+    "file": "chopin-waltz-a-minor.mxl",
+    "title": "Waltz in A minor (B. 150)",
+    "composer": "Chopin",
+    "stage": 5,
+    "skills": [
+      "waltz-bass",
+      "3/4",
+      "A-minor",
+      "fingering"
+    ],
+    "targetBpm": 96,
+    "hands": "both",
+    "license": "unverified-arrangement",
+    "source": "musetrainer/library",
+    "difficulty": 74,
+    "notes": "Rated by the piece’s usual grade (5–6), not the file"
+  },
+  {
+    "id": "x-mozart-lacrimosa",
+    "file": "mozart-lacrimosa.mxl",
+    "title": "Lacrimosa (Requiem)",
+    "composer": "Mozart",
+    "stage": 5,
+    "skills": [
+      "12/8",
+      "slow-tempo"
+    ],
+    "targetBpm": 35,
+    "hands": "both",
+    "license": "unverified-arrangement",
+    "source": "musetrainer/library",
+    "difficulty": 79,
+    "notes": "12/8: the beat is a dotted quarter, four to a bar. Try wait mode first"
+  },
+  {
+    "id": "x-waltz-flowers",
+    "file": "waltz-flowers.mxl",
+    "title": "Waltz of the Flowers",
+    "composer": "Tchaikovsky",
+    "stage": 5,
+    "skills": [
+      "waltz-bass",
+      "3/4"
+    ],
+    "targetBpm": 120,
+    "hands": "both",
+    "license": "unverified-arrangement",
+    "source": "musetrainer/library",
+    "difficulty": 86
+  },
+  {
+    "id": "x-mozart-k545-1",
+    "file": "mozart-k545-1.mxl",
+    "title": "Piano Sonata No. 16, K. 545, 1st mvt",
+    "composer": "Mozart",
+    "stage": 5,
+    "skills": [
+      "Alberti-bass",
+      "scales"
+    ],
+    "targetBpm": 106,
+    "hands": "both",
+    "license": "unverified-arrangement",
+    "source": "musetrainer/library",
+    "difficulty": 87
+  },
+  {
+    "id": "x-canon-d-full",
+    "file": "canon-d-full.mxl",
+    "title": "Canon in D (full)",
+    "composer": "Pachelbel",
+    "stage": 5,
+    "skills": [
+      "D-major",
+      "ground-bass"
+    ],
+    "targetBpm": 80,
+    "hands": "both",
+    "license": "unverified-arrangement",
+    "source": "musetrainer/library",
+    "difficulty": 97
+  },
+  {
+    "id": "x-chopin-nocturne-csm",
+    "file": "chopin-nocturne-csm.mxl",
+    "title": "Nocturne in C♯ minor (posth.)",
+    "composer": "Chopin",
+    "stage": 5,
+    "skills": [
+      "sustain-pedal",
+      "ornaments"
+    ],
+    "targetBpm": 52,
+    "hands": "both",
+    "license": "unverified-arrangement",
+    "source": "musetrainer/library",
+    "difficulty": 107
+  },
+  {
+    "id": "x-schubert-liszt-serenade",
+    "file": "schubert-liszt-serenade.mxl",
+    "title": "Serenade (Ständchen), Liszt arr.",
+    "composer": "Schubert / Liszt",
+    "stage": 5,
+    "skills": [
+      "melody-in-thumb"
+    ],
+    "targetBpm": 46,
+    "hands": "both",
+    "license": "unverified-arrangement",
+    "source": "musetrainer/library",
+    "difficulty": 116
+  },
+  {
+    "id": "x-beethoven-moonlight-1",
+    "file": "beethoven-moonlight-1.mxl",
+    "title": "Moonlight Sonata, 1st mvt",
+    "composer": "Beethoven",
+    "stage": 5,
+    "skills": [
+      "triplets",
+      "sustain-pedal"
+    ],
+    "targetBpm": 40,
+    "hands": "both",
+    "license": "unverified-arrangement",
+    "source": "musetrainer/library",
+    "difficulty": 119
+  },
+  {
+    "id": "x-chopin-nocturne-op9-2-full",
+    "file": "chopin-nocturne-op9-2-full.mxl",
+    "title": "Nocturne Op. 9 No. 2 (full)",
+    "composer": "Chopin",
+    "stage": 5,
+    "skills": [
+      "12/8",
+      "ornaments",
+      "sustain-pedal"
+    ],
+    "targetBpm": 32,
+    "hands": "both",
+    "license": "unverified-arrangement",
+    "source": "musetrainer/library",
+    "difficulty": 120,
+    "notes": "12/8: the beat is a dotted quarter, four to a bar. Try wait mode first"
+  },
+  {
+    "id": "x-fur-elise-full",
+    "file": "fur-elise-full.mxl",
+    "title": "Für Elise (full, fingered)",
+    "composer": "Beethoven",
+    "stage": 5,
+    "skills": [
+      "A-minor",
+      "3/8",
+      "fingering"
+    ],
+    "targetBpm": 96,
+    "hands": "both",
+    "license": "unverified-arrangement",
+    "source": "musetrainer/library",
+    "difficulty": 125,
+    "notes": "3/8: the beat is an eighth note; full length, so rated up"
+  },
+  {
+    "id": "x-chopin-prelude-e-minor",
+    "file": "chopin-prelude-e-minor.mxl",
+    "title": "Prelude in E minor, Op. 28 No. 4",
+    "composer": "Chopin",
+    "stage": 5,
+    "skills": [
+      "chordal-LH",
+      "slow-tempo",
+      "sustain-pedal",
+      "melody-over-accompaniment"
+    ],
+    "targetBpm": 50,
+    "hands": "both",
+    "license": "public-domain",
+    "source": "musetrainer/library",
+    "difficulty": 131,
+    "notes": "Slow and repetitive, so rated below the file score"
+  },
+  {
+    "id": "x-schubert-ave-maria",
+    "file": "schubert-ave-maria.mxl",
+    "title": "Ave Maria (D. 839)",
+    "composer": "Schubert",
+    "stage": 5,
+    "skills": [
+      "sustain-pedal",
+      "arpeggio-accompaniment"
+    ],
+    "targetBpm": 40,
+    "hands": "both",
+    "license": "unverified-arrangement",
+    "source": "musetrainer/library",
+    "difficulty": 132,
+    "notes": "Only 17 bars with high density: the measures look unusual, difficulty is uncertain"
+  },
+  {
+    "id": "x-satie-gnossienne-1",
+    "file": "satie-gnossienne-1.mxl",
+    "title": "Gnossienne No. 1",
+    "composer": "Satie",
+    "stage": 5,
+    "skills": [
+      "sustain-pedal",
+      "free-time"
+    ],
+    "targetBpm": 82,
+    "hands": "both",
+    "license": "unverified-arrangement",
+    "source": "musetrainer/library",
+    "difficulty": 136,
+    "notes": "No time signature and only 11 bars in the file: check it renders and tracks"
+  },
+  {
+    "id": "x-debussy-arabesque-1",
+    "file": "debussy-arabesque-1.mxl",
+    "title": "Arabesque No. 1",
+    "composer": "Debussy",
+    "stage": 6,
+    "skills": [
+      "E-major",
+      "polyrhythm",
+      "sustain-pedal"
+    ],
+    "targetBpm": 96,
+    "hands": "both",
+    "license": "unverified-arrangement",
+    "source": "musetrainer/library",
+    "difficulty": 98,
+    "notes": "Rated up: triplets against duplets"
+  },
+  {
+    "id": "x-mozart-twinkle-var",
+    "file": "mozart-twinkle-var.mxl",
+    "title": "12 Variations on \"Twinkle, twinkle\" (K. 265)",
+    "composer": "Mozart",
+    "stage": 6,
+    "skills": [
+      "variations"
+    ],
+    "targetBpm": 96,
+    "hands": "both",
+    "license": "unverified-arrangement",
+    "source": "musetrainer/library",
+    "difficulty": 107,
+    "notes": "325 bars"
+  },
+  {
+    "id": "x-bumblebee",
+    "file": "bumblebee.mxl",
+    "title": "Flight of the Bumblebee",
+    "composer": "Rimsky-Korsakov",
+    "stage": 6,
+    "skills": [
+      "chromatic",
+      "fast"
+    ],
+    "targetBpm": 116,
+    "hands": "both",
+    "license": "unverified-arrangement",
+    "source": "musetrainer/library",
+    "difficulty": 108,
+    "notes": "Rated up: fast tempo is not in the file"
+  },
+  {
+    "id": "x-brahms-hungarian-5",
+    "file": "brahms-hungarian-5.mxl",
+    "title": "Hungarian Dance No. 5",
+    "composer": "Brahms",
+    "stage": 6,
+    "skills": [
+      "G-minor",
+      "tempo-changes"
+    ],
+    "targetBpm": 104,
+    "hands": "both",
+    "license": "unverified-arrangement",
+    "source": "musetrainer/library",
+    "difficulty": 112,
+    "notes": "Fast"
+  },
+  {
+    "id": "x-mozart-turkish-march",
+    "file": "mozart-turkish-march.mxl",
+    "title": "Turkish March (fingered)",
+    "composer": "Mozart",
+    "stage": 6,
+    "skills": [
+      "fingering"
+    ],
+    "targetBpm": 96,
+    "hands": "both",
+    "license": "unverified-arrangement",
+    "source": "musetrainer/library",
+    "difficulty": 119,
+    "notes": "Fast"
+  },
+  {
+    "id": "x-liszt-liebestraum-3",
+    "file": "liszt-liebestraum-3.mxl",
+    "title": "Liebestraum No. 3",
+    "composer": "Liszt",
+    "stage": 6,
+    "skills": [
+      "sustain-pedal"
+    ],
+    "targetBpm": 120,
+    "hands": "both",
+    "license": "unverified-arrangement",
+    "source": "musetrainer/library",
+    "difficulty": 124
+  },
+  {
+    "id": "x-chopin-nocturne-op9-1",
+    "file": "chopin-nocturne-op9-1.mxl",
+    "title": "Nocturne Op. 9 No. 1",
+    "composer": "Chopin",
+    "stage": 6,
+    "skills": [
+      "sustain-pedal"
+    ],
+    "targetBpm": 92,
+    "hands": "both",
+    "license": "unverified-arrangement",
+    "source": "musetrainer/library",
+    "difficulty": 127
+  },
+  {
+    "id": "x-chopin-waltz-op64-2",
+    "file": "chopin-waltz-op64-2.mxl",
+    "title": "Waltz Op. 64 No. 2",
+    "composer": "Chopin",
+    "stage": 6,
+    "skills": [
+      "waltz-bass",
+      "rubato"
+    ],
+    "targetBpm": 96,
+    "hands": "both",
+    "license": "unverified-arrangement",
+    "source": "musetrainer/library",
+    "difficulty": 130
+  },
+  {
+    "id": "x-beethoven-sym5-1",
+    "file": "beethoven-sym5-1.mxl",
+    "title": "Symphony No. 5, 1st mvt (piano solo)",
+    "composer": "Beethoven",
+    "stage": 6,
+    "skills": [
+      "transcription"
+    ],
+    "targetBpm": 120,
+    "hands": "both",
+    "license": "unverified-arrangement",
+    "source": "musetrainer/library",
+    "difficulty": 134,
+    "notes": "504 bars"
+  },
+  {
+    "id": "x-bach-prelude-cm",
+    "file": "bach-prelude-cm.mxl",
+    "title": "Prelude in C minor, BWV 847",
+    "composer": "Bach",
+    "stage": 6,
+    "skills": [
+      "broken-chords",
+      "fast"
+    ],
+    "targetBpm": 116,
+    "hands": "both",
+    "license": "unverified-arrangement",
+    "source": "musetrainer/library",
+    "difficulty": 137
+  },
+  {
+    "id": "x-chopin-ballade-1",
+    "file": "chopin-ballade-1.mxl",
+    "title": "Ballade No. 1",
+    "composer": "Chopin",
+    "stage": 6,
+    "skills": [
+      "concert-piece"
+    ],
+    "targetBpm": 54,
+    "hands": "both",
+    "license": "unverified-arrangement",
+    "source": "musetrainer/library",
+    "difficulty": 142
+  },
+  {
+    "id": "x-debussy-clair-de-lune",
+    "file": "debussy-clair-de-lune.mxl",
+    "title": "Clair de lune",
+    "composer": "Debussy",
+    "stage": 6,
+    "skills": [
+      "9/8",
+      "sustain-pedal"
+    ],
+    "targetBpm": 27,
+    "hands": "both",
+    "license": "unverified-arrangement",
+    "source": "musetrainer/library",
+    "difficulty": 148,
+    "notes": "9/8: the beat is a dotted quarter, three to a bar. A long-term goal"
+  },
+  {
+    "id": "x-sugar-plum",
+    "file": "sugar-plum.mxl",
+    "title": "Dance of the Sugar Plum Fairy",
+    "composer": "Tchaikovsky",
+    "stage": 6,
+    "skills": [
+      "staccato"
+    ],
+    "targetBpm": 56,
+    "hands": "both",
+    "license": "unverified-arrangement",
+    "source": "musetrainer/library",
+    "difficulty": 159
+  },
+  {
+    "id": "x-beethoven-moonlight-3",
+    "file": "beethoven-moonlight-3.mxl",
+    "title": "Moonlight Sonata, 3rd mvt",
+    "composer": "Beethoven",
+    "stage": 6,
+    "skills": [
+      "concert-piece"
+    ],
+    "targetBpm": 120,
+    "hands": "both",
+    "license": "unverified-arrangement",
+    "source": "musetrainer/library",
+    "difficulty": 159
+  },
+  {
+    "id": "x-beethoven-pathetique-2",
+    "file": "beethoven-pathetique-2.mxl",
+    "title": "Pathétique Sonata, 2nd mvt",
+    "composer": "Beethoven",
+    "stage": 6,
+    "skills": [
+      "sustain-pedal"
+    ],
+    "targetBpm": 40,
+    "hands": "both",
+    "license": "unverified-arrangement",
+    "source": "musetrainer/library",
+    "difficulty": 170,
+    "notes": "Rated up from file: grace-note and triplet heavy"
+  },
+  {
+    "id": "x-bach-toccata-fugue",
+    "file": "bach-toccata-fugue.mxl",
+    "title": "Toccata and Fugue in D minor",
+    "composer": "Bach",
+    "stage": 6,
+    "skills": [
+      "concert-piece"
+    ],
+    "targetBpm": 48,
+    "hands": "both",
+    "license": "unverified-arrangement",
+    "source": "musetrainer/library",
+    "difficulty": 183
+  },
+  {
+    "id": "x-liszt-campanella",
+    "file": "liszt-campanella.mxl",
+    "title": "La Campanella",
+    "composer": "Liszt",
+    "stage": 6,
+    "skills": [
+      "concert-piece"
+    ],
+    "targetBpm": 52,
+    "hands": "both",
+    "license": "unverified-arrangement",
+    "source": "musetrainer/library",
+    "difficulty": 206,
+    "notes": "6/8: the beat is a dotted quarter, two to a bar"
+  }
+]

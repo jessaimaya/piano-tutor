@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MIDI Check</title>
+<style>
+  :root { --bg:#fafaf8; --fg:#1d1d1b; --muted:#6b6b66; --line:#ddd; --accent:#2f6fde; --on:#e8a33d; }
+  @media (prefers-color-scheme: dark) { :root { --bg:#151514; --fg:#ececea; --muted:#9a9a94; --line:#333; --accent:#6e9cf0; --on:#e8a33d; } }
+  body { background:var(--bg); color:var(--fg); font:15px/1.5 system-ui, sans-serif; max-width:820px; margin:0 auto; padding:16px; }
+  h1 { font-size:20px; margin:0 0 4px; }
+  .muted { color:var(--muted); }
+  section { border-top:1px solid var(--line); padding:12px 0; }
+  .pedal { display:grid; grid-template-columns:150px 1fr 48px; gap:8px; align-items:center; margin:6px 0; }
+  .bar { height:14px; background:var(--line); border-radius:7px; overflow:hidden; }
+  .bar > div { height:100%; width:0; background:var(--accent); transition:width .05s; }
+  #keys { display:flex; flex-wrap:wrap; gap:4px; min-height:28px; }
+  #keys span { background:var(--on); color:#000; border-radius:4px; padding:2px 6px; font:13px ui-monospace, monospace; }
+  #log { font:12px/1.4 ui-monospace, monospace; height:220px; overflow:auto; background:rgba(127,127,127,.08); padding:8px; border-radius:6px; white-space:pre; }
+  .ok { color:#2e9a4f; } .bad { color:#d0453a; }
+</style>
+</head>
+<body>
+<h1>MIDI Check</h1>
+<p class="muted">Plug the piano in over USB, open this page in Chrome or Edge, play some notes and press each pedal.</p>
+
+<section>
+  <strong>Inputs:</strong> <span id="inputs">requesting access…</span>
+</section>
+
+<section>
+  <strong>Pedals</strong>
+  <div class="pedal"><span>CC64 Sustain</span><div class="bar"><div id="b64"></div></div><span id="v64">–</span></div>
+  <div class="pedal"><span>CC66 Sostenuto</span><div class="bar"><div id="b66"></div></div><span id="v66">–</span></div>
+  <div class="pedal"><span>CC67 Soft</span><div class="bar"><div id="b67"></div></div><span id="v67">–</span></div>
+  <p id="half" class="muted">Sustain values seen: none yet. Press the pedal slowly, halfway.</p>
+</section>
+
+<section>
+  <strong>Keys held</strong>
+  <div id="keys"></div>
+</section>
+
+<section>
+  <strong>Raw messages</strong> <span class="muted">(Active Sensing and Clock are hidden)</span>
+  <div id="log"></div>
+</section>
+
+<script>
+const NAMES = ['C','C♯','D','D♯','E','F','F♯','G','G♯','A','A♯','B'];
+const noteName = n => NAMES[n % 12] + (Math.floor(n / 12) - 1);
+const held = new Map();
+const sustainSeen = new Set();
+const $ = id => document.getElementById(id);
+
+function log(line) {
+  const el = $('log');
+  el.textContent = line + '\n' + el.textContent.slice(0, 8000);
+}
+
+function renderKeys() {
+  $('keys').innerHTML = [...held.keys()].sort((a, b) => a - b)
+    .map(n => `<span>${noteName(n)} · ${held.get(n)}</span>`).join('');
+}
+
+function onMessage(e) {
+  const [status, d1, d2] = e.data;
+  if (status === 0xFE || status === 0xF8) return; // Active Sensing / Clock: the P-115 sends both
+  const type = status & 0xF0, ch = (status & 0x0F) + 1;
+  const hex = [...e.data].map(b => b.toString(16).padStart(2, '0')).join(' ');
+
+  if (type === 0x90 && d2 > 0) {
+    held.set(d1, d2); renderKeys();
+    log(`${hex}  ch${ch} note on   ${noteName(d1)} vel ${d2}`);
+  } else if (type === 0x80 || (type === 0x90 && d2 === 0)) {
+    // The P-115 sends note-off as note-on with velocity 0
+    held.delete(d1); renderKeys();
+    log(`${hex}  ch${ch} note off  ${noteName(d1)}${type === 0x90 ? '  (note-on vel 0)' : ''}`);
+  } else if (type === 0xB0) {
+    if ([64, 66, 67].includes(d1)) {
+      $('b' + d1).style.width = (d2 / 127 * 100) + '%';
+      $('v' + d1).textContent = d2;
+    }
+    if (d1 === 64) {
+      sustainSeen.add(d2);
+      const mid = [...sustainSeen].filter(v => v > 0 && v < 127);
+      $('half').innerHTML = `Sustain values seen: ${[...sustainSeen].sort((a, b) => a - b).join(', ')} — ` +
+        (mid.length ? '<span class="ok">continuous: half-pedal data is sent</span>'
+                    : '<span class="muted">only on/off so far (a switch-type pedal sends just 0 and 127)</span>');
+    }
+    log(`${hex}  ch${ch} CC${d1} = ${d2}`);
+  } else {
+    log(`${hex}  ch${ch}`);
+  }
+}
+
+function bindInputs(access) {
+  const names = [];
+  access.inputs.forEach(input => { input.onmidimessage = onMessage; names.push(input.name); });
+  $('inputs').innerHTML = names.length ? `<span class="ok">${names.join(', ')}</span>`
+                                       : '<span class="bad">none found. Is the USB cable connected and the piano on?</span>';
+}
+
+if (!navigator.requestMIDIAccess) {
+  $('inputs').innerHTML = '<span class="bad">Web MIDI is not available in this browser. Use Chrome or Edge.</span>';
+} else {
+  navigator.requestMIDIAccess().then(access => {
+    bindInputs(access);
+    access.onstatechange = () => bindInputs(access);
+  }, err => {
+    $('inputs').innerHTML = `<span class="bad">access denied: ${err.message}</span>`;
+  });
+}
+</script>
+</body>
+</html>
