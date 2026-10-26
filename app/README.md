@@ -44,6 +44,7 @@ With the P-115 connected, the device name appears in the top bar and the sustain
 | `src/content/technique.ts` | Scales and arpeggios in every key (46 exercises), fingering derived from where the thumbs fall | ✅ |
 | `src/content/scores.ts` | The imported-scores list: reads `scores/library.json`, loads each file on demand | build only |
 | `src/content/pieces.ts` | The starter library (31 pieces, stages 0–3) | ✅ |
+| `src/ui/staff-position.ts` | Where a key sits on a treble or bass staff (step from the top line, ledger lines, sharps): the red wrong-note drawn by `ScoreView.showWrong` | ✅ |
 | `src/ui/*` | OpenSheetMusicDisplay score + cursor, on-screen keyboard, small synth | checked in a browser |
 
 ## Scales and arpeggios

@@ -229,6 +229,12 @@ main { min-width: 0; }
 /* score paper */
 #score { background: var(--paper); color: #000; border-radius: 20px; padding: 12px; min-height: 160px; overflow-x: auto; box-shadow: var(--raise); }
 
+/* a wrong key, drawn on the staff in red */
+.wrong-note { pointer-events: none; animation: wrong-fade 3.5s ease-out forwards; }
+.wrong-head, .wrong-sharp { fill: var(--bad); }
+.wrong-ledger { stroke: var(--bad); }
+@keyframes wrong-fade { 0%, 70% { opacity: 1; } 100% { opacity: 0; } }
+
 /* keyboard: keys sit in a dark bezel with a fine outline around it */
 #keyboard { margin: 22px 8px 14px; padding: 12px 12px 16px; background: var(--bezel); border-radius: 20px; box-shadow: var(--inset); outline: 1px solid var(--bezel-line); outline-offset: 8px; }
 #keyboard svg { width: 100%; height: auto; display: block; touch-action: none; user-select: none; filter: drop-shadow(0 3px 3px rgba(0, 0, 0, .28)); }

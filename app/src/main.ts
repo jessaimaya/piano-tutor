@@ -814,9 +814,11 @@ bus.on((event, source) => {
     const outcome = session?.press(event.note);
     if (outcome?.result.kind === 'wrong') {
       keyboard.flash('wrong', event.note);
+      score.showWrong(event.note);
       setFeedback(describeWrongNote(event.note, [...(session?.expected ?? [])]));
     }
     if (outcome?.result.kind === 'correct' || outcome?.result.kind === 'advance') keyboard.flash('hit', event.note);
+    if (outcome?.result.kind === 'advance') score.clearWrong(); // the cursor moved on: the mistake is behind you
     renderStatus();
     refreshKeys();
     if (outcome?.finished) finishWaitRun(outcome.finished);
@@ -825,6 +827,7 @@ bus.on((event, source) => {
     if (r.kind === 'hit') keyboard.flash('hit', event.note);
     if (r.kind === 'extra') {
       keyboard.flash('wrong', event.note);
+      if (r.offsetMs === undefined) score.showWrong(event.note); // right note at the wrong time is not a pitch error
       for (const w of r.wanted) keyboard.flash('should', w, 1500);
       setFeedback(
         r.offsetMs !== undefined ? describeOffTime(event.note, r.offsetMs)
