@@ -34,7 +34,7 @@ The three dots at the top right switch between the Warm, Cold blues and Night th
 - **Notes on the staff.** A right key shows up as a green note that fades after a moment. A wrong key shows up as a red note on the staff at the cursor (with ledger lines and a sharp sign where needed), so you see at what height you played, not just a message. It works before you press Start too: in tempo mode the key is checked against the first notes of the piece (or your bar range) for the hand you chose, with no clock and no score.
 - **Tempo mode.** After a count-in, the score follows a metronome and each note has a timing window. You get the share of notes played
   in time, missed and extra notes, and whether you rush or drag. After a clean run the tempo rises 4 bpm. Three clean runs at the target tempo finish the piece.
-  The tempo counts the piece's own beat, so 6/8 is counted in dotted quarters.
+  The tempo counts the piece's own beat, so 6/8 is counted in dotted quarters. A line slides across the score at the tempo: press each key as the line reaches its note.
 - **Listen.** Plays the piece (one hand or both) after a count-in, with the cursor and the keys lit, so you can hear the rhythm before you try it.
 - **Bar ranges and looping.** Practise bars 5 to 8 only, and loop them at a rising tempo.
 - **Tempo readout.** A big thin numeral with − and + buttons and a tick ruler that fills up to your tempo, with a notch at the piece's target.

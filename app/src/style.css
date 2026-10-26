@@ -256,3 +256,6 @@ main { min-width: 0; }
 .middle-c { fill: var(--key-line); pointer-events: none; }
 
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+
+/* the line that moves across the score at the tempo: press the key when it reaches the note */
+.playhead { stroke: var(--accent); stroke-linecap: round; opacity: 0.85; pointer-events: none; }

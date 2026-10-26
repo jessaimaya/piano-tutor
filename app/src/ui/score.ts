@@ -1,6 +1,7 @@
 import { OpenSheetMusicDisplay, type GraphicalMeasure } from 'opensheetmusicdisplay';
 import type { MeasuredCursor } from '../practice/range';
 import type { CursorNote } from '../practice/session';
+import type { Spot } from './playhead';
 import { clefFor, isSharp, ledgerSteps, staffStep } from './staff-position';
 
 /** OSMD lays out in units of one staff space; at zoom 1 that is 10 px. */
@@ -39,6 +40,7 @@ export class ScoreView implements MeasuredCursor {
   async load(xml: string): Promise<void> {
     this.loaded = false;
     this.clearMarks();
+    this.setPlayhead(undefined);
     await this.osmd.load(xml);
     this.osmd.render();
     this.osmd.cursor.show();
@@ -106,6 +108,32 @@ export class ScoreView implements MeasuredCursor {
     const gnote = this.osmd.cursor.GNotesUnderCursor()[0];
     if (!staves?.length || !gnote) return undefined;
     return { staves, x: gnote.PositionAndShape.AbsolutePosition.x };
+  }
+
+  /** The cursor's place on the page, for the moving line: its x and the top and bottom of its system. */
+  spot(beat: number): Spot | undefined {
+    const at = this.anchor();
+    if (!at) return undefined;
+    const top = (i: number) => at.staves[i]!.ParentStaffLine.PositionAndShape.AbsolutePosition.y;
+    return { beat, x: at.x, y0: top(0) - 0.8, y1: top(at.staves.length - 1) + 4.8 };
+  }
+
+  /** Draw (or move) the line that crosses the staves at the tempo; `undefined` takes it away. */
+  setPlayhead(spot: Spot | undefined): void {
+    const svg = this.container.querySelector('svg');
+    let line = svg?.querySelector<SVGLineElement>('.playhead') ?? null;
+    if (!svg || !spot) { line?.remove(); return; }
+    const u = UNIT_PX * this.osmd.zoom;
+    if (!line) {
+      line = document.createElementNS(SVG_NS, 'line');
+      line.setAttribute('class', 'playhead');
+      svg.append(line);
+    }
+    line.setAttribute('x1', String(spot.x * u));
+    line.setAttribute('x2', String(spot.x * u));
+    line.setAttribute('y1', String(spot.y0 * u));
+    line.setAttribute('y2', String(spot.y1 * u));
+    line.setAttribute('stroke-width', String(0.2 * u));
   }
 
   /** The key you pressed as a red note on the staff at the cursor, so you can see how far off you were. */

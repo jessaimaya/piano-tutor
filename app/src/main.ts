@@ -23,6 +23,7 @@ import { bindTempoDial } from './ui/dial';
 import { KeyboardView } from './ui/keyboard';
 import { filterLibrary, isFiltering, NO_FILTER, type LibraryFilter, type SortBy } from './ui/library-filter';
 import { ScoreView } from './ui/score';
+import { playheadAt, type Spot } from './ui/playhead';
 import { bindThemes } from './ui/theme';
 
 const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
@@ -68,6 +69,8 @@ interface TempoState {
   cancelClicks: () => void;
   raf: number;
   lastRaw: number;
+  /** Where each step sits on the page, for the moving line (indexed like `steps`). */
+  spots: Spot[];
 }
 
 let current: Current | undefined;
@@ -404,10 +407,24 @@ function startTempo(): void {
   }
   const cancelClicks = synth.scheduleClicks(clicks);
 
-  tempo = { run, cursor, steps, bpm, cancelClicks, raf: 0, lastRaw: 0 };
+  const spots = stepSpots(cursor, steps);
+  tempo = { run, cursor, steps, bpm, cancelClicks, raf: 0, lastRaw: 0, spots };
   cursor.reset();
   renderControls();
   tick();
+}
+
+/** Walk the score once to learn where each step sits on the page. */
+function stepSpots(cursor: RangeCursor, steps: TimedStep[]): Spot[] {
+  const byRaw = new Map<number, Spot>();
+  cursor.reset();
+  for (let raw = 0; !cursor.done; raw++) {
+    const spot = score.spot(cursor.beat());
+    if (spot) byRaw.set(raw, spot);
+    cursor.next();
+  }
+  cursor.reset();
+  return steps.flatMap((s) => byRaw.get(s.rawIndex) ?? []);
 }
 
 function tick(): void {
@@ -421,6 +438,8 @@ function tick(): void {
     for (const n of u.newlyMissed) keyboard.flash('should', n, 1500);
     setFeedback(describeMissed(u.newlyMissed));
   }
+  const now = performance.now() - latencyMs;
+  score.setPlayhead(playheadAt(tempo.spots, Math.max(0, (now - tempo.run.beatZeroAt) / tempo.run.beatMs)));
   refreshKeys();
 
   const status = $('status');
@@ -451,6 +470,7 @@ function stopTempo(): void {
   cancelAnimationFrame(tempo.raf);
   tempo.cancelClicks();
   tempo = undefined;
+  score.setPlayhead(undefined);
   renderControls();
   refreshKeys();
 }
