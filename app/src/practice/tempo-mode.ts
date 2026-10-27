@@ -66,6 +66,8 @@ export interface TempoUpdate {
   cursorRawIndex: number;
   /** Notes whose window closed unplayed since the last update. */
   newlyMissed: number[];
+  /** The steps those notes belong to (each step once), for marking them on the score. */
+  newlyMissedSteps: number[];
   summary: TempoSummary | null;
 }
 
@@ -148,15 +150,18 @@ export class TempoRun {
   }
 
   update(nowMs: number): TempoUpdate {
-    if (this.done) return { phase: 'done', countInLeft: 0, cursorRawIndex: this.rawAt(this.cursorPos), newlyMissed: [], summary: this.done };
+    if (this.done) return { phase: 'done', countInLeft: 0, cursorRawIndex: this.rawAt(this.cursorPos), newlyMissed: [], newlyMissedSteps: [], summary: this.done };
 
     const newlyMissed: number[] = [];
+    const missedSteps = new Set<number>();
     for (const e of this.expected) {
       if (!e.matched && !e.missed && nowMs > e.time + this.windowMs) {
         e.missed = true;
         newlyMissed.push(e.note);
+        missedSteps.add(e.stepIdx);
       }
     }
+    const newlyMissedSteps = [...missedSteps];
 
     while (this.cursorPos + 1 < this.steps.length && this.timeOfBeat(this.steps[this.cursorPos + 1]!.beat) <= nowMs) {
       this.cursorPos++;
@@ -164,14 +169,14 @@ export class TempoRun {
 
     if (this.expected.every((e) => e.matched || e.missed)) {
       this.done = this.summarise(nowMs);
-      return { phase: 'done', countInLeft: 0, cursorRawIndex: this.rawAt(this.cursorPos), newlyMissed, summary: this.done };
+      return { phase: 'done', countInLeft: 0, cursorRawIndex: this.rawAt(this.cursorPos), newlyMissed, newlyMissedSteps, summary: this.done };
     }
 
     if (nowMs < this.t0 - this.windowMs) {
       const left = Math.max(1, Math.ceil((this.t0 - nowMs) / (this.beatMs * (this.opts.beatQuarters ?? 1))));
-      return { phase: 'countin', countInLeft: left, cursorRawIndex: this.rawAt(0), newlyMissed, summary: null };
+      return { phase: 'countin', countInLeft: left, cursorRawIndex: this.rawAt(0), newlyMissed, newlyMissedSteps, summary: null };
     }
-    return { phase: 'playing', countInLeft: 0, cursorRawIndex: this.rawAt(this.cursorPos), newlyMissed, summary: null };
+    return { phase: 'playing', countInLeft: 0, cursorRawIndex: this.rawAt(this.cursorPos), newlyMissed, newlyMissedSteps, summary: null };
   }
 
   /**
@@ -211,6 +216,31 @@ export class TempoRun {
     const first = this.expected.find((e) => !e.matched && !e.missed);
     if (!first) return [];
     return this.expected.filter((e) => e.stepIdx === first.stepIdx && !e.matched && !e.missed).map((e) => e.note);
+  }
+
+  /**
+   * Where the next note to play sits in the score (the raw cursor index of its step), or undefined when every note is played or missed.
+   * Unlike the clock-driven cursor of `update`, it moves the moment you play or miss the note: it is the note you are about to play.
+   */
+  upcomingRaw(): number | undefined {
+    const first = this.expected.find((e) => !e.matched && !e.missed);
+    return first ? this.rawAt(first.stepIdx) : undefined;
+  }
+
+  /**
+   * How many of the piece's own beats until the next note is due (negative when it is already late); undefined when nothing is left.
+   * It is what the player counts: "in 2" means two clicks from now.
+   */
+  beatsUntilNext(nowMs: number): number | undefined {
+    const first = this.expected.find((e) => !e.matched && !e.missed);
+    return first ? (first.time - nowMs) / (this.beatMs * (this.opts.beatQuarters ?? 1)) : undefined;
+  }
+
+  /** Which note of the piece is up (1-based) out of how many there are to play. */
+  get progress(): { step: number; of: number } {
+    const steps = new Set(this.expected.map((e) => e.stepIdx));
+    const unresolved = new Set(this.expected.filter((e) => !e.matched && !e.missed).map((e) => e.stepIdx));
+    return { step: Math.min(steps.size, steps.size - unresolved.size + 1), of: steps.size };
   }
 
   /** Live counters for the status line. */

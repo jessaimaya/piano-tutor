@@ -54,6 +54,10 @@ see the line after the one you are reading, and the page turns exactly at the st
 <td width="50%"><img src="docs/screenshots/minimal-cards.webp" alt="A note card: one note on the grand staff"><br><sub><b>Note cards</b> (Stage 0). A note appears, you play it. Under two seconds counts as fast. New notes arrive one a day.</sub></td>
 <td width="50%"><img src="docs/screenshots/minimal-wait.webp" alt="Wait mode in the minimal view: a right note filled in, a wrong note dashed"><br><sub><b>Free mode, wait mode.</b> What you play shows on the staff: filled when right, dashed when wrong, with no colour needed.</sub></td>
 </tr>
+<tr>
+<td width="50%"><img src="docs/screenshots/minimal-tempo.webp" alt="A timed run: the grey bar on the next note, a check mark under the note just played, and the cue 'Next C4, in 3'"><br><sub><b>A timed run.</b> The grey bar is the next note to play and jumps the moment you play it. The cue says which note and how many clicks away ("in 3", then NOW), and a ✓ stays under every note that counted (✕ for a missed one).</sub></td>
+<td width="50%"><img src="docs/screenshots/minimal-result.webp" alt="The result card after a run: 89 out of 100 with a Try again button"><br><sub><b>The result.</b> Score and stars, and <b>Try again</b>, which is on every piece and exercise. Tap anywhere else on the card to close it and see your marks.</sub></td>
+</tr>
 </table>
 
 <table>
@@ -75,6 +79,7 @@ These screenshots show only the app's own exercises and generated pieces, with a
 - **Tempo mode.** After a count-in, the score follows a metronome and each note has a timing window. You get the share of notes played
   in time, missed and extra notes, and whether you rush or drag. After a clean run the tempo rises 4 bpm. Three clean runs at the target tempo finish the piece.
   The tempo counts the piece's own beat, so 6/8 is counted in dotted quarters. A line slides across the score at the tempo: press each key as the line reaches its note. A level setting (Beginner, Intermediate, Advanced) sets how wide the timing window is, from about half a beat either side down to a strict ±150 ms at most.
+- **Try again.** Every result card has a **Try again** button, for every piece and exercise (wait or tempo, free or in the course): wait mode starts again from the first note, tempo mode from a fresh count-in, as often as you like. Every run is logged. In the course, a second go at the same generated reading piece is practice and does not count towards the step; the sight-reading test is one try on purpose.
 - **Listen.** Plays the piece (one hand or both) after a count-in, with the cursor and the keys lit, so you can hear the rhythm before you try it.
 - **Bar ranges and looping.** Practise bars 5 to 8 only, and loop them at a rising tempo.
 - **Tempo readout.** A big thin numeral with − and + buttons and a tick ruler that fills up to your tempo, with a notch at the piece's target.

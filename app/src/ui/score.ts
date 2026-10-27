@@ -349,6 +349,33 @@ export class ScoreView implements MeasuredCursor {
 
   /** Remove every coloured note (a restart, a new piece). */
   clearMarks(): void {
-    this.container.querySelectorAll('.mark-note').forEach((el) => el.remove());
+    this.container.querySelectorAll('.mark-note, .mark-result').forEach((el) => el.remove());
+  }
+
+  /**
+   * A check mark below the system under a note you played in time, a cross under one you missed. Unlike the coloured notes these stay until the run is
+   * restarted, so at the end you see which notes counted. Drawn in the minimal view only (the full view has colour and the moving line).
+   */
+  markResult(at: NoteAnchor | undefined, kind: 'hit' | 'missed'): void {
+    const svg = this.container.querySelector('svg');
+    if (!this.paged || !svg || !at) return;
+    const u = UNIT_PX * this.osmd.zoom;
+    const x = at.x * u;
+    // Below the system: the fingering numbers sit above the treble staff and the notes' own numbers are inside, so the marks get a row of their own.
+    const bottom = at.staves[at.staves.length - 1]!.ParentStaffLine.PositionAndShape.AbsolutePosition.y + 4;
+    const y = (bottom + 3.6) * u;
+    const key = `${Math.round(x)}@${Math.round(y)}`;
+    const old = svg.querySelector(`[data-result="${key}"]`);
+    if (old?.classList.contains('hit-result')) return; // a played note stays played
+    old?.remove();
+    const t = document.createElementNS(SVG_NS, 'text');
+    t.setAttribute('class', `mark-result ${kind}-result`);
+    t.dataset.result = key;
+    t.setAttribute('x', String(x));
+    t.setAttribute('y', String(y));
+    t.setAttribute('text-anchor', 'middle');
+    t.setAttribute('font-size', String(2.1 * u));
+    t.textContent = kind === 'hit' ? '✓' : '✕';
+    svg.append(t);
   }
 }

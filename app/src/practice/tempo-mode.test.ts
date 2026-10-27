@@ -329,3 +329,51 @@ describe('a player rushing ahead of the beat', () => {
     expect(r.press(62, r.timeOfBeat(1) - 60)).toMatchObject({ kind: 'hit', stepIdx: 1 });
   });
 });
+
+describe('what the player is about to play', () => {
+  // 60 bpm, count-in of 2: beat 0 sounds at 2000 ms, the next notes at 3000, 5000 (a rest between).
+  const steps = [step(0, 0, 60), step(1, 1, 62), step(2, 3, 64)];
+
+  it('points at the next unplayed note, and moves on the moment it is played', () => {
+    const r = run(steps);
+    expect(r.upcomingRaw()).toBe(0);
+    r.press(60, 2000);
+    expect(r.upcomingRaw()).toBe(1);
+    r.press(62, 3000);
+    expect(r.upcomingRaw()).toBe(2); // the rest-free step after it
+    r.press(64, 5000);
+    expect(r.upcomingRaw()).toBeUndefined();
+  });
+
+  it('moves on when a note is missed, and says which step was missed', () => {
+    const r = run(steps);
+    const u = r.update(2400); // past the 300 ms window of the first note
+    expect(u.newlyMissed).toEqual([60]);
+    expect(u.newlyMissedSteps).toEqual([0]);
+    expect(r.upcomingRaw()).toBe(1);
+    expect(r.update(2500).newlyMissedSteps).toEqual([]); // each step is reported once
+  });
+
+  it('counts the beats to the next note in the piece’s own beat', () => {
+    const r = run(steps);
+    expect(r.beatsUntilNext(0)).toBeCloseTo(2); // two count-in beats away
+    expect(r.beatsUntilNext(1500)).toBeCloseTo(0.5);
+    r.press(60, 2000);
+    expect(r.beatsUntilNext(2000)).toBeCloseTo(1);
+    expect(r.beatsUntilNext(3500)).toBeCloseTo(-0.5); // late
+    const compound = new TempoRun([step(0, 0, 60), step(1, 3, 62)], { bpm: 180, countInBeats: 6, beatQuarters: 1.5 }); // 6/8: the beat is a dotted quarter
+    compound.start(0);
+    expect(compound.beatsUntilNext(0)).toBeCloseTo(4); // 6 quarters of count-in = 4 dotted-quarter beats
+  });
+
+  it('says which note is up and how many there are', () => {
+    const r = run(steps);
+    expect(r.progress).toEqual({ step: 1, of: 3 });
+    r.press(60, 2000);
+    expect(r.progress).toEqual({ step: 2, of: 3 });
+    r.update(3400); // the second note is missed
+    expect(r.progress).toEqual({ step: 3, of: 3 });
+    r.press(64, 5000);
+    expect(r.progress).toEqual({ step: 3, of: 3 }); // never past the last
+  });
+});

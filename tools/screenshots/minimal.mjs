@@ -92,7 +92,26 @@ await run(`(() => { const b = __piano.bus; b.noteOn(64, 'midi'); b.noteOff(64, '
 await sleep(500);
 await shot('minimal-wait');
 
-// 6. The same app held upright.
+// 6. A timed run (tempo mode): the count-in and the cue, then which notes counted. The notes are played by script, one skipped.
+await size(LANDSCAPE);
+await seed({ unitId: '0.1' }, { app: 'free', piece: 's0-two-notes', mode: 'tempo', 'bpm:s0-two-notes': '60' });
+await click('#restart');
+await run(`(async () => {
+  const status = document.getElementById('status');
+  while (!status.innerText.startsWith('Count-in')) await new Promise((r) => setTimeout(r, 5));
+  const t0 = performance.now();
+  const beats = [0, 4, 8, 10, 12, 13, 14, 15, 16], notes = [60, 62, 60, 62, 62, 60, 62, 60, 60];
+  beats.forEach((b, i) => { if (i !== 4) setTimeout(() => { __piano.bus.noteOn(notes[i], 'midi'); __piano.bus.noteOff(notes[i], 'midi'); }, 4000 + b * 1000 - (performance.now() - t0)); });
+  window.__runStart = t0;
+})()`);
+await sleep(8700);
+await shot('minimal-tempo');
+// 7. The result card, with Try again.
+await run(`(async () => { const r = document.getElementById('result'); while (r.hidden) await new Promise((x) => setTimeout(x, 100)); })()`);
+await sleep(400);
+await shot('minimal-result');
+
+// 8. The same app held upright.
 await size(PORTRAIT);
 await seed({ unitId: '0.3', unitDays: 2, readingLevel: 10 });
 await click('#course-start');

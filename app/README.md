@@ -14,6 +14,10 @@ USB-MIDI (Web MIDI), and has two practice modes:
   After a clean run the tempo goes up by 4 bpm until the piece's target tempo. Three clean runs in a row
   at the target tempo or faster, with the piece's own hands, mark the piece **done** (wait-mode runs never do).
 
+After every run the result card has a **Try again** button (the same as Restart, where you can reach it): wait mode goes back to the first note, tempo mode into a fresh
+count-in. It is there for every piece and exercise, in Free mode and in the course; each run is logged and counts as usual. The one exception is
+the generated reading pieces of the course: a retry of the same piece is practice and is not counted again for the step. The sight-reading test has no retry.
+
 ## Run
 
 ```bash
@@ -79,7 +83,10 @@ stays in the full view. Built for a monochrome e-ink screen such as the Minimal 
 - the staff is drawn at the width of the window and shrinks until two systems fit its height (never below 0.4); `A−` / `A+` set the
   biggest size it may use, and it is drawn again when the window changes (turning the phone, a toolbar hiding);
 - held sideways (landscape, under 520 px high) the score takes the whole height on the left and the controls stack in a column on the right;
-- the moving line is replaced by the cursor jumping from note to note at the tempo, since e-ink smears continuous movement;
+- in a timed run the grey bar marks **the next note to play**, not where the clock is, and jumps the moment you play (or miss) it, so you see your key counted; there is no
+  moving line, since e-ink smears continuous movement. The count-in reads "1 2 3 4" up, like the clicks, and the first note is on the click after the last number. The
+  cue under the title says which note and how many clicks away it is ("Next D4 · in 2", then "Play D4 NOW"), and the line under it which note of how many you are on and what
+  counted. Every note you play gets a ✓ under it on the score, a missed one a ✕, until the run starts again, and the feedback line confirms each key ("✓ C4 counted, on the beat");
 - right notes show as a filled head on the staff, wrong ones as a dashed hollow head (no colour);
 - tap the result card to put it away; tap the MIDI label to reconnect.
 

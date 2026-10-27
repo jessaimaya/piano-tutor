@@ -17,7 +17,7 @@ import { CLEAN_ACCURACY, CLEAN_RUNS_TO_FINISH, PracticeLog, type Hands, type Pie
 import { compareWithHistory, needsPractice, progressOf, runScore, starsFor, verdict } from './practice/scoring';
 import { Session, type RunSummary } from './practice/session';
 import { describeOutcome, PASS_ACCURACY, recordResult, startTest, type SightState } from './practice/sight-test';
-import { TempoRun, type Level, type TempoSummary } from './practice/tempo-mode';
+import { TempoRun, type Level, type TempoSummary, type TempoUpdate } from './practice/tempo-mode';
 import { readTimeline, type TimedStep } from './practice/timeline';
 import { accuracy } from './practice/wait-mode';
 import { Synth } from './ui/audio';
@@ -242,11 +242,36 @@ function bindLibraryFilter(): void {
 }
 
 // ───────────── loading ─────────────
-function showResult(text: string, isError = false): void {
+function showResult(text: string, isError = false, retry = false): void {
   const el = $('result');
   el.hidden = false;
   el.className = 'result' + (isError ? ' error' : '');
   el.textContent = text;
+  if (retry) el.append(tryAgainRow());
+}
+
+/** The button every finished run offers: play the same piece or exercise again, as often as you like. */
+function tryAgainRow(): HTMLElement {
+  const row = document.createElement('div');
+  row.className = 'result-actions';
+  const b = document.createElement('button');
+  b.type = 'button';
+  b.id = 'try-again';
+  b.className = 'primary';
+  b.textContent = 'Try again';
+  b.addEventListener('click', (e) => { e.stopPropagation(); tryAgain(); }); // the card itself closes on a tap in the minimal view
+  row.append(b);
+  return row;
+}
+
+/** Another go at what is open: wait mode starts from the first note, tempo mode from a fresh count-in. Not offered in the test. */
+function tryAgain(): void {
+  if (!current || sight || listening || calibration) return;
+  clearFeedback();
+  $('result').hidden = true;
+  if (mode === 'wait') { session?.restart(); renderStatus(); refreshKeys(); return; }
+  if (tempo) stopTempo();
+  startTempo();
 }
 
 const starText = (score: number) => '★'.repeat(starsFor(score)) + '☆'.repeat(3 - starsFor(score));
@@ -273,7 +298,7 @@ function showRunResult(text: string, run: RunRecord, earlier: readonly RunRecord
   );
   const p = document.createElement('p');
   p.textContent = text;
-  el.replaceChildren(card, p);
+  el.replaceChildren(card, tryAgainRow(), p); // the button before the long explanation: on a small screen it must be seen first
 }
 
 /** Last, best and a sparkline of the latest scores for the open piece, under its title. */
@@ -449,7 +474,8 @@ function renderStatus(): void {
     return;
   }
   if (!tempo) {
-    status.textContent = current ? 'Set a tempo and press Start. You get a count-in first.' : '';
+    const beats = current ? Array.from({ length: current.unit.perBar }, (_, i) => i + 1).join(' ') : '';
+    status.textContent = current ? `Press Start. You hear a count-in, ${beats}, then play the first note on the next click.` : '';
   }
 }
 
@@ -461,7 +487,7 @@ function finishWaitRun(summary: RunSummary): void {
   const pct = Math.round(accuracy(summary) * 100);
   const secs = Math.max(1, Math.round(summary.durationMs / 1000));
   showRunResult(`${pct}% first try, ${summary.wrong} wrong note${summary.wrong === 1 ? '' : 's'}, ${secs}s. ` +
-    (loopOn() ? 'Looping: play it again.' : pct >= 90 ? 'Ready to try Tempo mode.' : 'Press Restart to go again.'), rec, earlier);
+    (loopOn() ? 'Looping: play it again.' : pct >= 90 ? 'Ready to try Tempo mode.' : 'Press Try again to go again.'), rec, earlier);
   renderLibrary();
   courseCtl.onRun({ pieceId: current.id, mode: 'wait', accuracy: accuracy(summary), sight: false });
   if (loopOn()) { session?.restart(); renderStatus(); refreshKeys(); }
@@ -484,6 +510,7 @@ function startTempo(): void {
   if (!steps.some((s) => s.notes.length > 0)) { showResult('Nothing to play for that hand.', true); return; }
   $('result').hidden = true;
   clearFeedback();
+  score.clearMarks(); // the check marks and crosses of the last run
 
   const bpm = readBpm();
   if (!sight) safeSet('bpm:' + current.id, String(bpm));
@@ -529,33 +556,31 @@ function stepPlaces(cursor: RangeCursor, steps: TimedStep[]): { spots: Spot[]; a
   };
 }
 
+/** What the status line said last, so the page is only touched when its words change (every repaint costs an e-ink screen a flash). */
+let lastStatus = '';
+
 function tick(): void {
   if (!tempo || !current) return;
   const now = performance.now() - latencyMs;
   const u = tempo.run.update(now);
-  if (u.cursorRawIndex !== tempo.lastRaw) {
-    tempo.lastRaw = u.cursorRawIndex;
-    tempo.cursor.moveTo(u.cursorRawIndex);
+  // The minimal view marks the note you are about to play, and moves on the moment you play or miss it: you see your key counted.
+  // The clock-driven cursor jumps only when a note is already due, which on a slow screen is too late to be of any use.
+  const raw = view === 'minimal' ? tempo.run.upcomingRaw() ?? u.cursorRawIndex : u.cursorRawIndex;
+  if (raw !== tempo.lastRaw) {
+    tempo.lastRaw = raw;
+    tempo.cursor.moveTo(raw);
   }
   if (u.newlyMissed.length) {
     for (const n of u.newlyMissed) keyboard.flash('should', n, 1500);
     setFeedback(describeMissed(u.newlyMissed));
+    for (const i of u.newlyMissedSteps) score.markResult(tempo.anchors[i], 'missed');
   }
   // The moving line is smooth on a screen and a smear on e-ink: the minimal view only steps the cursor from note to note.
   if (view === 'full') score.setPlayhead(playheadAt(tempo.spots, Math.max(0, (now - tempo.run.beatZeroAt) / tempo.run.beatMs)));
   refreshKeys();
 
-  const status = $('status');
-  if (u.phase === 'countin') {
-    status.innerHTML = `Count-in <span class="count">${u.countInLeft}</span> · ${tempo.bpm} bpm`;
-  } else if (u.phase === 'playing') {
-    const l = tempo.run.live;
-    const next = tempo.run.upcoming();
-    const nextText = $<HTMLInputElement>('showNext').checked && next.length
-      ? `Next <strong>${next.sort((a, b) => a - b).map(noteName).join(' + ')}</strong> · ` : '';
-    status.innerHTML = `${nextText}${l.matched} in time · ${l.missed ? `<span class="bad">${l.missed} missed</span>` : '0 missed'} · ${
-      l.extra ? `<span class="bad">${l.extra} extra</span>` : '0 extra'}`;
-  }
+  const html = tempoStatus(u, now);
+  if (html !== lastStatus) { $('status').innerHTML = html; lastStatus = html; }
 
   if (u.phase === 'done' && u.summary) {
     const summary = u.summary;
@@ -566,7 +591,32 @@ function tick(): void {
   tempo.raf = requestAnimationFrame(tick);
 }
 
+/**
+ * The status line of a run, in the words of counting. Count-in: "1 2 3 4", up like the clicks, and the first note is on the click after
+ * the last number. Playing: the next note and how many clicks away it is ("in 2"), NOW when it is due; then which note of how many you
+ * are on and what has counted.
+ */
+function tempoStatus(u: TempoUpdate, now: number): string {
+  if (!tempo || !current) return '';
+  const perBar = current.unit.perBar;
+  if (u.phase === 'countin') {
+    const n = Math.max(1, Math.min(perBar, perBar - u.countInLeft + 1));
+    return `<span class="cue">Count-in <span class="count">${n}</span> of ${perBar}</span><span class="tally">Play the first note on the click after ${perBar}.</span>`;
+  }
+  const l = tempo.run.live;
+  const { step, of } = tempo.run.progress;
+  const next = tempo.run.upcoming();
+  const b = tempo.run.beatsUntilNext(now);
+  const names = $<HTMLInputElement>('showNext').checked && next.length ? ` <strong>${[...next].sort((a, c) => a - c).map(noteName).join(' + ')}</strong>` : '';
+  const cue = b === undefined ? ''
+    : b <= 0.5 ? `Play${names} <span class="now">NOW</span>`
+    : `Next${names} · in ${Math.round(b)}`;
+  const tally = `Note ${step} of ${of} · ${l.matched} ✓ · ${l.missed ? `<span class="bad">${l.missed} missed</span>` : '0 missed'}${l.extra ? ` · <span class="bad">${l.extra} extra</span>` : ''}`;
+  return `<span class="cue">${cue}</span><span class="tally">${tally}</span>`;
+}
+
 function stopTempo(): void {
+  lastStatus = '';
   cancelLoop();
   firstStep = undefined;
   if (!tempo) return;
@@ -584,6 +634,9 @@ function describeTiming(s: TempoSummary): string {
   return `timing: ${lean}${Math.abs(s.biasMs) >= 40 && latencyMs === 0 ? ' (if it is always about the same, press Calibrate timing)' : ''}`;
 }
 
+/** Generated reading pieces already played once in the course (their retries are practice, not counted). */
+const readingDone = new Set<string>();
+
 function finishTempoRun(s: TempoSummary): void {
   if (!current) return;
   if (s.matched === 0 && s.extra === 0) {
@@ -596,9 +649,11 @@ function finishTempoRun(s: TempoSummary): void {
   if (sight) { finishSightRun(s); return; }
   if (current.id.startsWith('sr-')) { // a generated reading piece in the course: shown, counted by the course, never logged
     const pct = Math.round(accuracy(s) * 100);
-    showResult(`${pct}% of the notes in time (${s.missed} missed, ${s.extra} extra), ${describeTiming(s)}.`);
+    const again = readingDone.has(current.id); // the same piece a second time is practice: it does not count towards the step
+    readingDone.add(current.id);
+    showResult(`${pct}% of the notes in time (${s.missed} missed, ${s.extra} extra), ${describeTiming(s)}.${again ? ' (Practice: this one does not count again.)' : ''}`, false, true);
     renderStatus();
-    courseCtl.onRun({ pieceId: current.id, mode: 'tempo', accuracy: accuracy(s), sight: true });
+    if (!again) courseCtl.onRun({ pieceId: current.id, mode: 'tempo', accuracy: accuracy(s), sight: true });
     return;
   }
   const rec: RunRecord = {
@@ -972,6 +1027,9 @@ bus.on((event, source) => {
     if (r.kind === 'hit') {
       keyboard.flash('hit', event.note);
       score.showRight(event.note, tempo.anchors[r.stepIdx] ?? at); // on its own note: the cursor may not have reached it yet
+      score.markResult(tempo.anchors[r.stepIdx], 'hit');
+      const off = Math.round(r.offsetMs);
+      setFeedback(`✓ ${noteName(event.note)} counted${Math.abs(off) <= 80 ? ', on the beat' : `, ${Math.abs(off)} ms ${off > 0 ? 'late' : 'early'}`}`, 'good');
     }
     if (r.kind === 'extra') {
       keyboard.flash('wrong', event.note);
