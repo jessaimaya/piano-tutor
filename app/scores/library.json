@@ -621,6 +621,21 @@
     "difficulty": 52
   },
   {
+    "id": "x-arnalds-tomorrow-s-song",
+    "file": "arnalds-tomorrow-s-song.musicxml",
+    "title": "Tomorrow's Song",
+    "composer": "Ólafur Arnalds",
+    "stage": 4,
+    "skills": [
+      "fast-notes"
+    ],
+    "targetBpm": 66,
+    "hands": "both",
+    "license": "unverified-arrangement",
+    "source": "Living Room Songs (Ólafur Arnalds), sheet PDF, p. 1",
+    "difficulty": 64
+  },
+  {
     "id": "x-fur-elise-beginner",
     "file": "fur-elise-beginner.mxl",
     "title": "Für Elise (beginner, 3/8)",

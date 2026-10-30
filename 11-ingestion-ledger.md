@@ -55,6 +55,12 @@ Refresh with `python3 -I tools/ledger.py`. The app also has 31 own exercises (`p
 
 Unit 13 is the G7 chord (its page header was cut off in the first scan, which is why an earlier version of this table called it the G major scale).
 
+## Single pieces from loose PDFs
+
+| Piece | Source | How it got in |
+|---|---|---|
+| Tomorrow's Song (Ólafur Arnalds, 48 bars, stage 4) | *Living Room Songs* sheet PDF, `batches/arnalds-tomorrows-song.json` | OMR misread 20 bars (ties, triplets, a held low note read as extra bars), so it was typed from the page with `handfix.py` (now with triplets, ties, sixteenths and a second left-hand voice). Low notes measured from the page image. Both staves are written in treble clef on the page; the left hand is kept at its written pitch and drawn in bass clef. The held bass note is its own voice. Check it against the page while playing. |
+
 ## What is next, in the order the course needs it
 
 1. Faber Book 1: hand-transcribe the four lyric-heavy pieces, then Units 14–16 (Stage 2).

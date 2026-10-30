@@ -84,5 +84,42 @@ class Restream(unittest.TestCase):
         self.assertTrue(all(e <= 4 for e in ends.values()), ends)
 
 
+class HandfixNotation(unittest.TestCase):
+    """Triplets, sixteenths, ties and a second left-hand voice typed by hand (handfix.py)."""
+
+    def build(self, **spec):
+        import handfix
+        return handfix.build({'timeSig': [4, 4], 'fifths': 0, **spec})
+
+    def test_triplet_and_sixteenths_fill_the_bar(self):
+        root = self.build(rh='(C5:e D5:e E5:e) F5:e G5:e A5:s B5:s C6:q C6:e | C5:w')
+        notes = root.find('part').find('measure').findall('note')
+        self.assertEqual(root.findtext('.//divisions'), '12')
+        self.assertEqual([n.findtext('duration') for n in notes], ['4', '4', '4', '6', '6', '3', '3', '12', '6'])
+        self.assertEqual(len(root.findall('.//time-modification')), 3)
+
+    def test_a_bar_that_does_not_add_up_is_refused(self):
+        with self.assertRaises(ValueError):
+            self.build(rh='(C5:e D5:e) C5:h C5:q | C5:w')
+
+    def test_ties_run_across_the_bar_line_and_must_keep_the_pitch(self):
+        root = self.build(rh='C5:h C5:h~ | C5:w')
+        ties = [(n.findtext('duration'), [t.get('type') for t in n.findall('tie')]) for n in root.iter('note')]
+        self.assertEqual(ties, [('4', []), ('4', ['start']), ('8', ['stop'])])
+        with self.assertRaises(ValueError):
+            self.build(rh='C5:h D5:h~ | C5:w')
+
+    def test_second_voice_starts_on_the_bar_line_and_skips_dash_bars(self):
+        root = self.build(rh='C5:w | C5:w', lh='C4:q C4:q C4:h | C4:w', lh2='G2:w | -')
+        first, second = root.findall('part/measure')
+        kinds = [k.tag + (':' + k.findtext('voice') if k.tag == 'note' else ':' + k.findtext('duration')) for k in first if k.tag in ('note', 'backup')]
+        self.assertIn('backup:8', kinds)
+        self.assertEqual([k.findtext('voice') for k in first.findall('note')], ['1', '2', '2', '2', '3'])
+        self.assertEqual([k.findtext('voice') for k in second.findall('note')], ['1', '2'])
+
+    def test_plain_pieces_keep_two_divisions(self):
+        self.assertEqual(self.build(rh='C5:h C5:h').findtext('.//divisions'), '2')
+
+
 if __name__ == '__main__':
     unittest.main()

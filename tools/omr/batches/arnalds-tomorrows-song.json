@@ -1,0 +1,23 @@
+{
+  "pdf": "/home/jessai/Documents/04 Tomorrow s Song.pdf",
+  "source": "Living Room Songs (Ólafur Arnalds), sheet PDF",
+  "pieces": [
+    {
+      "title": "Tomorrow's Song",
+      "composer": "Ólafur Arnalds",
+      "piece": "1:1-7",
+      "stage": 4,
+      "page": "1",
+      "hand": {
+        "timeSig": [
+          4,
+          4
+        ],
+        "fifths": 0,
+        "rh": "R:e C5:e~ C5:e C5:e~ C5:e C5:e~ C5:e C5:e | B4:h. R:e G4:e | G4:e B4:e C5:e G4:e~ G4:e B4:e C5:e G4:e | A4:h R:h | R:e C5:e~ C5:e C5:e~ C5:e C5:e~ C5:e C5:e | B4:h. R:e G4:e | G4:e B4:e C5:e G4:e~ G4:e G4:s B4:s C5:e G4:e | A4:w | R:e C5:e~ C5:e C5:e~ C5:e C5:e~ C5:e C5:e | B4:h. R:e G4:e | G4:e B4:e C5:e G4:e~ G4:e G4:s B4:s C5:e G4:e | A4:w | R:e C5:e~ C5:e C5:e~ C5:e C5:e~ C5:e D5:e | B4:h. G4:q | G4:e B4:e C5:e G4:e~ (G4:e G4:e B4:e) C5:e G4:s B4:s | A4:h. R:e C5:e | B4:e C5:e B4:e C5:e (G5:q G5:q G5:q) | (G5:q F5:q E5:e D5:e) C5:q. C5:e | C5:e D5:e E5:e G4:e~ (G4:e C5:e D5:e) E5:e G4:e | A4:h. R:e C5:e | B4:e C5:e B4:e C5:e (G5:q G5:q G5:q) | (G5:q F5:q E5:e D5:e) C5:q. C5:e | C5:e D5:e E5:e G4:e~ (G4:e C5:e D5:e) E5:e G4:e | A4:w | R:e C5:e~ C5:e C5:e~ C5:e C5:e~ C5:e C5:e | B4:h. G4:q | G4:e B4:e C5:e G4:e~ G4:e B4:e C5:e G4:e | A4:w | R:e C5:e~ C5:e C5:e~ C5:e C5:e~ C5:e D5:e | B4:h. G4:q | G4:e B4:e C5:e G4:e~ (G4:e G4:e B4:e) (C5:e G4:e B4:e) | A4:h. R:e C5:e | B4:e C5:e B4:e C5:e (G5:q G5:q G5:q) | (G5:q F5:q E5:e D5:e) C5:q. C5:e | C5:e D5:e E5:e G4:e~ (G4:e C5:e D5:e) E5:e G4:e | A4:h. R:e C5:e | B4:e C5:e B4:e C5:e (G5:q G5:q G5:q) | (G5:q F5:q E5:e D5:e) C5:q. C5:e | C5:e D5:e E5:e G4:e~ (G4:e C5:e D5:e) E5:e G4:e | A4:h. R:e C5:e | B4:e C5:e G4:q~ G4:q. C5:e | B4:e C5:e G4:q~ G4:q. C5:e | B4:e C5:e G4:q~ G4:q. C5:e | A4:h. R:e C5:e | B4:e C5:e G4:q~ G4:q. C5:e | B4:e C5:e G4:q~ G4:q. C5:e | B4:e C5:e G4:q~ G4:q. C5:e | A4:w",
+        "lh": "A3:q E4:q~ E4:q E4:q | G3:q E4:q~ E4:h | E3:q C4:q~ C4:q C4:q | F3:q C4:q~ C4:q C4:q | A3:q F4:q F4:q F4:q | G3:q D4:q~ D4:q D4:q | E3:q C4:q~ C4:q C4:q | F3:q C4:q~ C4:q C4:q | A3:q E4:q E4:q A3:q | G3:q E4:q~ E4:q E4:q | E3:q C4:q~ C4:q C4:q | F3:q C4:q~ C4:q D4:q | A3:q F4:q F4:q F4:q | G3:h D4:q D4:q | C4:q C4:q C4:q C4:q | C4:h. C4:q | F4:q F4:q F4:q F4:q | E4:q E4:q E4:q E4:q | D4:q D4:q D4:q D4:q | C4:q C4:q C4:q C4:q | F4:q F4:q F4:q F4:q | E4:q E4:q E4:h | D4:q D4:q D4:q D4:q | C4:q C4:q C4:q C4:q | A3:q E4:q~ E4:q E4:q | G3:q E4:q~ E4:q E4:q | E3:q C4:q~ C4:q C4:q | F3:h. D4:q | A3:q F4:q F4:q F4:q | D4:q D4:q D4:q D4:q | C4:q C4:q C4:q C4:q | C4:h. C4:q | F4:q F4:q F4:q F4:q | E4:q E4:q E4:q E4:q | D4:q D4:q D4:q D4:q | C4:q C4:q C4:q C4:q | F4:q F4:q F4:q F4:q | E4:q E4:q E4:h | D4:q D4:q D4:q D4:q | C4:q C4:q C4:q C4:q | F4:q F4:q~ F4:q F4:q | E4:q E4:q~ E4:q E4:q | D4+F3:w | C4:q C4:q~ C4:h | F4:q F4:q~ F4:h | E4:q E4:q~ E4:q E4:q | D4+F3:w | C4:q C4:q~ C4:h",
+        "lh2": "- | - | - | - | - | - | - | - | - | - | - | - | - | - | E3:w | F3:w | D3:w | C3:w | F3:w | F3:w | D3:w | C3:w | F3:w | F3:w | - | - | - | - | - | G3:w | E3:w | F3:w | D3:w | C3:w | F3:w | F3:w | D3:w | C3:w | F3:w | F3:w | D3:w | C3:w | - | F3:w | D3:w | C3:w | - | F3:w"
+      }
+    }
+  ]
+}
