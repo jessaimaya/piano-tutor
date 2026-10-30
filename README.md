@@ -13,7 +13,7 @@ MIDI keyboard, and you can also play with your computer keyboard or the mouse.
 
 ## Screenshots
 
-**Wait mode** (Warm theme). The cursor waits for the right notes. The notes you play appear on the staff, green when right and red when wrong, at the height of the key you pressed, with a plain explanation underneath. The line under the title is the piece's score history.
+**Wait mode** (Warm theme). The cursor waits for the right notes. The notes you play appear on the staff, green when right and red when wrong, at the height of the key you pressed, with a plain explanation underneath. The screen stays bare: the list of pieces is a drawer (**☰ Pieces**), the drawn piano is hidden, and the MIDI status only shows when something is wrong.
 
 ![Wait mode on Ode to Joy: a right chord in green, a wrong key in red, and the feedback line](docs/screenshots/wait-mode.webp)
 
@@ -29,7 +29,7 @@ MIDI keyboard, and you can also play with your computer keyboard or the mouse.
 
 ![Sight-reading test, level 1](docs/screenshots/sight-reading.webp)
 
-The three dots at the top right switch between the Warm, Cold blues and Night themes, and the choice is remembered. The screenshots use a stand-in for the piano connection, so the top bar shows a P-115.
+The three dots at the top right switch between the Warm, Cold blues and Night themes, and the choice is remembered. The screenshots use a stand-in for the piano connection. `node tools/screenshots/full.mjs` takes the full-view ones again (see its header).
 
 ## Course mode and the minimal view
 
@@ -72,7 +72,20 @@ These screenshots show only the app's own exercises and generated pieces, with a
 
 ## Piece mode
 
-The **Piece** switch at the top works one score until it is done: the app finds the easy and hard parts of each hand, then takes you from the notes the piece uses, through each hand alone, a few bars with both hands, and the trouble spots, up to the whole piece with the metronome. Details: [14-piece-mode.md](14-piece-mode.md).
+The **Piece** switch at the top works one score until it is done: the app finds the easy and hard parts of each hand, then takes you from the notes the piece uses, through each hand alone, a few bars with both hands, and the trouble spots, up to the whole piece with the metronome.
+
+It opens on a short list of pieces **grouped by artist**. Pick one and you are practising at once, at the step where you stopped: there is no plan to read, only a row of dots at the top for how far along the path you are (filled = done, big = this one, dashed = skipped). **Pieces** takes you back to the list.
+
+<table>
+<tr>
+<td width="50%"><img src="docs/screenshots/piece-home.webp" alt="Piece mode: the pieces grouped by artist"><br><sub><b>The list.</b> Pieces by artist.</sub></td>
+<td width="50%"><img src="docs/screenshots/piece-step.webp" alt="The first step of a piece: a note card, with one dot per step above it"><br><sub><b>A step.</b> The first step is a note card; the dots above show the whole path.</sub></td>
+</tr>
+</table>
+
+Every playing step opens on the notes only, with the music waiting for you, and that practice is free: it never counts. A step is finished by the rhythm: press **Play with rhythm** and play it with the metronome. Only good runs with the beat count towards the goal, and **Back to the notes only** takes you back whenever you like.
+
+Only the scores marked `"pieceMode": true` in `app/scores/library.json` appear in its list, so the list holds just the pieces set up by hand for it (today: Tomorrow's Song). Add the flag to an entry to offer another.
 
 ## What the app does
 
@@ -80,6 +93,7 @@ The **Piece** switch at the top works one score until it is done: the app finds 
   [OpenSheetMusicDisplay](https://opensheetmusicdisplay.org/), with a cursor on the current step.
 - **Wait mode.** The cursor stays put until you play exactly the right notes. Chords can be played in any order. Use it to learn a piece.
 - **Notes on the staff.** A right key shows up as a green note that fades after a moment. A wrong key shows up as a red note on the staff at the cursor (with ledger lines and a sharp sign where needed), so you see at what height you played, not just a message. It works before you press Start too: in tempo mode the key is checked against the first notes of the piece (or your bar range) for the hand you chose, with no clock and no score.
+- **Sound.** Listen and the computer keyboard play through one of four instruments, picked with the **♪** button beside Listen: Grand (a recorded piano, one sample per key from C2 to B5, loaded the first time it is used), Piano (a built-in one made of overtones that die away at their own speed, with a hammer thump and a little room reverb), Soft (an electric piano) and Bells. The built-in ones are made in code and work with no files; if the recorded samples cannot be loaded, Grand plays the built-in Piano instead. The samples are MIT-licensed, from [piano-sound-samples](https://github.com/Leethring/piano-sound-samples); see `app/public/samples/piano/README.md`. A piano plugged in over MIDI always makes its own sound.
 - **Tempo mode.** After a count-in, the score follows a metronome and each note has a timing window. You get the share of notes played
   in time, missed and extra notes, and whether you rush or drag. After a clean run the tempo rises 4 bpm. Three clean runs at the target tempo finish the piece.
   The tempo counts the piece's own beat, so 6/8 is counted in dotted quarters. A line slides across the score at the tempo: press each key as the line reaches its note. A level setting (Beginner, Intermediate, Advanced) sets how wide the timing window is, from about half a beat either side down to a strict ±150 ms at most.
@@ -93,7 +107,7 @@ The **Piece** switch at the top works one score until it is done: the app finds 
 - **Scales and arpeggios.** Generated for 23 keys, with fingering, run through the same tempo ladder.
 - **Scores.** Every run gets a 0–100 score and up to three stars, with how it compares to your last run and your best. Under each piece's title you see last score, best, run count and a sparkline; the library shows each piece's last score, and "Needs practice first" sorts the weakest to the top.
 - **Practice log.** Every run is saved in your browser, and each piece is marked new, practicing or done.
-- **Library search.** Filter by title, composer, skill, stage or status, and sort by course order or difficulty.
+- **Library search.** **☰ Pieces** opens the list as a drawer: filter by title, composer, skill, stage or status, and sort by course order or difficulty.
 - **Course mode.** A daily session built from the syllabus: warm-up, reading, new bars, a steady run, review and play, scaled to 10, 15, 20, 25, 30 or 45 minutes. It adapts: reading climbs after two good days, units end when their exit is met, and a streak counts the days. It starts with a seven-day introduction week. Progress can be saved to a file and loaded back (**Backup**).
 - **Reading ladder.** The Reading step is a generated piece from a ladder of 28 rungs, each adding one thing (one new note, a skip, a meter, a rhythm), tied to the unit you are in, so it never asks for something the lessons have not shown.
 - **Note cards.** In Stage 0, a note on the staff that you play within two seconds; the deck grows with the units and shows new notes more often.
@@ -116,8 +130,8 @@ npm run dev        # https://localhost:5173 (a self-signed certificate: accept t
 `npm run dev` serves over **https** on every network address, because Web MIDI only works on a secure page: that lets a phone on the same wifi open
 `https://<your laptop's address>:5173/?view=minimal` and use its own USB-MIDI. `npm run dev:http` is the plain `http://localhost:5173` server.
 
-Plug in a MIDI keyboard before you open the page. The device name appears in the top bar and the pedal value is shown live.
-With no keyboard, play with the computer keys (shown in the sidebar) or click the on-screen keys.
+Plug in a MIDI keyboard before you open the page. The MIDI status only shows when something is wrong: a red banner says whether the browser refused MIDI (press **Allow MIDI**; if Chrome has blocked it, the banner says where to switch it on, and the app reconnects by itself) or the keyboard disconnected (plug it back in and press **Reconnect**). The pedal appears once one is heard.
+With no keyboard, play with the computer keys (shown in the **☰ Pieces** drawer).
 
 ```bash
 npm test           # unit tests (vitest)
@@ -188,14 +202,16 @@ app/                    Vite + TypeScript app
   src/midi/             Web MIDI parsing and the single input bus (piano, keyboard, mouse)
   src/practice/         Wait mode, tempo mode, timeline, calibration, ranges, log, sight-reading test
   src/content/          Notation compiler, MXL reader, built-in lessons, technique generator, reading ladder, score manifest
-  src/ui/               Score view (paged and fitted in the minimal view), on-screen keyboard, synth, library filter, view switch
+  src/ui/               Score view (paged and fitted in the minimal view), on-screen keyboard (hidden), synth with four voices and the sample player, library filter, view switch
+  src/piece/            Piece mode: analysis, learning path, progress, the artist list and the practice bar
   src/course/           Course mode: state, day planner, note cards, the course page
   src/storage/          Backup and restore of everything the app remembers
   course/course.json    The units: exercises, reading rungs, cards, exits
   scores/library.json   Manifest of imported scores (files are not tracked)
-tools/                  import-scores.py, score-difficulty.py, midi-check.html, ledger.py
+  public/samples/piano/ The recorded piano (MIT, with its credit), one sample per key
+tools/                  import-scores.py, score-difficulty.py, midi-check.html, ledger.py, fingering.py (finger numbers for Tomorrow's Song), piano-samples.py (picks the piano samples)
 tools/omr/              PDF to MusicXML (homr plus checks), local only
-tools/screenshots/      Takes the minimal-view screenshots for this README
+tools/screenshots/      Takes the screenshots for this README (minimal.mjs and full.mjs)
 docs/screenshots/       The images above
 inbox/                  Drop new scores here, then run ./ingest.sh
 .claude/skills/         The import-scores skill for Claude Code

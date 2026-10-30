@@ -29,12 +29,12 @@ npm test           # unit tests (vitest)
 npm run build      # typecheck + production build
 ```
 
-No piano plugged in? Play with the computer keyboard (shown in the sidebar) or click the on-screen keys.
-With the P-115 connected, the device name appears in the top bar and the sustain pedal value is shown live.
+No piano plugged in? Play with the computer keyboard (the keys are listed in the **☰ Pieces** drawer).
+The MIDI status only shows when something is wrong: a red banner says whether the browser refused MIDI (**Allow MIDI**) or the keyboard disconnected (**Reconnect**). The sustain pedal shows once one is heard. The drawn piano is hidden (`#keyboard` in `style.css`; delete that rule to bring it back).
 
 ## Course mode
 
-The app opens in Course; **Free | Course** at the top switches (and remembers the choice) between the app as it was (browse the library, play anything) and a daily session, Duolingo-style.
+The app opens in Course; **Free | Course | Piece** at the top switches (and remembers the choice) between the app as it was (browse the library, play anything) and a daily session, Duolingo-style.
 Course mode hides the library and the mode and hands switches: each step decides what you play. One dot per step shows where you are
 (filled = done, ring = here, dashed = skipped); a step counts when its goal is reached (a run, two readings, ten cards), **Next** or **Skip
 step** moves on, and **Menu** goes back to the course page. A day counts for the streak when its *core* steps (reading and new bars) are done.
