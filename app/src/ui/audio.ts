@@ -1,10 +1,43 @@
+import { Sampler } from './sampler';
+import { makeBus, play, type Bus, type Playing, type VoiceName } from './voices';
+
 /**
- * A tiny synth so the app is playable without the piano (computer keyboard / mouse).
- * Not used for MIDI input: the P-115 makes its own sound.
+ * The sound of the app: Listen, the metronome clicks and the computer keyboard, so it is playable without the piano.
+ * Not used for MIDI input: the piano makes its own sound. The instrument is chosen with `setVoice` (see voices.ts).
  */
 export class Synth {
   private ctx: AudioContext | undefined;
-  private voices = new Map<number, { osc: OscillatorNode; gain: GainNode }>();
+  private bus: Bus | undefined;
+  private voice: VoiceName = 'piano';
+  private sampler = new Sampler();
+  private held = new Map<number, Playing>();
+
+  setVoice(voice: VoiceName): void {
+    this.voice = voice;
+  }
+
+  /** Fetch the recorded piano for these keys (all of it when none are named). Nothing happens for the built-in instruments. */
+  async preload(midis?: readonly number[]): Promise<void> {
+    try {
+      this.ctx ??= new AudioContext();
+      await this.sampler.load(this.ctx, midis);
+    } catch {
+      // no audio: nothing to load for
+    }
+  }
+
+  /** The recorded piano is not waiting for anything: it is not the chosen sound, or these keys are loaded (or can never be). */
+  hasSamples(midis: readonly number[]): boolean {
+    return this.voice !== 'grand' || this.sampler.has(midis);
+  }
+
+  private busFor(ctx: AudioContext): Bus {
+    if (!this.bus) {
+      this.bus = makeBus(ctx);
+      this.bus.samples = this.sampler;
+    }
+    return this.bus;
+  }
 
   /** True once the audio clock is running: a fresh context starts a moment late and its clock reads 0 until then. */
   get isReady(): boolean {
@@ -46,30 +79,18 @@ export class Synth {
       this.ctx ??= new AudioContext();
       void this.ctx.resume();
       this.noteOff(note);
-      const t = this.ctx.currentTime;
-      const osc = this.ctx.createOscillator();
-      const gain = this.ctx.createGain();
-      osc.type = 'triangle';
-      osc.frequency.value = 440 * 2 ** ((note - 69) / 12);
-      gain.gain.setValueAtTime(0.0001, t);
-      gain.gain.exponentialRampToValueAtTime(0.25, t + 0.01);
-      gain.gain.exponentialRampToValueAtTime(0.08, t + 0.4);
-      osc.connect(gain).connect(this.ctx.destination);
-      osc.start();
-      this.voices.set(note, { osc, gain });
+      if (this.voice === 'grand' && !this.sampler.has([note])) void this.preload([note]); // this once the built-in piano answers
+      this.held.set(note, play(this.ctx, this.busFor(this.ctx), this.voice, note, this.ctx.currentTime, 0.8));
     } catch {
       // no audio available: stay silent
     }
   }
 
   noteOff(note: number): void {
-    const v = this.voices.get(note);
+    const v = this.held.get(note);
     if (!v || !this.ctx) return;
-    const t = this.ctx.currentTime;
-    v.gain.gain.cancelScheduledValues(t);
-    v.gain.gain.setTargetAtTime(0.0001, t, 0.08);
-    v.osc.stop(t + 0.4);
-    this.voices.delete(note);
+    v.release(this.ctx.currentTime);
+    this.held.delete(note);
   }
 
   /**
@@ -77,47 +98,28 @@ export class Synth {
    * Scheduled on the audio clock like the metronome clicks. Returns a function that silences everything (also what is sounding).
    */
   scheduleNotes(notes: { atMs: number; durMs: number; midi: number }[]): () => void {
-    const voices: { osc: OscillatorNode; gain: GainNode }[] = [];
+    const playing: Playing[] = [];
     try {
       this.ctx ??= new AudioContext();
       void this.ctx.resume();
       const ctx = this.ctx;
-      const master = ctx.createGain(); // chords add up: keep the sum clear of clipping
-      master.gain.value = 0.5;
-      master.connect(ctx.destination);
+      const bus = this.busFor(ctx);
       const offsetSec = this.clockOffset(ctx);
       for (const n of notes) {
         const t = n.atMs / 1000 + offsetSec;
         const end = t + Math.max(0.08, n.durMs / 1000 * 0.97);
         if (end < ctx.currentTime) continue;
-        const start = Math.max(t, ctx.currentTime);
-        const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
-        osc.type = 'triangle';
-        osc.frequency.value = 440 * 2 ** ((n.midi - 69) / 12);
-        gain.gain.setValueAtTime(0.0001, start);
-        gain.gain.exponentialRampToValueAtTime(0.28, start + 0.012);
-        gain.gain.exponentialRampToValueAtTime(0.1, start + Math.min(0.5, (end - start) * 0.8));
-        gain.gain.setValueAtTime(0.1, Math.max(start + 0.02, end - 0.02));
-        gain.gain.exponentialRampToValueAtTime(0.0001, end + 0.12); // a short release instead of a click
-        osc.connect(gain).connect(master);
-        osc.start(start);
-        osc.stop(end + 0.15);
-        voices.push({ osc, gain });
+        const note = play(ctx, bus, this.voice, n.midi, Math.max(t, ctx.currentTime), 0.7);
+        note.release(end);
+        playing.push(note);
       }
     } catch {
       // no audio: the cursor and keys still follow along
     }
     return () => {
-      const ctx = this.ctx;
-      if (!ctx) return;
-      for (const v of voices) {
-        try {
-          v.gain.gain.cancelScheduledValues(ctx.currentTime);
-          v.gain.gain.setTargetAtTime(0.0001, ctx.currentTime, 0.03);
-          v.osc.stop(ctx.currentTime + 0.2);
-        } catch { /* already stopped */ }
-      }
+      for (const p of playing) p.stop();
+      this.bus?.dispose(); // the reverb tail as well: stopping must be silent. The next note builds a fresh one.
+      this.bus = undefined;
     };
   }
 

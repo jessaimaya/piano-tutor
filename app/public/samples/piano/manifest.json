@@ -1,0 +1,282 @@
+{
+ "source": "https://github.com/Leethring/piano-sound-samples",
+ "license": "MIT",
+ "roots": [
+  {
+   "midi": 36,
+   "file": "36.mp3",
+   "onset": 0.0,
+   "gain": 0.858
+  },
+  {
+   "midi": 37,
+   "file": "37.mp3",
+   "onset": 0.0,
+   "gain": 0.801
+  },
+  {
+   "midi": 38,
+   "file": "38.mp3",
+   "onset": 0.0,
+   "gain": 0.935
+  },
+  {
+   "midi": 39,
+   "file": "39.mp3",
+   "onset": 0.0,
+   "gain": 0.797
+  },
+  {
+   "midi": 40,
+   "file": "40.mp3",
+   "onset": 0.0,
+   "gain": 0.776
+  },
+  {
+   "midi": 41,
+   "file": "41.mp3",
+   "onset": 0.0,
+   "gain": 0.89
+  },
+  {
+   "midi": 42,
+   "file": "42.mp3",
+   "onset": 0.0,
+   "gain": 1.034
+  },
+  {
+   "midi": 43,
+   "file": "43.mp3",
+   "onset": 0.0,
+   "gain": 0.869
+  },
+  {
+   "midi": 44,
+   "file": "44.mp3",
+   "onset": 0.0,
+   "gain": 0.708
+  },
+  {
+   "midi": 45,
+   "file": "45.mp3",
+   "onset": 0.0,
+   "gain": 0.973
+  },
+  {
+   "midi": 46,
+   "file": "46.mp3",
+   "onset": 0.0,
+   "gain": 0.693
+  },
+  {
+   "midi": 47,
+   "file": "47.mp3",
+   "onset": 0.0,
+   "gain": 0.54
+  },
+  {
+   "midi": 48,
+   "file": "48.mp3",
+   "onset": 0.0,
+   "gain": 0.68
+  },
+  {
+   "midi": 49,
+   "file": "49.mp3",
+   "onset": 0.0,
+   "gain": 0.646
+  },
+  {
+   "midi": 50,
+   "file": "50.mp3",
+   "onset": 0.0,
+   "gain": 0.552
+  },
+  {
+   "midi": 51,
+   "file": "51.mp3",
+   "onset": 0.0,
+   "gain": 0.61
+  },
+  {
+   "midi": 52,
+   "file": "52.mp3",
+   "onset": 0.0,
+   "gain": 0.578
+  },
+  {
+   "midi": 53,
+   "file": "53.mp3",
+   "onset": 0.0,
+   "gain": 0.544
+  },
+  {
+   "midi": 54,
+   "file": "54.mp3",
+   "onset": 0.0,
+   "gain": 0.466
+  },
+  {
+   "midi": 55,
+   "file": "55.mp3",
+   "onset": 0.0,
+   "gain": 0.567
+  },
+  {
+   "midi": 56,
+   "file": "56.mp3",
+   "onset": 0.0,
+   "gain": 0.789
+  },
+  {
+   "midi": 57,
+   "file": "57.mp3",
+   "onset": 0.0,
+   "gain": 1.038
+  },
+  {
+   "midi": 58,
+   "file": "58.mp3",
+   "onset": 0.0,
+   "gain": 0.939
+  },
+  {
+   "midi": 59,
+   "file": "59.mp3",
+   "onset": 0.0,
+   "gain": 0.57
+  },
+  {
+   "midi": 60,
+   "file": "60.mp3",
+   "onset": 0.0,
+   "gain": 0.565
+  },
+  {
+   "midi": 61,
+   "file": "61.mp3",
+   "onset": 0.0,
+   "gain": 0.551
+  },
+  {
+   "midi": 62,
+   "file": "62.mp3",
+   "onset": 0.0,
+   "gain": 0.544
+  },
+  {
+   "midi": 63,
+   "file": "63.mp3",
+   "onset": 0.0,
+   "gain": 0.617
+  },
+  {
+   "midi": 64,
+   "file": "64.mp3",
+   "onset": 0.0,
+   "gain": 0.609
+  },
+  {
+   "midi": 65,
+   "file": "65.mp3",
+   "onset": 0.0,
+   "gain": 0.585
+  },
+  {
+   "midi": 66,
+   "file": "66.mp3",
+   "onset": 0.0,
+   "gain": 0.468
+  },
+  {
+   "midi": 67,
+   "file": "67.mp3",
+   "onset": 0.0,
+   "gain": 0.526
+  },
+  {
+   "midi": 68,
+   "file": "68.mp3",
+   "onset": 0.0,
+   "gain": 0.387
+  },
+  {
+   "midi": 69,
+   "file": "69.mp3",
+   "onset": 0.0,
+   "gain": 0.411
+  },
+  {
+   "midi": 70,
+   "file": "70.mp3",
+   "onset": 0.0,
+   "gain": 0.442
+  },
+  {
+   "midi": 71,
+   "file": "71.mp3",
+   "onset": 0.0,
+   "gain": 0.49
+  },
+  {
+   "midi": 72,
+   "file": "72.mp3",
+   "onset": 0.0,
+   "gain": 0.557
+  },
+  {
+   "midi": 73,
+   "file": "73.mp3",
+   "onset": 0.0,
+   "gain": 0.419
+  },
+  {
+   "midi": 74,
+   "file": "74.mp3",
+   "onset": 0.0,
+   "gain": 0.364
+  },
+  {
+   "midi": 75,
+   "file": "75.mp3",
+   "onset": 0.0,
+   "gain": 0.447
+  },
+  {
+   "midi": 76,
+   "file": "76.mp3",
+   "onset": 0.0,
+   "gain": 0.449
+  },
+  {
+   "midi": 77,
+   "file": "77.mp3",
+   "onset": 0.0,
+   "gain": 0.449
+  },
+  {
+   "midi": 78,
+   "file": "78.mp3",
+   "onset": 0.0,
+   "gain": 0.515
+  },
+  {
+   "midi": 79,
+   "file": "79.mp3",
+   "onset": 0.0,
+   "gain": 0.507
+  },
+  {
+   "midi": 81,
+   "file": "81.mp3",
+   "onset": 0.0,
+   "gain": 0.773
+  },
+  {
+   "midi": 83,
+   "file": "83.mp3",
+   "onset": 0.0,
+   "gain": 0.614
+  }
+ ]
+}
