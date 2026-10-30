@@ -31,6 +31,8 @@ import { backupFileName, exportBackup, importBackup, parseBackup } from './stora
 import { course as courseData } from './course/ladder';
 import { createCourse } from './course/ui';
 import type { StepTarget } from './course/state';
+import { readSteps, analyse } from './piece/analysis';
+import { createPiece } from './piece/ui';
 import { resolveZoom, stepZoom, type ViewId } from './ui/view';
 
 const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
@@ -83,6 +85,8 @@ interface TempoState {
 }
 
 let current: Current | undefined;
+let cardScoreShown = false; // a note card has replaced the piece's score on screen
+let currentXml = ''; // the MusicXML of `current`, for reading its key signature
 let session: Session | undefined; // wait mode
 let tempo: TempoState | undefined; // tempo mode, while a run is going
 let hands: Hands = 'both';
@@ -361,6 +365,8 @@ async function loadScore(info: Omit<Current, 'unit'>, xml: string, preferredHand
     showResult(`Could not read that score: ${(err as Error).message}`, true);
     return;
   }
+  currentXml = xml;
+  cardScoreShown = false;
   const next: Current = { ...info, unit: beatUnitOfXml(xml) };
   current = next;
   const range = bpmRange(next.unit);
@@ -490,6 +496,7 @@ function finishWaitRun(summary: RunSummary): void {
     (loopOn() ? 'Looping: play it again.' : pct >= 90 ? 'Ready to try Tempo mode.' : 'Press Try again to go again.'), rec, earlier);
   renderLibrary();
   courseCtl.onRun({ pieceId: current.id, mode: 'wait', accuracy: accuracy(summary), sight: false });
+  pieceCtl.onRun({ pieceId: current.id, mode: 'wait', accuracy: accuracy(summary), sight: false });
   if (loopOn()) { session?.restart(); renderStatus(); refreshKeys(); }
 }
 
@@ -688,6 +695,7 @@ function finishTempoRun(s: TempoSummary): void {
   renderLibrary();
   renderStatus();
   courseCtl.onRun({ pieceId: current.id, mode: 'tempo', accuracy: accuracy(s), sight: false });
+  pieceCtl.onRun({ pieceId: current.id, mode: 'tempo', accuracy: accuracy(s), sight: false });
   // Loop: straight into the next pass (at the raised tempo, if the run was clean) until Stop, Escape, or the piece is done.
   if (loopOn() && mode === 'tempo' && !sight && status !== 'done') {
     loopTimer = setTimeout(() => { loopTimer = undefined; if (!tempo && mode === 'tempo' && current && loopOn()) startTempo(); }, 1200);
@@ -736,11 +744,11 @@ function restoreRange(): void {
   renderRange();
 }
 
-function setRange(from: number, to: number): void {
+function setRange(from: number, to: number, remember = true): void {
   if (!current) return;
   const r = clampRange(from, to, score.measureCount);
   barRange = isWholePiece(r, score.measureCount) ? undefined : r;
-  if (!current.id.startsWith('sr-')) safeSet('range:' + current.id, barRange ? `${barRange.from}-${barRange.to}` : '');
+  if (remember && !current.id.startsWith('sr-')) safeSet('range:' + current.id, barRange ? `${barRange.from}-${barRange.to}` : '');
   renderRange();
   resetPractice();
 }
@@ -1214,6 +1222,7 @@ async function openSight(rung: number): Promise<void> {
 
 async function showCard(xml: string): Promise<void> {
   cardsOn = true;
+  cardScoreShown = true;
   await score.load(xml, 2.4);
   $('status').textContent = '';
   $('piece-title').textContent = 'Note card';
@@ -1239,6 +1248,17 @@ async function loadBackup(file: File): Promise<string> {
   return `Loaded ${n} saved items from the backup (made ${parsed.backup.exportedAt.slice(0, 10)}). Reloading…`;
 }
 
+function setAppLayout(on: boolean): void {
+  document.documentElement.dataset.app = on ? 'course' : 'free';
+  document.documentElement.classList.remove('lib-open');
+  stopEverything();
+  if (!on) { // back to free practice: the mode and the piece the player had
+    mode = savedMode();
+    const before = catalog.find((p) => p.id === safeGet('piece')) ?? catalog[0];
+    if (before) void before.open();
+  }
+}
+
 const courseCtl = createCourse({
   course: courseData,
   now: () => new Date(),
@@ -1252,27 +1272,54 @@ const courseCtl = createCourse({
   startTest: startSightTest,
   showCard,
   setKeyHandler: (h) => { cardKeyHandler = h; },
-  setLayout: (on) => {
-    document.documentElement.dataset.app = on ? 'course' : 'free';
-    document.documentElement.classList.remove('lib-open');
-    stopEverything();
-    if (!on) { // back to free practice: the mode and the piece the player had
-      mode = savedMode();
-      const before = catalog.find((p) => p.id === safeGet('piece')) ?? catalog[0];
-      if (before) void before.open();
-    }
-  },
+  setLayout: setAppLayout,
   stopEverything,
   say: (text, tone) => showResult(text, tone === 'bad'),
   exportBackup: downloadBackup,
   importBackup: loadBackup,
 });
 
-type AppMode = 'free' | 'course';
+// ───────────── piece mode ─────────────
+const pieceCtl = createPiece({
+  pieces: () => catalog.filter((p) => !p.technique && !p.id.startsWith('sr-')).sort((a, b) => a.stage - b.stage || a.title.localeCompare(b.title)).map((p) => ({ id: p.id, title: p.title, stage: p.stage })),
+  analyze: async (id) => {
+    const item = catalogById.get(id);
+    if (!item) return undefined;
+    await item.open();
+    if (current?.id !== id) return undefined;
+    const fifths = Number(/<fifths>(-?\d+)<\/fifths>/.exec(currentXml)?.[1] ?? 0);
+    return { title: item.title, analysis: analyse(readSteps(score)), flats: fifths < 0 };
+  },
+  open: async (t) => {
+    const item = catalogById.get(t.pieceId);
+    if (!item) throw new Error(`${t.pieceId} is not in this copy of the app`);
+    cardsOn = false;
+    if (cardScoreShown || current?.id !== t.pieceId) await item.open();
+    if (!current) return;
+    mode = t.mode;
+    hands = current.handsAvailable === 'both' || current.handsAvailable === t.hands ? t.hands : current.handsAvailable;
+    if (t.bars) setRange(t.bars[0], t.bars[1], false); else setRange(1, score.measureCount, false);
+    resetPractice();
+    renderControls();
+  },
+  showCard,
+  setKeyHandler: (h) => { cardKeyHandler = h; },
+  setLayout: setAppLayout,
+  stopEverything,
+  say: (text, tone) => showResult(text, tone === 'bad'),
+  load: safeGet,
+  save: safeSet,
+  now: () => new Date(),
+});
+
+type AppMode = 'free' | 'course' | 'piece';
 function applyApp(next: AppMode, remember: boolean): void {
   for (const b of document.querySelectorAll<HTMLButtonElement>('#app-mode button')) b.setAttribute('aria-pressed', String(b.dataset.app === next));
   if (remember) safeSet('app', next);
-  if (next === 'course') courseCtl.show(); else courseCtl.hide();
+  if (next !== 'course') courseCtl.hide();
+  if (next !== 'piece') pieceCtl.hide();
+  if (next === 'course') courseCtl.show();
+  if (next === 'piece') pieceCtl.show();
 }
 $('app-mode').addEventListener('click', (e) => {
   const b = (e.target as HTMLElement).closest<HTMLButtonElement>('button[data-app]');
@@ -1300,6 +1347,6 @@ renderLatency();
 renderSightLast();
 const last = catalog.find((p) => p.id === safeGet('piece')) ?? catalog[0];
 if (last) void last.open();
-applyApp(safeGet('app') === 'free' ? 'free' : 'course', false); // the course is the main way in; Free is remembered once chosen
+applyApp(((a) => (a === 'free' || a === 'piece' ? a : 'course'))(safeGet('app')), false); // the course is the main way in; Free is remembered once chosen
 void navigator.storage?.persist?.(); // ask the browser not to clear what the app remembers
-if (import.meta.env.DEV) (window as unknown as Record<string, unknown>).__piano = { course: courseCtl, bus, log, score }; // for the browser tests, never in the build
+if (import.meta.env.DEV) (window as unknown as Record<string, unknown>).__piano = { course: courseCtl, piece: pieceCtl, bus, log, score }; // for the browser tests, never in the build

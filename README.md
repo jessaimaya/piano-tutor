@@ -70,6 +70,10 @@ see the line after the one you are reading, and the page turns exactly at the st
 These screenshots show only the app's own exercises and generated pieces, with a stand-in for the piano connection and sample course history.
 `node tools/screenshots/minimal.mjs` takes them again (see its header).
 
+## Piece mode
+
+The **Piece** switch at the top works one score until it is done: the app finds the easy and hard parts of each hand, then takes you from the notes the piece uses, through each hand alone, a few bars with both hands, and the trouble spots, up to the whole piece with the metronome. Details: [14-piece-mode.md](14-piece-mode.md).
+
 ## What the app does
 
 - **Reads real notation.** It loads MusicXML (`.mxl`, `.musicxml`) and draws it with
