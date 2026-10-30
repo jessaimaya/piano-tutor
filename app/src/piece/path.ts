@@ -15,13 +15,13 @@ import { difficultyOf, easierHand, midiName, sections, troubleBars, type Analysi
 export type PhaseId = 'notes' | 'first' | 'second' | 'together' | 'trouble' | 'whole' | 'tempo';
 
 export const PHASES: Record<PhaseId, { name: string; blurb: string }> = {
-  notes: { name: 'Know the notes', blurb: 'Learn to find the notes this piece uses, before you play them in order.' },
-  first: { name: 'First hand', blurb: 'The easier hand alone, a section at a time.' },
-  second: { name: 'Second hand', blurb: 'The other hand alone, a section at a time.' },
-  together: { name: 'Hands together', blurb: 'A few notes first, then a section, then the next.' },
-  trouble: { name: 'Trouble spots', blurb: 'The bars that are hardest, on their own.' },
-  whole: { name: 'The whole piece', blurb: 'Start to finish, with the music waiting for you.' },
-  tempo: { name: 'Up to tempo', blurb: 'With the metronome, a little faster after every clean run.' },
+  notes: { name: 'Know the notes', blurb: 'Find the notes this piece uses.' },
+  first: { name: 'First hand', blurb: 'The easier hand, a section at a time.' },
+  second: { name: 'Second hand', blurb: 'The other hand, a section at a time.' },
+  together: { name: 'Hands together', blurb: 'Both hands, a bit at a time.' },
+  trouble: { name: 'Trouble spots', blurb: 'The hardest bars, alone.' },
+  whole: { name: 'The whole piece', blurb: 'Start to finish.' },
+  tempo: { name: 'Up to tempo', blurb: 'With the metronome.' },
 };
 
 export type TaskKind = 'notes' | 'hand' | 'start' | 'together' | 'trouble' | 'whole' | 'tempo';
@@ -36,7 +36,10 @@ export interface Task {
   hands: Hands;
   /** Bars to practise (1-based, inclusive); absent for the whole piece. */
   bars?: [number, number];
+  /** How the step opens: `wait` is the notes only, with the music waiting for you. */
   mode: 'cards' | 'wait' | 'tempo';
+  /** Counts only from runs with the metronome (the Tempo mode); the notes-only runs before it are free practice. */
+  rhythm?: boolean;
   /** Good runs (or right, fast cards) that complete it. */
   goal: number;
   /** A run counts at this share of steps right (and in time, in tempo mode). */
@@ -46,6 +49,8 @@ export interface Task {
 }
 
 export const CARDS_GOAL = 10;
+/** Said on every step that is finished with the rhythm: practise the notes as long as you like, then prove it with the beat. */
+const THEN_RHYTHM = ' Notes first, then rhythm.';
 const GOOD = 0.9;
 
 export const handName = (h: Hands) => (h === 'rh' ? 'right hand' : h === 'lh' ? 'left hand' : 'both hands');
@@ -84,7 +89,7 @@ export function buildPath(a: Analysis, flats = false): Task[] {
     out.push({
       id: idOf('notes', h), phase: 'notes', kind: 'notes', hands: h, mode: 'cards', goal: CARDS_GOAL, minAccuracy: 1, cardHand: h,
       title: `Notes of the ${handName(h)}`,
-      text: `The piece uses ${names.length} different notes here: ${names.join(' ')}. Find each one on the keyboard as the card shows it.`,
+      text: `${names.length} notes: ${names.join(' ')}.`,
     });
   }
 
@@ -94,16 +99,16 @@ export function buildPath(a: Analysis, flats = false): Task[] {
     for (const s of easyFirst) {
       if (a[h].slice(s.from - 1, s.to).every((b) => b.notes === 0)) continue; // nothing to play in this section for this hand
       out.push({
-        id: idOf('hand', h, s), phase, kind: 'hand', hands: h, bars: [s.from, s.to], mode: 'wait', goal: 2, minAccuracy: GOOD,
+        id: idOf('hand', h, s), phase, kind: 'hand', hands: h, bars: [s.from, s.to], mode: 'wait', rhythm: true, goal: 2, minAccuracy: GOOD,
         title: `${barsText(s)}, ${handName(h)}`,
-        text: `${easyFirst[0] === s ? 'The easiest part for this hand. ' : ''}Play ${barsText(s)} with the ${handName(h)} alone, twice without a mistake. The music waits for you.`,
+        text: `Twice without a mistake.${THEN_RHYTHM}`,
       });
     }
     if (parts.length > 1 && second) { // a one-hand piece goes straight to the whole-piece task at the end
       out.push({
-        id: idOf('whole', h), phase, kind: 'whole', hands: h, mode: 'wait', goal: 1, minAccuracy: GOOD,
+        id: idOf('whole', h), phase, kind: 'whole', hands: h, mode: 'wait', rhythm: true, goal: 1, minAccuracy: GOOD,
         title: `All of it, ${handName(h)}`,
-        text: `Now the whole piece with the ${handName(h)} alone, joining the sections in order.`,
+        text: `Start to finish.${THEN_RHYTHM}`,
       });
     }
   });
@@ -112,40 +117,40 @@ export function buildPath(a: Analysis, flats = false): Task[] {
     const start = easiestWindow(a);
     const home = parts.find((s) => within(start, s)) ?? parts[0]!;
     out.push({
-      id: idOf('start', 'both', start), phase: 'together', kind: 'start', hands: 'both', bars: [start.from, start.to], mode: 'wait', goal: 2, minAccuracy: GOOD,
+      id: idOf('start', 'both', start), phase: 'together', kind: 'start', hands: 'both', bars: [start.from, start.to], mode: 'wait', rhythm: true, goal: 2, minAccuracy: GOOD,
       title: `${barsText(start)}, hands together`,
-      text: `Just ${start.to - start.from + 1 === 1 ? 'one bar' : 'two bars'}, the easiest place to put the hands together. Slowly: look at the right hand's notes, then the left's, then play both.`,
+      text: `The easiest place to start.${THEN_RHYTHM}`,
     });
     const rest = byDifficulty(parts, (s) => difficultyOf(a, s, 'both'));
     const queue = [home, ...rest.filter((s) => s !== home)];
     for (const s of queue) {
       if (s.from === start.from && s.to === start.to) continue;
       out.push({
-        id: idOf('together', 'both', s), phase: 'together', kind: 'together', hands: 'both', bars: [s.from, s.to], mode: 'wait', goal: 2, minAccuracy: GOOD,
+        id: idOf('together', 'both', s), phase: 'together', kind: 'together', hands: 'both', bars: [s.from, s.to], mode: 'wait', rhythm: true, goal: 2, minAccuracy: GOOD,
         title: `${barsText(s)}, hands together`,
-        text: s === home ? `The same place, now the whole section: ${barsText(s)}.` : `Next easiest: ${barsText(s)}, both hands.`,
+        text: (s === home ? 'The whole section.' : 'Next easiest.') + THEN_RHYTHM,
       });
     }
   }
 
   for (const r of mergeTrouble(troubleBars(a), a.bars)) {
     out.push({
-      id: idOf('trouble', 'both', r), phase: 'trouble', kind: 'trouble', hands: second ? 'both' : first, bars: [r.from, r.to], mode: 'wait', goal: 3, minAccuracy: GOOD,
+      id: idOf('trouble', 'both', r), phase: 'trouble', kind: 'trouble', hands: second ? 'both' : first, bars: [r.from, r.to], mode: 'wait', rhythm: true, goal: 3, minAccuracy: GOOD,
       title: `Trouble spot: ${barsText(r)}`,
-      text: `One of the hardest places in the piece. Take it slowly, three good runs, with a bar on each side so it joins up.`,
+      text: `A hard place. Three good runs.${THEN_RHYTHM}`,
     });
   }
 
   const hands: Hands = second ? 'both' : first;
   out.push({
-    id: idOf('whole', hands), phase: 'whole', kind: 'whole', hands, mode: 'wait', goal: 2, minAccuracy: GOOD,
+    id: idOf('whole', hands), phase: 'whole', kind: 'whole', hands, mode: 'wait', rhythm: true, goal: 2, minAccuracy: GOOD,
     title: 'The whole piece',
-    text: `Start to finish with ${handName(hands)}, twice without a mistake. The music still waits for you.`,
+    text: `Start to finish, twice without a mistake.${THEN_RHYTHM}`,
   });
   out.push({
     id: idOf('tempo', hands), phase: 'tempo', kind: 'tempo', hands, mode: 'tempo', goal: 3, minAccuracy: GOOD,
     title: 'With the metronome',
-    text: 'Three clean runs. After every clean run the tempo goes up a little, until it reaches the tempo set for this piece.',
+    text: 'Three clean runs. The tempo rises after each.',
   });
   return dedupe(out);
 }

@@ -633,7 +633,8 @@
     "hands": "both",
     "license": "unverified-arrangement",
     "source": "Living Room Songs (Ólafur Arnalds), sheet PDF, p. 1",
-    "difficulty": 64
+    "difficulty": 64,
+    "pieceMode": true
   },
   {
     "id": "x-fur-elise-beginner",

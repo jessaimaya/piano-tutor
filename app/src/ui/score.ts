@@ -1,8 +1,8 @@
-import { OpenSheetMusicDisplay, type GraphicalMeasure } from 'opensheetmusicdisplay';
+import { ClefEnum, OpenSheetMusicDisplay, type GraphicalMeasure } from 'opensheetmusicdisplay';
 import type { MeasuredCursor } from '../practice/range';
 import type { CursorNote } from '../practice/session';
 import type { Spot } from './playhead';
-import { clefFor, isSharp, ledgerSteps, staffStep } from './staff-position';
+import { clefFor, isSharp, ledgerSteps, staffStep, type Clef } from './staff-position';
 
 /** OSMD lays out in units of one staff space; at zoom 1 that is 10 px. */
 const UNIT_PX = 10;
@@ -21,6 +21,8 @@ const RESIZE_DEBOUNCE_MS = 200;
 export interface NoteAnchor {
   staves: GraphicalMeasure[];
   x: number;
+  /** The notes due at this spot and the staff each one is written on (0 = top). */
+  due: { midi: number; staff: number }[];
 }
 
 /** OSMD stores pitches with C4 = 48; MIDI has C4 = 60. */
@@ -38,6 +40,8 @@ export class ScoreView implements MeasuredCursor {
   private seen = { w: 0, h: 0 };
   /** Which hand is being asked for: the other staff's notes are drawn faded. */
   private activeHands: 'rh' | 'lh' | 'both' = 'both';
+  /** The tied notes the cursor has gone over since `clearHeld`: they sound on, so they are not asked for again. */
+  heldTies: CursorNote[] = [];
   private resizeTimer: ReturnType<typeof setTimeout> | undefined;
 
   constructor(private container: HTMLElement) {
@@ -105,7 +109,8 @@ export class ScoreView implements MeasuredCursor {
           for (const voice of entry.graphicalVoiceEntries) {
             for (const note of voice.notes) {
               const el = (note as unknown as { getSVGGElement?: () => SVGGElement | undefined }).getSVGGElement?.();
-              if (el) el.style.opacity = staff === faded && staves.length > 1 ? '0.25' : '';
+              const tied = note.sourceNote.NoteTie && note.sourceNote.NoteTie.StartNote !== note.sourceNote; // held, not played: not asked for
+              if (el) el.style.opacity = staff === faded && staves.length > 1 ? '0.25' : tied ? '0.4' : '';
             }
           }
         }
@@ -208,6 +213,7 @@ export class ScoreView implements MeasuredCursor {
 
   reset(): void {
     this.pos = 0;
+    this.heldTies = [];
     this.clearMarks();
     if (!this.loaded) return;
     this.osmd.cursor.reset();
@@ -244,6 +250,19 @@ export class ScoreView implements MeasuredCursor {
     this.pos++;
     this.osmd.cursor.next();
     this.page();
+    if (this.done) return;
+    this.heldTies.push(...this.tiedHere());
+  }
+
+  clearHeld(): void {
+    this.heldTies = [];
+  }
+
+  /** The notes at the cursor that are the second half of a tie: still sounding, so nothing to press. */
+  private tiedHere(): CursorNote[] {
+    return this.osmd.cursor.NotesUnderCursor()
+      .filter((n) => !n.isRest() && n.NoteTie && n.NoteTie.StartNote !== n)
+      .map((n) => ({ midi: n.halfTone + OSMD_TO_MIDI, staff: n.ParentStaff.idInMusicSheet }));
   }
 
   notes(): CursorNote[] {
@@ -267,7 +286,9 @@ export class ScoreView implements MeasuredCursor {
     const staves = this.osmd.GraphicSheet.MeasureList[this.osmd.cursor.iterator.CurrentMeasureIndex];
     const gnote = this.osmd.cursor.GNotesUnderCursor()[0];
     if (!staves?.length || !gnote) return undefined;
-    return { staves, x: gnote.PositionAndShape.AbsolutePosition.x };
+    const due = this.osmd.cursor.NotesUnderCursor().filter((n) => !n.isRest())
+      .map((n) => ({ midi: n.halfTone + OSMD_TO_MIDI, staff: n.ParentStaff.idInMusicSheet }));
+    return { staves, x: gnote.PositionAndShape.AbsolutePosition.x, due };
   }
 
   /** The cursor's place on the page, for the moving line: its x and the top and bottom of its system. */
@@ -310,8 +331,12 @@ export class ScoreView implements MeasuredCursor {
   private showNote(midi: number, kind: 'wrong' | 'right', at: NoteAnchor | undefined): void {
     const svg = this.container.querySelector('svg');
     if (!svg || !at) return;
-    const clef = at.staves.length > 1 ? clefFor(midi) : 'treble';
-    const staff = at.staves[clef === 'treble' ? 0 : 1] ?? at.staves[0]!;
+    // The staff the note it should have been is written on, whatever its pitch: the left hand's upper notes sit on the bass staff
+    // (above its top line), so a key from Middle C up still belongs there. With nothing due, fall back to the pitch's usual hand.
+    const mine = at.due.filter((d) => this.activeHands === 'both' || d.staff === (this.activeHands === 'rh' ? 0 : 1)); // only the hand being asked for
+    const near = mine.reduce<{ midi: number; staff: number } | undefined>((best, d) => (!best || Math.abs(d.midi - midi) < Math.abs(best.midi - midi) ? d : best), undefined);
+    const staff = at.staves[near?.staff ?? (at.staves.length > 1 && clefFor(midi) === 'bass' ? 1 : 0)] ?? at.staves[0]!;
+    const clef: Clef = staff.InitiallyActiveClef?.ClefType === ClefEnum.F ? 'bass' : 'treble';
     const u = UNIT_PX * this.osmd.zoom;
     const top = staff.ParentStaffLine.PositionAndShape.AbsolutePosition.y;
     const step = staffStep(midi, clef);

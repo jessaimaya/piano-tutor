@@ -94,6 +94,14 @@ describe('path', () => {
     expect(tasks[tasks.length - 1]!.mode).toBe('tempo');
   });
 
+  it('opens every playing step on the notes only and finishes it with the rhythm', () => {
+    const playing = tasks.filter((t) => t.mode === 'wait');
+    expect(playing.length).toBeGreaterThan(0);
+    expect(playing.every((t) => t.rhythm === true)).toBe(true);
+    expect(tasks.filter((t) => t.mode !== 'wait').some((t) => t.rhythm)).toBe(false); // cards and the metronome step are as they were
+    expect(playing.every((t) => t.text.includes('rhythm'))).toBe(true);
+  });
+
   it('does the easiest section first within a hand', () => {
     const lh = tasks.filter((t) => t.phase === 'second' && t.kind === 'hand');
     expect(lh[lh.length - 1]!.bars).toEqual([5, 6]); // the section with the hard bar comes last

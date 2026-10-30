@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { keyToNote } from './input';
+import { keyToNote, splitPorts } from './input';
 
 describe('keyToNote', () => {
   it('maps the home row to the octave from Middle C', () => {
@@ -30,5 +30,19 @@ describe('keyToNote', () => {
     for (const shift of [false, true])
       for (const code of ['KeyZ', 'KeyX', 'KeyC', 'KeyV', 'KeyB', 'KeyN', 'KeyM']) reachable.add(keyToNote(code, shift)!);
     for (const midi of [41, 43, 45, 47, 48, 50, 52, 53, 55, 57, 59]) expect(reachable.has(midi), String(midi)).toBe(true);
+  });
+});
+
+describe('splitPorts', () => {
+  it('keeps real pianos and drops the system loopback port', () => {
+    expect(splitPorts(['Midi Through Port-0', 'Yamaha P-125 MIDI 1'])).toEqual({ pianos: ['Yamaha P-125 MIDI 1'], virtualOnly: false });
+  });
+
+  it('says so when the loopback port is all there is', () => {
+    expect(splitPorts(['Midi Through Port-0'])).toEqual({ pianos: [], virtualOnly: true });
+  });
+
+  it('is not "virtual only" when there are no ports at all', () => {
+    expect(splitPorts([])).toEqual({ pianos: [], virtualOnly: false });
   });
 });

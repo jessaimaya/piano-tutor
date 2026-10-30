@@ -91,6 +91,13 @@ kbd { font: 12px var(--mono); border: 1px solid var(--hair); border-bottom-width
 .pill.bad { color: var(--bad); border-color: var(--bad); }
 .pill.bad::before { background: var(--bad); box-shadow: none; }
 .pill.on b { color: var(--accent); }
+.pill[hidden] { display: none !important; }
+#midi-status[data-ask='yes'] { cursor: pointer; }
+#midi-status[data-ask='yes']:hover { border-color: var(--ink); }
+/* the piano was refused or went away: said in full, wherever you are in the app */
+.midi-banner { display: flex; align-items: center; gap: 14px; margin: 10px 8px 0; padding: 10px 16px; border: 1px solid var(--bad); border-radius: 14px; color: var(--bad); font-size: 14px; }
+.midi-banner[hidden] { display: none; }
+.midi-banner span { flex: 1; min-width: 0; }
 .themes { display: inline-flex; gap: 8px; margin-right: 6px; }
 .theme-dot { width: 18px; height: 18px; padding: 0; border-radius: 50%; border: 2px solid transparent; box-shadow: var(--raise-sm); }
 .theme-dot[data-theme='warm'] { background: #e8590c; }
@@ -123,7 +130,7 @@ input[type='number'], input[type='search'], select {
 }
 input[type='checkbox'] { accent-color: var(--accent); }
 
-.layout { display: grid; grid-template-columns: 300px 1fr; gap: 28px; padding: 14px 28px 32px; }
+.layout { display: grid; grid-template-columns: 1fr; gap: 28px; padding: 14px 28px 32px; }
 @media (max-width: 800px) { .layout { grid-template-columns: 1fr; padding: 12px 16px 24px; } }
 
 /* small caps label with a rule on each side */
@@ -131,7 +138,11 @@ input[type='checkbox'] { accent-color: var(--accent); }
 .cap::before, .cap::after { content: ''; flex: 1; height: 1px; background: var(--hair); }
 
 /* library: a sunken well */
-.library { background: var(--well); border-radius: 22px; padding: 16px; align-self: start; box-shadow: var(--inset); }
+.library { display: none; background: var(--card); border-radius: 0 22px 22px 0; padding: 16px; box-shadow: var(--raise); }
+/* the list of pieces is a drawer: out of the way until you ask for it (☰ Pieces) */
+html.lib-open .library { display: block; position: fixed; top: 0; bottom: 0; left: 0; width: min(380px, 100vw); z-index: 50; overflow: auto; }
+#min-close { width: 100%; margin-bottom: 10px; }
+html[data-view='full'][data-app='course'] #min-pieces { display: none; } /* the course and Piece mode choose the piece themselves */
 .library h2 { display: flex; align-items: center; gap: 10px; font-size: 11px; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); margin: 16px 0 4px; }
 .library h2::after { content: ''; flex: 1; height: 1px; background: var(--hair); }
 .library h2:first-child { margin-top: 0; }
@@ -244,6 +255,8 @@ main { min-width: 0; }
 
 /* keyboard: keys sit in a dark bezel with a fine outline around it */
 #keyboard { margin: 22px 8px 14px; padding: 12px 12px 16px; background: var(--bezel); border-radius: 20px; box-shadow: var(--inset); outline: 1px solid var(--bezel-line); outline-offset: 8px; }
+/* the drawn piano is not shown (the minimal view never did); the practice code still drives it, so delete this line to bring it back */
+#keyboard { display: none; }
 #keyboard svg { width: 100%; height: auto; display: block; touch-action: none; user-select: none; filter: drop-shadow(0 3px 3px rgba(0, 0, 0, .28)); }
 .kw-top { stop-color: var(--kw-top); } .kw-mid { stop-color: var(--kw-mid); } .kw-lip { stop-color: var(--kw-lip); }
 .kb-top { stop-color: var(--kb-top); } .kb-mid { stop-color: var(--kb-mid); } .kb-lip { stop-color: var(--kb-lip); }
@@ -319,7 +332,7 @@ main { min-width: 0; }
 [data-view='minimal'] #midi-status { flex: 0 1 auto; min-width: 0; max-width: 34vw; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; display: block; font-size: 11px; padding: 1px 8px; border: 1px solid #000; color: #000; }
 [data-view='minimal'] .pill.ok::before, [data-view='minimal'] .pill.bad::before { display: none; }
 [data-view='minimal'] .pill.bad { border-style: dashed; border-width: 2px; }
-[data-view='minimal'] #midi-retry { display: none; } /* tap the MIDI label instead */
+[data-view='minimal'] .midi-banner { flex: none; margin: 0; padding: 6px 8px; border: 0; border-bottom: 2px solid #000; border-radius: 0; color: #000; font-size: 13px; }
 [data-view='minimal'] .topbar button { white-space: nowrap; }
 [data-view='minimal'] .layout { display: block; flex: 1; min-height: 0; padding: 0; }
 
@@ -368,7 +381,7 @@ main { min-width: 0; }
 
 /* hidden here, still in the full view: ask for them there */
 [data-view='minimal'] .piece-meta, [data-view='minimal'] .progress, [data-view='minimal'] #tempo-controls, [data-view='minimal'] #sr-panel,
-[data-view='minimal'] #keyboard, [data-view='minimal'] #listen, [data-view='minimal'] .group.opts, [data-view='minimal'] .group.dial .cap,
+[data-view='minimal'] #keyboard, [data-view='minimal'] #listen, [data-view='minimal'] #voice, [data-view='minimal'] .group.opts, [data-view='minimal'] .group.dial .cap,
 [data-view='minimal'] .ruler, [data-view='minimal'] .ruler-labels, [data-view='minimal'] #beat-hint, [data-view='minimal'] .spacer { display: none !important; }
 
 /* the result of a run sits over the bottom of the score; a tap puts it away */
@@ -409,6 +422,16 @@ main { min-width: 0; }
 .course-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
 .course-head h2 { margin: 0; font-size: 22px; letter-spacing: -.01em; }
 .streak { font: 12.5px var(--mono); color: var(--muted); }
+/* Piece mode's progress: one dot per step, filled when done, bigger for the one you are on */
+.piece-artist { font-size: 11px; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); margin: 18px 0 8px; }
+[data-view='minimal'] .piece-artist { color: #000; font-size: 13px; }
+.piece-dots { display: flex; flex-wrap: wrap; gap: 5px; align-items: center; }
+.piece-dots i { width: 9px; height: 9px; border-radius: 50%; border: 1.5px solid var(--muted); box-sizing: border-box; }
+.piece-dots i[data-state='done'] { background: var(--good); border-color: var(--good); }
+.piece-dots i[data-state='skipped'] { border-style: dashed; opacity: .6; }
+.piece-dots i[data-state='now'] { width: 13px; height: 13px; background: var(--ink); border-color: var(--ink); }
+[data-view='minimal'] .piece-dots i { border-color: #000; }
+[data-view='minimal'] .piece-dots i[data-state='done'], [data-view='minimal'] .piece-dots i[data-state='now'] { background: #000; }
 .course-notice { border-left: 3px solid var(--good); padding: 6px 12px; margin: 10px 0; background: color-mix(in srgb, var(--good) 11%, var(--card)); border-radius: 10px; }
 .course-unit { margin: 10px 0 6px; }
 .course-minutes { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin: 10px 0; }
@@ -439,10 +462,10 @@ html[data-app='course'][data-phase='home'] #score, html[data-app='course'][data-
 html[data-app='course'][data-phase='home'] #pace-controls, html[data-app='course'][data-phase='home'] #status, html[data-app='course'][data-phase='home'] #feedback,
 html[data-app='course'][data-phase='home'] #result, html[data-app='course'][data-phase='home'] #sr-panel { display: none !important; }
 /* sight-reading is reading what you have not heard: no Listen on the reading step or the test */
-html[data-app='course'][data-step='reading'] #listen, html[data-app='course'][data-step='test'] #listen { display: none !important; }
+html[data-app='course'][data-step='reading'] #listen, html[data-app='course'][data-step='test'] #listen, html[data-app='course'][data-step='reading'] #voice, html[data-app='course'][data-step='test'] #voice { display: none !important; }
 html[data-app='course'][data-step='cards'] .transport, html[data-app='course'][data-step='cards'] #pace-controls { display: none !important; }
 /* the test: Start stays (the text says to press it); Listen, the mode and the hands do not apply, and the tempo is set by the level */
-html[data-app='course'][data-step='test'] #pace-controls, html[data-app='course'][data-step='test'] #listen,
+html[data-app='course'][data-step='test'] #pace-controls, html[data-app='course'][data-step='test'] #listen, html[data-app='course'][data-step='test'] #voice,
 html[data-app='course'][data-step='test'] #mode, html[data-app='course'][data-step='test'] #hands { display: none !important; }
 
 /* the minimal view: black and white, big dots, the course page scrolls inside the window */
@@ -476,6 +499,9 @@ html[data-app='course'][data-step='test'] #mode, html[data-app='course'][data-st
 /* Listen stays available in the course (the first day of a piece starts by listening to it), under the tempo row */
 [data-view='minimal'][data-app='course'] #listen { display: inline-flex !important; grid-row: 6; grid-column: 1 / 4; margin-top: 6px; justify-self: start; }
 [data-view='minimal'][data-app='course'][data-phase='home'] #listen { display: none !important; }
+/* the sound button sits beside it */
+[data-view='minimal'][data-app='course'] #voice { display: inline-flex !important; grid-row: 6; grid-column: 4 / 6; margin-top: 6px; justify-self: end; }
+[data-view='minimal'][data-app='course'][data-phase='home'] #voice { display: none !important; }
 
 /* the minimal view held sideways (the phone on the music stand). Height is what is short there, so the score takes all of it, on the
  * left, and everything else (top bar, course bar, tempo, Start) is one narrow column on the right. .layout and main dissolve
@@ -516,6 +542,7 @@ html[data-app='course'][data-step='test'] #mode, html[data-app='course'][data-st
   html[data-view='minimal'][data-app] #bpm-inc { grid-column: 5; grid-row: 6; margin-top: 4px; }
   html[data-view='minimal'][data-app] #restart { grid-column: 2 / 4; grid-row: 7; margin-top: 4px; }
   html[data-view='minimal'][data-app] #stop { grid-column: 2 / 6; grid-row: 8; justify-self: stretch; margin-top: 4px; }
+  html[data-view='minimal'][data-app] #voice { grid-column: 2 / 6; grid-row: 8; justify-self: stretch; margin-top: 4px; padding: 2px 4px; font-size: 14px; }
   html[data-view='minimal'][data-app] #listen { grid-column: 4 / 6; grid-row: 7; justify-self: stretch; margin-top: 4px; padding: 2px 4px; font-size: 14px; }
   html[data-view='minimal'][data-app] #mode { grid-column: 2 / 6; grid-row: 9; margin-top: 4px; }
   html[data-view='minimal'][data-app] #hands { grid-column: 2 / 6; grid-row: 10; margin-top: 4px; }
