@@ -9,5 +9,7 @@ export default defineConfig({
   plugins: plain ? [] : [basicSsl()],
   server: { port: 5173, host: !plain },
   preview: { host: !plain },
+  // Scores stay separate files however small (Vite folds anything under 4 kB into the script), so a build can be checked by counting them.
+  build: { assetsInlineLimit: (file) => (/\.(mxl|musicxml|xml)$/.test(file) ? false : undefined) },
   test: { include: ['src/**/*.test.ts'] },
 });

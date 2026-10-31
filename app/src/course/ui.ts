@@ -72,6 +72,7 @@ export function createCourse(host: Host) {
   let placing = false;
   let notice = '';
   let cardsOn: { card: Card; t0: number } | undefined;
+  let lastCard: Card | undefined; // the card before this one (`cardsOn` is cleared when it is answered), so the next is never the same note
 
   const save = () => host.save(JSON.stringify(state));
   const today = () => dateKey(host.now());
@@ -446,7 +447,8 @@ export function createCourse(host: Host) {
     if (!t) return;
     const done = t.states[view] === 'done';
     if (done) { host.setKeyHandler(undefined); return; }
-    const card = drawCard(Math.random, deckFor(host.course, state.unitId, state.unitDays), cardsOn?.card, state.cardFast);
+    const card = drawCard(Math.random, deckFor(host.course, state.unitId, state.unitDays), lastCard, state.cardFast);
+    lastCard = card;
     await host.showCard(cardXml(card));
     cardsOn = { card, t0: performance.now() };
     msg(`Card ${(t.progress[view] ?? 0) + 1} of ${CARDS_PER_STEP}: play the note.`);
@@ -482,6 +484,8 @@ export function createCourse(host: Host) {
       host.setKeyHandler(undefined);
       host.setLayout(false);
       $('course').hidden = true;
+      delete document.documentElement.dataset.phase; // free practice has no course page: its layout rules must not apply
+      delete document.documentElement.dataset.step;
     },
     onRun, onTestFinished, onTestAborted,
     get active(): boolean { return active; },

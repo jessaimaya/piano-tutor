@@ -21,7 +21,7 @@
 <body>
 <div class="shell">
   <header class="topbar">
-    <button id="min-pieces" type="button" class="min-only">☰ Pieces</button>
+    <button id="min-pieces" type="button">☰ Pieces</button>
     <h1>Piano Tutor<i class="mark" aria-hidden="true"></i></h1>
     <div class="spacer"></div>
     <span id="app-mode" class="segmented" role="group" aria-label="Free practice or the course">
@@ -34,15 +34,18 @@
       <button id="zoom-in" type="button" aria-label="Bigger staff">A+</button>
     </span>
     <div id="themes" class="themes" role="group" aria-label="Theme"></div>
-    <span id="pedal" class="pill" title="Sustain pedal (CC64)">Pedal <b id="pedal-val">–</b></span>
-    <span id="midi-status" class="pill">MIDI: starting…</span>
-    <button id="midi-retry" type="button">Reconnect</button>
+    <span id="pedal" class="pill" title="Sustain pedal (CC64)" hidden>Pedal <b id="pedal-val">–</b></span>
+    <span id="midi-status" class="pill" hidden>MIDI: starting…</span>
     <button id="view-toggle" type="button" title="Switch between the full app and a minimal view for small or e-ink screens">Minimal view</button>
   </header>
+  <div id="midi-banner" class="midi-banner" role="alert" hidden>
+    <span id="midi-banner-text"></span>
+    <button id="midi-banner-retry" type="button">Reconnect</button>
+  </div>
 
   <div class="layout">
     <aside class="library" aria-label="Library">
-      <button id="min-close" type="button" class="min-only">Close</button>
+      <button id="min-close" type="button">Close</button>
       <div class="sr-launch">
         <button id="sr-start" type="button" title="Read pieces you have never seen, from easy to harder, until reading gets difficult">Sight-reading test</button>
         <span id="sr-last" class="muted"></span>
@@ -73,9 +76,8 @@
         <input id="import" type="file" accept=".musicxml,.xml,.mxl">
       </label>
       <p class="hint">
-        No piano connected? Play with the computer keyboard.
-        Right hand: <kbd>A S D F G H J K L</kbd> = white keys from Middle C, <kbd>W E T Y U O P</kbd> = black keys.
-        Left hand: <kbd>Z X C V B N M</kbd> = C3–B3, hold <kbd>Shift</kbd> for the octave below.
+        No piano? Right hand <kbd>A S D F G H J K L</kbd> (black <kbd>W E T Y U O P</kbd>).
+        Left hand <kbd>Z X C V B N M</kbd> (<kbd>Shift</kbd>: lower).
       </p>
     </aside>
 
@@ -117,8 +119,15 @@
           <button type="button" data-hands="both">Both</button>
         </div>
         <div class="spacer"></div>
+        <button id="voice" type="button" title="The sound of Listen and the computer keyboard: tap to change"></button>
         <button id="listen" type="button" title="Hear the piece at the tempo below, with the cursor following">▶ Listen</button>
         <button id="restart" type="button" class="primary">Restart</button>
+        <span id="line-sync" class="line-sync" role="group" aria-label="Where the line is drawn" hidden>
+          <span class="muted">Line</span>
+          <button id="line-earlier" type="button" title="The line reaches the note too late: draw it earlier">Earlier</button>
+          <button id="line-later" type="button" title="The line reaches the note too early: draw it later">Later</button>
+          <span id="line-lag" class="muted"></span>
+        </span>
         <button id="stop" type="button" class="stop" hidden>Stop</button>
       </div>
 
@@ -159,6 +168,7 @@
               <button type="button" data-level="advanced" title="Strict: a small window around the beat">Advanced</button>
             </div>
             <label><input id="metronome" type="checkbox" checked> Metronome while playing</label>
+            <label><input id="backing" type="checkbox" checked> Play the music quietly</label>
             <label><input id="showNext" type="checkbox" checked> Show the next key</label>
             <span class="calib">
               <button id="calibrate" type="button" title="Tap along with 16 clicks to measure the delay of your speakers and piano">Calibrate timing</button>

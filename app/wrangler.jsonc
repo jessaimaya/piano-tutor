@@ -1,0 +1,9 @@
+{
+  // The piano app: static files from the local build, served on workers.dev behind a Cloudflare Access login (set in the dashboard).
+  // Deployed from this computer (npm run deploy), never from GitHub: the scores are not in git.
+  "name": "piano",
+  "compatibility_date": "2026-10-01",
+  "assets": { "directory": "./dist" },
+  "workers_dev": true,
+  "preview_urls": false // a preview address is a second public door that the login does not cover
+}

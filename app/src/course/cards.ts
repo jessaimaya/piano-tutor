@@ -52,7 +52,8 @@ const LEARNING_WEIGHT = 3;
  * KNOWN_AFTER are drawn more often, so a note introduced today is seen often today, and fades into the mix as it is learned.
  */
 export function drawCard(rand: () => number, deck: readonly Card[], previous?: Card, known: Record<string, number> = {}): Card {
-  const choices = deck.filter((c) => !previous || cardKey(c) !== cardKey(previous));
+  const others = deck.filter((c) => !previous || cardKey(c) !== cardKey(previous));
+  const choices = others.length ? others : deck; // a deck of one note has nothing else to show
   const weight = (c: Card) => ((known[cardKey(c)] ?? 0) < KNOWN_AFTER ? LEARNING_WEIGHT : 1);
   const total = choices.reduce((sum, c) => sum + weight(c), 0);
   let x = rand() * total;

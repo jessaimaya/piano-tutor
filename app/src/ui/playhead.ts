@@ -5,6 +5,8 @@ export interface Spot {
   /** Top and bottom of the system the step is on. */
   y0: number;
   y1: number;
+  /** Where the staff begins (the left edge of the bar this step is in). */
+  left?: number;
 }
 
 /**

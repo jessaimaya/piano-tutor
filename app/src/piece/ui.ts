@@ -1,17 +1,18 @@
 import { cardKey, cardXml, drawCard, judgeCard, type Card } from '../course/cards';
 import type { Hands } from '../practice/log';
-import { difficultyOf, HANDS, midiName, sections, type Analysis } from './analysis';
-import { buildPath, handName, PHASES, type PhaseId, type Task } from './path';
+import { midiName, type Analysis } from './analysis';
+import { buildPath, type Task } from './path';
 import {
-  completion, currentTask, have, isComplete, isSkipped, newPieceState, noteCard, noteRun, parsePieceState, redoTask, skipTask, type PieceState,
+  currentTask, have, isComplete, isSettled, isSkipped, noteCard, noteRun, parsePieceState, redoTask, skipTask, type PieceState,
 } from './state';
 
 /**
- * Piece mode on screen: pick a piece, see which parts are easy and hard, then work down its learning path one task at a time.
+ * Piece mode on screen: the pieces grouped by artist; picking one goes straight to practising its learning path, at the step you
+ * were on. The path itself is never shown, only a row of dots for how far along it you are.
  * It shares the course's page area and look (#course-home, #course-bar). It owns no practice logic: `host` (main.ts) opens the
  * piece with the task's hands, bars and mode, and tells this controller when a run ends.
  */
-export interface PieceChoice { id: string; title: string; stage: number }
+export interface PieceChoice { id: string; title: string; composer: string; stage: number }
 
 export interface Loaded {
   title: string;
@@ -25,6 +26,8 @@ export interface Host {
   /** Open the piece and read its notes. */
   analyze: (id: string) => Promise<Loaded | undefined>;
   open: (t: { pieceId: string; hands: Hands; bars?: [number, number]; mode: 'wait' | 'tempo' }) => Promise<void>;
+  /** Switch the open step between the notes only and the metronome, keeping its hands and bars. */
+  setMode: (mode: 'wait' | 'tempo') => void;
   showCard: (xml: string) => Promise<void>;
   setKeyHandler: (handler: ((midi: number) => void) | undefined) => void;
   setLayout: (on: boolean) => void;
@@ -47,53 +50,40 @@ function h<K extends keyof HTMLElementTagNameMap>(tag: K, attrs: Record<string, 
 const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
 
 const stateKey = (id: string) => `piece:v1:${id}`;
-const LAST = 'piece:last';
-const BLOCKS = '▁▂▃▄▅▆▇█';
-
-/** One block character per section, tall for hard, scaled against the hardest section of either hand. */
-function difficultyStrip(a: Analysis, hand: 'rh' | 'lh', max: number): string {
-  return sections(a.bars).map((s) => BLOCKS[Math.min(BLOCKS.length - 1, Math.round((difficultyOf(a, s, hand) / (max || 1)) * (BLOCKS.length - 1)))]!).join('');
-}
 
 export function createPiece(host: Host) {
   let active = false;
   let loaded: (Loaded & { id: string; tasks: Task[]; state: PieceState }) | undefined;
   let running: Task | undefined;
-  let cardsOn: { card: Card; t0: number } | undefined;
+  let cardsOn: { card: Card; t0: number; missed?: boolean } | undefined;
+  let rhythm = false; // the running step is being played with the metronome (steps that finish with the rhythm open on the notes only)
+  let lastCard: Card | undefined; // the card before this one (`cardsOn` is cleared when it is answered), so the next is never the same note
   let busy = false;
 
   const save = () => { if (loaded) host.save(stateKey(loaded.id), JSON.stringify(loaded.state)); };
 
-  // ───────────── home: choose a piece ─────────────
+  // ───────────── home: the pieces, grouped by artist ─────────────
   function renderHome(): void {
     document.documentElement.dataset.phase = 'home';
     delete document.documentElement.dataset.step;
+    running = undefined;
+    host.stopEverything();
+    host.setKeyHandler(undefined);
     $('course-bar').hidden = true;
     const home = $('course-home');
     home.hidden = false;
     home.replaceChildren();
-    const choices = host.pieces();
-    const lastId = host.load(LAST) ?? '';
-    const select = h('select', { id: 'piece-pick', 'aria-label': 'Piece to learn' },
-      ...choices.map((c) => h('option', { value: c.id }, `${c.title} · stage ${c.stage}`)));
-    select.value = choices.some((c) => c.id === lastId) ? lastId : choices[0]?.id ?? '';
-    const go = h('button', { type: 'button', class: 'primary', id: 'piece-go' }, 'Plan this piece');
-    go.addEventListener('click', () => void openPiece(select.value));
-
-    home.append(
-      h('div', { class: 'course-head' }, h('h2', {}, 'Learn one piece')),
-      h('p', {}, 'Pick a piece. The app finds its easy and hard parts, then takes you through it in small steps: the notes first, one hand at a time, a few bars with both hands, and finally the whole piece up to tempo.'),
-      h('div', { class: 'course-actions' }, select, go),
-    );
-    const started = choices.filter((c) => host.load(stateKey(c.id))).map((c) => ({ c, s: parsePieceState(host.load(stateKey(c.id)), c.id) }))
-      .filter(({ s }) => Object.keys(s.progress).length || s.skipped.length).sort((x, y) => y.s.updatedAt.localeCompare(x.s.updatedAt));
-    if (started.length) {
-      home.append(h('p', { class: 'muted' }, 'Pieces you have started'),
-        h('div', { class: 'course-actions' }, ...started.map(({ c }) => {
-          const b = h('button', { type: 'button' }, c.title);
+    const byArtist = new Map<string, PieceChoice[]>();
+    for (const c of host.pieces()) byArtist.set(c.composer, [...(byArtist.get(c.composer) ?? []), c]);
+    for (const [artist, list] of [...byArtist].sort(([x], [y]) => x.localeCompare(y))) {
+      home.append(
+        h('h3', { class: 'piece-artist' }, artist),
+        h('div', { class: 'course-actions' }, ...list.map((c) => {
+          const b = h('button', { type: 'button', class: 'piece-pick', 'data-piece': c.id }, c.title);
           b.addEventListener('click', () => void openPiece(c.id));
           return b;
-        })));
+        })),
+      );
     }
   }
 
@@ -106,16 +96,25 @@ export function createPiece(host: Host) {
       if (!info || !info.analysis.bars) { host.say('Could not read the notes of that piece.', 'bad'); return; }
       const tasks = buildPath(info.analysis, info.flats);
       loaded = { ...info, id, tasks, state: parsePieceState(host.load(stateKey(id)), id, host.now()) };
-      host.save(LAST, id);
-      renderMap();
+      renderPractice();
     } finally {
       busy = false;
     }
   }
 
-  // ───────────── the piece map ─────────────
-  function renderMap(): void {
+  // ───────────── straight to practising ─────────────
+  /** There is no plan screen: opening a piece, or finishing a step, goes to the next step that is not done. */
+  function renderPractice(): void {
     if (!loaded) { renderHome(); return; }
+    const now = currentTask(loaded.state, loaded.tasks);
+    if (now) { void enterTask(now); return; }
+    renderDone();
+  }
+
+  /** The whole path is done: say so, and offer to go again. */
+  function renderDone(): void {
+    if (!loaded) return;
+    running = undefined;
     host.stopEverything();
     host.setKeyHandler(undefined);
     document.documentElement.dataset.phase = 'home';
@@ -123,59 +122,15 @@ export function createPiece(host: Host) {
     const home = $('course-home');
     home.hidden = false;
     home.replaceChildren();
-    const { analysis: a, tasks, state, title } = loaded;
-    const now = currentTask(state, tasks);
-    const parts = sections(a.bars);
-    const max = Math.max(1, ...HANDS.flatMap((hd) => parts.map((s) => difficultyOf(a, s, hd))));
-
-    home.append(h('div', { class: 'course-head' }, h('h2', {}, title),
-      h('span', { class: 'streak' }, `${Math.round(completion(state, tasks) * 100)}% of the path`)));
-
-    const rows = HANDS.filter((hd) => a.plays[hd]).map((hd) =>
-      h('div', { class: 'piece-strip' }, h('span', { class: 'muted' }, hd === 'rh' ? 'Right hand ' : 'Left hand '), h('span', { class: 'strip-blocks', 'aria-hidden': 'true' }, difficultyStrip(a, hd, max))));
-    const hardest = parts.map((s) => ({ s, d: difficultyOf(a, s, 'both') })).sort((x, y) => y.d - x.d)[0];
-    const easiest = parts.map((s) => ({ s, d: difficultyOf(a, s, 'both') })).sort((x, y) => x.d - y.d)[0];
-    const bars = (s: { from: number; to: number }) => (s.from === s.to ? `bar ${s.from}` : `bars ${s.from}–${s.to}`);
-    home.append(
-      h('p', { class: 'muted' }, `${a.bars} bars in ${parts.length} sections. Each block below is one section, in score order; taller means harder.`),
-      ...rows,
-      ...(parts.length > 1 && easiest && hardest ? [h('p', {}, `Easiest: ${bars(easiest.s)}. Hardest: ${bars(hardest.s)}. `,
-        a.plays.rh && a.plays.lh ? `Start with the ${handName(tasks.find((t) => t.phase === 'first' && t.kind === 'hand')?.hands ?? 'rh')}.` : '')] : []),
-    );
-
-    const list = h('ol', { class: 'course-plan' });
-    let phase: PhaseId | undefined;
-    for (const t of tasks) {
-      if (t.phase !== phase) {
-        phase = t.phase;
-        list.append(h('li', { class: 'piece-phase' }, h('strong', {}, PHASES[phase].name), h('span', { class: 'muted' }, ` ${PHASES[phase].blurb}`)));
-      }
-      const st = isComplete(state, t) ? 'done' : isSkipped(state, t) ? 'skipped' : 'todo';
-      const li = h('li', { 'data-state': st, ...(t === now ? { 'aria-current': 'step' } : {}) }, t.title, h('span', { class: 'muted' }, ` ${have(state, t)}/${t.goal}`));
-      li.value = tasks.indexOf(t) + 1;
-      list.append(li);
-    }
-    const go = h('button', { type: 'button', class: 'primary', id: 'piece-continue' },
-      !now ? 'Practise again from the start' : Object.keys(state.progress).length ? 'Continue' : 'Start');
-    go.addEventListener('click', () => {
-      if (now) { void enterTask(now); return; }
-      for (const t of tasks) loaded!.state = redoTask(loaded!.state, t);
+    const again = h('button', { type: 'button', class: 'primary', id: 'piece-continue' }, 'Practise again');
+    again.addEventListener('click', () => {
+      for (const t of loaded!.tasks) loaded!.state = redoTask(loaded!.state, t);
       save();
-      renderMap();
+      renderPractice();
     });
-    const back = h('button', { type: 'button', id: 'piece-back' }, 'Other pieces');
-    back.addEventListener('click', () => renderHome());
-    home.append(h('div', { class: 'course-actions' }, go, back), list);
-    if (!now) home.append(h('p', { class: 'course-done' }, 'The whole path is done ✓'));
-
-    const reset = h('button', { type: 'button' }, 'Start this piece over');
-    reset.addEventListener('click', () => {
-      if (reset.dataset.sure !== 'yes') { reset.dataset.sure = 'yes'; reset.textContent = 'Really start over? Click again (the practice log stays)'; return; }
-      loaded!.state = newPieceState(loaded!.id, host.now());
-      save();
-      renderMap();
-    });
-    home.append(h('details', { class: 'course-more' }, h('summary', {}, 'More'), h('div', { class: 'course-actions' }, reset)));
+    const others = h('button', { type: 'button', id: 'piece-back' }, 'Pieces');
+    others.addEventListener('click', () => renderHome());
+    home.append(h('h2', {}, loaded.title), h('p', { class: 'course-done' }, 'Done ✓'), h('div', { class: 'course-actions' }, again, others));
   }
 
   // ───────────── a task ─────────────
@@ -183,6 +138,8 @@ export function createPiece(host: Host) {
     if (!loaded) return;
     running = t;
     cardsOn = undefined;
+    lastCard = undefined;
+    rhythm = false;
     host.stopEverything();
     host.setKeyHandler(undefined);
     $('course-home').hidden = true;
@@ -198,7 +155,7 @@ export function createPiece(host: Host) {
   const msg = (text: string) => { const el = document.getElementById('course-msg'); if (el) el.textContent = text; };
 
   function renderBar(): void {
-    if (!loaded || !running) { renderMap(); return; }
+    if (!loaded || !running) { renderPractice(); return; }
     const { tasks, state } = loaded;
     const t = running;
     const complete = isComplete(state, t);
@@ -207,36 +164,60 @@ export function createPiece(host: Host) {
     document.documentElement.dataset.step = t.mode === 'cards' ? 'cards' : 'newbars';
     const bar = $('course-bar');
     bar.hidden = false;
-    const next = tasks.find((x, j) => j > i && !isComplete(state, x) && !isSkipped(state, x));
+    const go = (to: Task | undefined) => {
+      host.stopEverything();
+      host.setKeyHandler(undefined);
+      if (to) void enterTask(to); else renderPractice();
+    };
+    // Skip goes on to the next step that is still open; once a step is done, Next simply goes to the one after it, so you can walk through them all.
+    const next = complete ? tasks[i + 1] : tasks.find((x, j) => j > i && !isSettled(state, x));
     const primary = h('button', { type: 'button', class: complete ? 'primary' : '', id: 'course-primary' }, complete ? (next ? 'Next →' : 'Finish ✓') : 'Skip');
     primary.addEventListener('click', () => {
       if (!complete) { loaded!.state = skipTask(loaded!.state, t, host.now()); save(); }
-      host.stopEverything();
-      host.setKeyHandler(undefined);
-      if (next) void enterTask(next); else { running = undefined; renderMap(); }
+      go(next);
+    });
+    const back = i > 0 ? h('button', { type: 'button', id: 'piece-back-step' }, '← Back') : null;
+    back?.addEventListener('click', () => go(tasks[i - 1]));
+    const dots = h('span', { class: 'piece-dots', 'aria-label': `Step ${i + 1} of ${tasks.length}` },
+      ...tasks.map((x) => {
+        const dot = h('i', { role: 'button', tabindex: '0', 'data-state': x === t ? 'now' : isComplete(state, x) ? 'done' : isSkipped(state, x) ? 'skipped' : 'todo', title: x.title });
+        dot.addEventListener('click', () => { if (x !== t) go(x); });
+        dot.addEventListener('keydown', (e) => { if ((e.key === 'Enter' || e.key === ' ') && x !== t) { e.preventDefault(); go(x); } });
+        return dot;
+      }));
+    const rhythmBtn = t.rhythm ? h('button', { type: 'button', id: 'piece-rhythm', 'aria-pressed': String(rhythm) }, rhythm ? 'Notes only' : 'Play with rhythm') : null;
+    rhythmBtn?.addEventListener('click', () => {
+      rhythm = !rhythm;
+      host.setMode(rhythm ? 'tempo' : 'wait');
+      renderBar();
+      msg(rhythm ? 'With rhythm: this counts.' : 'Notes only: does not count.');
     });
     bar.replaceChildren(
-      h('div', { class: 'course-top' }, h('span', { class: 'streak' }, `${PHASES[t.phase].name} · ${i + 1} of ${tasks.length}`),
-        h('button', { type: 'button', id: 'course-menu', title: 'Back to the piece map' }, 'Map')),
+      h('div', { class: 'course-top' }, dots, h('button', { type: 'button', id: 'course-menu', title: 'Back to the pieces' }, 'Pieces')),
       h('h2', { id: 'course-step-title' }, t.title),
       h('p', { id: 'course-step-text' }, t.text, h('span', { class: 'muted' }, ` ${have(state, t)} of ${t.goal}${complete ? ' ✓' : ''}`)),
       h('p', { id: 'course-msg', class: 'course-msg', 'aria-live': 'polite' }),
-      h('div', { class: 'course-actions' }, primary),
+      h('div', { class: 'course-actions' }, ...(back ? [back] : []), ...(rhythmBtn ? [rhythmBtn] : []), primary),
     );
-    $('course-menu').addEventListener('click', () => { host.stopEverything(); host.setKeyHandler(undefined); running = undefined; renderMap(); });
+    document.getElementById('course-menu')?.addEventListener('click', () => { host.stopEverything(); host.setKeyHandler(undefined); running = undefined; renderHome(); });
   }
 
   // ───────────── what main.ts reports ─────────────
   function onRun(r: PieceRun): void {
     if (!active || !loaded || !running || r.sight || running.mode === 'cards') return;
-    if (r.pieceId !== loaded.id || r.mode !== running.mode) return;
+    if (r.pieceId !== loaded.id) return;
+    if (running.rhythm && r.mode !== 'tempo') { // the notes only: free practice, it does not count
+      if (r.accuracy >= running.minAccuracy) msg('Notes good. Now with rhythm.');
+      return;
+    }
+    if (!running.rhythm && r.mode !== running.mode) return;
     const before = have(loaded.state, running);
     loaded.state = noteRun(loaded.state, running, r.accuracy, host.now());
     const counted = have(loaded.state, running) > before;
     save();
     renderBar();
     const done = isComplete(loaded.state, running);
-    msg(done ? 'Step complete. 🎉' : counted ? 'Good run. Again.' : `Not quite: ${Math.round(r.accuracy * 100)}%. A good run is ${Math.round(running.minAccuracy * 100)}% or better.`);
+    msg(done ? 'Step complete. 🎉' : counted ? 'Good run. Again.' : `${Math.round(r.accuracy * 100)}%. Need ${Math.round(running.minAccuracy * 100)}%.`);
   }
 
   // ───────────── note cards, limited to this piece ─────────────
@@ -246,10 +227,11 @@ export function createPiece(host: Host) {
   }
 
   async function nextCard(): Promise<void> {
-    if (!loaded || !running || isComplete(loaded.state, running)) { host.setKeyHandler(undefined); return; }
+    if (!loaded || !running) { host.setKeyHandler(undefined); return; } // cards go on after the step is done: free practice
     const cards = deck(running);
     if (!cards.length) return;
-    const card = drawCard(Math.random, cards, cardsOn?.card, loaded.state.cardFast);
+    const card = drawCard(Math.random, cards, lastCard, loaded.state.cardFast);
+    lastCard = card;
     await host.showCard(cardXml(card));
     cardsOn = { card, t0: performance.now() };
     msg('Play the note you see.');
@@ -260,15 +242,28 @@ export function createPiece(host: Host) {
     if (!active || !cardsOn || !loaded || !running) return;
     const { card, t0 } = cardsOn;
     const ms = performance.now() - t0;
+    const j = judgeCard(card, midi, ms);
+    const task = running;
+    if (!j.right) { // stay on this card until it is played right; the miss counts once
+      if (!cardsOn.missed) {
+        cardsOn.missed = true;
+        loaded.state = noteCard(loaded.state, task, cardKey(card), false, false, host.now());
+        save();
+        renderBar();
+      }
+      msg(`✗ ${midiName(midi, loaded.flats)}. Find ${card.name}.`);
+      return;
+    }
+    const missed = cardsOn.missed;
     cardsOn = undefined;
     host.setKeyHandler(undefined);
-    const j = judgeCard(card, midi, ms);
-    loaded.state = noteCard(loaded.state, running, cardKey(card), j.right, j.fast, host.now());
-    save();
-    const task = running;
-    renderBar();
-    msg(j.right ? (j.fast ? `✓ ${(ms / 1000).toFixed(1)} s` : `✓ right, but ${(ms / 1000).toFixed(1)} s: aim for under 2`) : `✗ it was ${card.name}`);
-    if (!isComplete(loaded.state, task)) setTimeout(() => { if (active && running === task) void nextCard(); }, j.right ? 600 : 1200);
+    if (!missed) { // a card corrected after a miss earns nothing: the miss is already on record
+      loaded.state = noteCard(loaded.state, task, cardKey(card), true, j.fast, host.now());
+      save();
+      renderBar();
+    }
+    msg(missed ? `✓ ${card.name}` : j.fast ? `✓ ${(ms / 1000).toFixed(1)} s` : `✓ ${(ms / 1000).toFixed(1)} s (aim for under 2)`);
+    setTimeout(() => { if (active && running === task) void nextCard(); }, 600);
   }
 
   return {
@@ -276,7 +271,7 @@ export function createPiece(host: Host) {
       active = true;
       host.setLayout(true);
       $('course').hidden = false;
-      if (loaded) renderMap(); else renderHome();
+      renderHome();
     },
     hide(): void {
       active = false;
@@ -284,6 +279,8 @@ export function createPiece(host: Host) {
       host.setKeyHandler(undefined);
       host.setLayout(false);
       $('course').hidden = true;
+      delete document.documentElement.dataset.phase; // free practice has no course page: its layout rules must not apply
+      delete document.documentElement.dataset.step;
     },
     onRun,
     get active(): boolean { return active; },

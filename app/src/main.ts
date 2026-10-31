@@ -18,9 +18,10 @@ import { compareWithHistory, needsPractice, progressOf, runScore, starsFor, verd
 import { Session, type RunSummary } from './practice/session';
 import { describeOutcome, PASS_ACCURACY, recordResult, startTest, type SightState } from './practice/sight-test';
 import { TempoRun, type Level, type TempoSummary, type TempoUpdate } from './practice/tempo-mode';
-import { readTimeline, type TimedStep } from './practice/timeline';
+import { handFilter, readTimeline, type TimedStep } from './practice/timeline';
 import { accuracy } from './practice/wait-mode';
 import { Synth } from './ui/audio';
+import { isVoice, VOICES, type VoiceName } from './ui/voices';
 import { bindTempoDial } from './ui/dial';
 import { KeyboardView } from './ui/keyboard';
 import { filterLibrary, isFiltering, NO_FILTER, type LibraryFilter, type SortBy } from './ui/library-filter';
@@ -80,6 +81,10 @@ interface TempoState {
   lastRaw: number;
   /** Where each step sits on the page, for the moving line (indexed like `steps`). */
   spots: Spot[];
+  /** Quarter-note beats of the count-in, which the line runs through before the first note. */
+  countIn: number;
+  /** Not read from storage every frame. */
+  lag: number;
   /** Where each step's notes sit on the page (indexed like `steps`), so a hit is marked on its own note even when you are early. */
   anchors: (NoteAnchor | undefined)[];
 }
@@ -109,6 +114,8 @@ interface Listed {
   /** Measured difficulty (imported scores only). */
   difficulty?: number;
   technique: boolean;
+  /** Offered in Piece mode: only the imported scores marked `pieceMode` in library.json. */
+  pieceMode?: boolean;
   hands: Hands;
   targetBpm: number;
   open: () => Promise<void>;
@@ -124,7 +131,7 @@ const techniqueSection = (group: keyof typeof TECHNIQUE_SECTIONS) => ({ ...TECHN
 const catalog: Listed[] = [
   ...pieces.map((p): Listed => ({ id: p.id, title: p.title, composer: p.composer, stage: p.stage, skills: p.skills, technique: false, ...stageSection(p.stage), hands: p.hands, targetBpm: p.targetBpm, open: () => openPiece(p) })),
   ...[...positionPieces, ...techniquePieces].map((p): Listed => ({ id: p.id, title: p.title, composer: p.composer, stage: p.stage, skills: p.skills, technique: true, ...(p.group ? techniqueSection(p.group) : stageSection(p.stage)), hands: p.hands, targetBpm: p.targetBpm, open: () => openPiece(p) })),
-  ...scoreEntries.map((e): Listed => ({ id: e.id, title: e.title, composer: e.composer, stage: e.stage, skills: e.skills, difficulty: e.difficulty, technique: false, ...stageSection(e.stage), hands: e.hands, targetBpm: e.targetBpm, open: () => openScoreEntry(e) })),
+  ...scoreEntries.map((e): Listed => ({ id: e.id, title: e.title, composer: e.composer, stage: e.stage, skills: e.skills, difficulty: e.difficulty, technique: false, ...(e.pieceMode ? { pieceMode: true } : {}), ...stageSection(e.stage), hands: e.hands, targetBpm: e.targetBpm, open: () => openScoreEntry(e) })),
 ];
 
 const catalogById = new Map(catalog.map((i) => [i.id, i] as const));
@@ -310,15 +317,9 @@ function renderProgress(): void {
   const el = $('progress');
   if (!current || sight) { el.hidden = true; return; } // test runs are not logged: nothing to show
   const p = progressOf(log.forPiece(current.id));
-  el.hidden = false;
   el.replaceChildren();
-  if (p.lastScore === undefined || p.best === undefined || !p.last) {
-    const none = document.createElement('span');
-    none.className = 'progress-none';
-    none.textContent = 'Not played yet: your scores will show here.';
-    el.append(none);
-    return;
-  }
+  if (p.lastScore === undefined || p.best === undefined || !p.last) { el.hidden = true; return; } // nothing to say before the first run
+  el.hidden = false;
   const bit = (cls: string, html: string) => { const e = document.createElement('span'); e.className = cls; e.innerHTML = html; return e; };
   el.append(
     bit(`progress-last ${toneOf(p.lastScore)}`, `Last <strong>${p.lastScore}</strong> <span class="stars">${starText(p.lastScore)}</span>`),
@@ -393,7 +394,7 @@ async function openPiece(piece: Piece): Promise<void> {
     pieceXml(piece),
     (safeGet('hands:' + piece.id) as Hands | null) ?? 'both',
   );
-  $('piece-meta').textContent = `${piece.composer} · stage ${piece.stage}`;
+  $('piece-meta').textContent = '';
   if (!piece.id.startsWith('sr-')) safeSet('piece', piece.id); // generated test pieces are not worth coming back to
 }
 
@@ -410,7 +411,7 @@ async function openScoreEntry(entry: ScoreEntry): Promise<void> {
     xml,
     (safeGet('hands:' + entry.id) as Hands | null) ?? 'both',
   );
-  $('piece-meta').textContent = `${entry.composer} · stage ${entry.stage} · ${entry.source}` + (entry.notes ? ` · ${entry.notes}` : '');
+  $('piece-meta').textContent = entry.notes ?? ''; // composer, stage and source are in the list; only a caveat is worth showing here
   safeSet('piece', entry.id);
 }
 
@@ -447,6 +448,8 @@ function renderControls(): void {
   $('beat-hint').textContent = current && current.unit.quarters !== 1 ? `Beat = ${current.unit.name} note, ${current.unit.perBar} per bar` : '';
   $('restart').textContent = mode === 'tempo' && !tempo ? 'Start' : 'Restart';
   $('stop').hidden = !(mode === 'tempo' && tempo);
+  $('line-sync').hidden = !tempo;
+  document.documentElement.toggleAttribute('data-run', !!tempo); // the minimal view clears the side column during a run: the score needs the width
   $<HTMLButtonElement>('listen').disabled = !!sight;
   if (current) renderRange();
   renderLatency();
@@ -474,14 +477,12 @@ function renderStatus(): void {
     const stats = session?.stats;
     if (!session || !stats || session.finished) { status.textContent = ''; return; }
     const want = [...session.expected].sort((a, b) => a - b).map(noteName).join(' + ');
-    const wrong = stats.wrong ? `<span class="bad">${stats.wrong} wrong</span> · ` : '';
-    status.innerHTML = `Play <strong>${want}</strong> · ${stats.steps} done · ${wrong}${
-      stats.steps ? Math.round(accuracy(stats) * 100) + '% first try' : 'waiting for your first note'}`;
+    status.innerHTML = `Play <strong>${want}</strong>${stats.steps ? ` · ${stats.steps} done` : ''}${stats.wrong ? ` · <span class="bad">${stats.wrong} wrong</span>` : ''}`;
     return;
   }
   if (!tempo) {
     const beats = current ? Array.from({ length: current.unit.perBar }, (_, i) => i + 1).join(' ') : '';
-    status.textContent = current ? `Press Start. You hear a count-in, ${beats}, then play the first note on the next click.` : '';
+    status.textContent = current ? `Press Start. Count-in ${beats}, then play.` : '';
   }
 }
 
@@ -515,6 +516,9 @@ function startTempo(): void {
   const cursor = activeCursor();
   const steps = readTimeline(cursor, hands);
   if (!steps.some((s) => s.notes.length > 0)) { showResult('Nothing to play for that hand.', true); return; }
+  // The music is played quietly under the run, as a tempo to follow. Its notes come from the recorded piano, fetched on first use.
+  const backing = $<HTMLInputElement>('backing').checked ? soundsOf(readPlayback(cursor, 'both')) : [];
+  if (backing.length && !synth.hasSamples(backing.map((s) => s.midi))) { setFeedback('Loading the piano…', 'good'); void synth.preload(backing.map((s) => s.midi)).then(startTempo); return; }
   $('result').hidden = true;
   clearFeedback();
   score.clearMarks(); // the check marks and crosses of the last run
@@ -523,9 +527,15 @@ function startTempo(): void {
   if (!sight) safeSet('bpm:' + current.id, String(bpm));
   // The player's tempo counts the piece's own beat; the run and the score count quarter notes.
   const { quarters: q, perBar } = current.unit;
+
+  // The run changes the layout (the minimal view clears its side column), so draw the score for that first, and measure where everything sits
+  // on the final drawing. All of it before the clock starts: the count-in must not be eaten by drawing.
+  document.documentElement.toggleAttribute('data-run', true);
+  score.refit();
+  const { spots, anchors } = stepPlaces(cursor, steps);
+
   const run = new TempoRun(steps, { bpm: bpm * q, countInBeats: perBar * q, beatQuarters: q, level });
-  const t0 = performance.now();
-  run.start(t0);
+  run.start(performance.now());
 
   // Clicks: always for the count-in; during the piece only if the metronome is on.
   const lastBeat = Math.ceil(Math.max(...steps.map((s) => s.beat)) / q) + 1;
@@ -536,13 +546,51 @@ function startTempo(): void {
     clicks.push({ atMs: run.timeOfBeat(k * q), accent: ((k % perBar) + perBar) % perBar === 0 });
   }
   const cancelClicks = synth.scheduleClicks(clicks);
-
-  const { spots, anchors } = stepPlaces(cursor, steps);
-  tempo = { run, cursor, steps, bpm, cancelClicks, raf: 0, lastRaw: 0, spots, anchors };
+  const cancelMusic = backing.length ? synth.scheduleNotes(schedule(backing, run.beatZeroAt, run.beatMs), BACKING_VELOCITY) : () => {};
+  tempo = { run, cursor, steps, bpm, cancelClicks: () => { cancelClicks(); cancelMusic(); }, raf: 0, lastRaw: 0, spots: withLeadIn(spots, perBar * q), countIn: perBar * q, lag: lineLag(), anchors };
   cursor.reset();
+  score.showCursor(false); // the moving line is the marker now, not the bar
+  lastFrameAt = 0;
+  $('line-lag').textContent = `${tempo.lag} ms`;
   renderControls();
   tick();
 }
+
+/** How loud the music under a run is: the notes you play must stay the loudest thing in the room. */
+const BACKING_VELOCITY = 0.3;
+
+// A redraw during a run (the phone turned) moves every note: measure again and put the cursor back where the clock has it.
+score.onRelayout = () => {
+  if (!tempo) return;
+  const { spots, anchors } = stepPlaces(tempo.cursor, tempo.steps);
+  tempo.spots = withLeadIn(spots, tempo.countIn);
+  tempo.anchors = anchors;
+  tempo.cursor.moveTo(tempo.lastRaw);
+  score.showCursor(false);
+};
+
+/** The line is not only for the notes: it enters from the start of the staff during the count-in and reaches the first note on the first beat. */
+function withLeadIn(spots: Spot[], beats: number): Spot[] {
+  const f = spots[0];
+  if (!f) return spots;
+  return [{ ...f, beat: -beats, x: f.left !== undefined && f.left < f.x - 2 ? f.left : f.x - 6 }, ...spots];
+}
+
+/**
+ * Seen on the screen the line is always late: the panel takes a moment, and a slow screen redraws only every few frames, so what it shows
+ * is already old. The line is drawn where the clock will be half a redraw from now (the measured time between redraws) plus the panel's own delay.
+ */
+const SCREEN_LAG_MS = { full: 0, minimal: 80 }; // until you set it with the Earlier / Later buttons beside Stop
+const lagKey = () => 'lineLag:' + view;
+const lineLag = (): number => { const v = safeGet(lagKey()); return v === null || v === '' || !Number.isFinite(Number(v)) ? SCREEN_LAG_MS[view] : Number(v); };
+function nudgeLine(by: number): void {
+  const v = Math.max(-300, Math.min(600, lineLag() + by));
+  safeSet(lagKey(), String(v));
+  if (tempo) tempo.lag = v;
+  $('line-lag').textContent = `${v} ms`;
+}
+let frameMs = 16;
+let lastFrameAt = 0;
 
 /** Walk the score once to learn where each step sits on the page. */
 function stepPlaces(cursor: RangeCursor, steps: TimedStep[]): { spots: Spot[]; anchors: (NoteAnchor | undefined)[] } {
@@ -570,9 +618,8 @@ function tick(): void {
   if (!tempo || !current) return;
   const now = performance.now() - latencyMs;
   const u = tempo.run.update(now);
-  // The minimal view marks the note you are about to play, and moves on the moment you play or miss it: you see your key counted.
-  // The clock-driven cursor jumps only when a note is already due, which on a slow screen is too late to be of any use.
-  const raw = view === 'minimal' ? tempo.run.upcomingRaw() ?? u.cursorRawIndex : u.cursorRawIndex;
+  // The hidden cursor follows the clock, so the page turns as the line reaches the last system on it.
+  const raw = u.cursorRawIndex;
   if (raw !== tempo.lastRaw) {
     tempo.lastRaw = raw;
     tempo.cursor.moveTo(raw);
@@ -582,8 +629,11 @@ function tick(): void {
     setFeedback(describeMissed(u.newlyMissed));
     for (const i of u.newlyMissedSteps) score.markResult(tempo.anchors[i], 'missed');
   }
-  // The moving line is smooth on a screen and a smear on e-ink: the minimal view only steps the cursor from note to note.
-  if (view === 'full') score.setPlayhead(playheadAt(tempo.spots, Math.max(0, (now - tempo.run.beatZeroAt) / tempo.run.beatMs)));
+  // The line crosses the staves and reaches a note when it is due.
+  const clock = performance.now();
+  if (lastFrameAt) frameMs = 0.8 * frameMs + 0.2 * Math.min(300, clock - lastFrameAt);
+  lastFrameAt = clock;
+  score.setPlayhead(playheadAt(tempo.spots, (clock + tempo.lag + frameMs / 2 - tempo.run.beatZeroAt) / tempo.run.beatMs));
   refreshKeys();
 
   const html = tempoStatus(u, now);
@@ -608,7 +658,7 @@ function tempoStatus(u: TempoUpdate, now: number): string {
   const perBar = current.unit.perBar;
   if (u.phase === 'countin') {
     const n = Math.max(1, Math.min(perBar, perBar - u.countInLeft + 1));
-    return `<span class="cue">Count-in <span class="count">${n}</span> of ${perBar}</span><span class="tally">Play the first note on the click after ${perBar}.</span>`;
+    return `<span class="cue">Count-in <span class="count">${n}</span> of ${perBar}</span><span class="tally">Then play.</span>`;
   }
   const l = tempo.run.live;
   const { step, of } = tempo.run.progress;
@@ -631,6 +681,7 @@ function stopTempo(): void {
   tempo.cancelClicks();
   tempo = undefined;
   score.setPlayhead(undefined);
+  score.showCursor(true);
   renderControls();
   refreshKeys();
 }
@@ -876,6 +927,8 @@ function startListen(): void {
   const steps = readPlayback(cursor, hands);
   const sounds = soundsOf(steps);
   if (sounds.length === 0) { showResult('Nothing to play for that hand.', true); return; }
+  const keys = sounds.map((s) => s.midi);
+  if (!synth.hasSamples(keys)) { setFeedback('Loading the piano…', 'good'); void synth.preload(keys).then(startListen); return; } // the recorded piano is fetched on first use
   clearFeedback();
   $('result').hidden = true;
   session = undefined; // the playback moves the cursor; the practice starts fresh afterwards
@@ -994,6 +1047,7 @@ $('calib-reset').addEventListener('click', () => {
 // ───────────── input ─────────────
 bus.on((event, source) => {
   if (event.type === 'sustain') {
+    $('pedal').hidden = false; // shown once a pedal is heard
     $('pedal-val').textContent = String(event.value);
     $('pedal').classList.toggle('on', event.down);
     return;
@@ -1009,12 +1063,25 @@ bus.on((event, source) => {
   pressed.add(event.note);
   refreshKeys(); // show the key even when no run is active (tempo mode before Start has no `tempo`)
   if (source !== 'midi') synth.noteOn(event.note); // the piano makes its own sound
-  if (cardsOn) { cardKeyHandler?.(event.note); return; } // the course's note cards: the key answers the card, nothing else
+  if (cardsOn) { // the note cards: the key answers the card; draw it on the card's staff so you can see how far off it was
+    if (cardKeyHandler) {
+      const right = score.notes().some((n) => n.midi === event.note);
+      if (right) score.showRight(event.note); else score.showWrong(event.note);
+      cardKeyHandler(event.note);
+    }
+    return;
+  }
   if (calibration) { calibration.taps.push(performance.now()); return; }
   if (listening) return; // the cursor belongs to the playback until it ends
+  // Piece mode, a finished run on the screen: any key goes again, so the hands can stay on the piano. The key itself is not played into the new run.
+  if (!tempo && !$('result').hidden && document.getElementById('try-again') && document.querySelector('#app-mode [data-app="piece"]')?.getAttribute('aria-pressed') === 'true') {
+    setTimeout(tryAgain, 0);
+    return;
+  }
 
   if (mode === 'wait') {
     const at = score.anchor(); // before the press moves the cursor
+    score.clearHeld();
     const outcome = session?.press(event.note);
     if (outcome?.result.kind === 'wrong') {
       keyboard.flash('wrong', event.note);
@@ -1025,7 +1092,11 @@ bus.on((event, source) => {
       keyboard.flash('hit', event.note);
       score.showRight(event.note, at);
     }
-    if (outcome?.result.kind === 'advance') score.clearWrong(); // the cursor moved on: the mistake is behind you
+    if (outcome?.result.kind === 'advance') {
+      score.clearWrong(); // the cursor moved on: the mistake is behind you
+      const held = [...new Set(score.heldTies.filter(handFilter(hands)).map((n) => noteName(n.midi)))];
+      if (held.length && !outcome.finished) setFeedback(`✓ ${noteName(event.note)} · tied ${held.join(' + ')}: hold it`, 'good');
+    }
     renderStatus();
     refreshKeys();
     if (outcome?.finished) finishWaitRun(outcome.finished);
@@ -1075,6 +1146,26 @@ function firstStepNotes(): readonly number[] {
   return firstStep.notes;
 }
 
+// ───────────── sound ─────────────
+let voice: VoiceName = ((v) => (isVoice(v) ? v : 'grand'))(safeGet('voice'));
+synth.setVoice(voice);
+if (voice === 'grand') setTimeout(() => void synth.preload(), 2000); // the recorded piano, after the page has settled
+function renderVoice(): void {
+  $('voice').textContent = `♪ ${VOICES.find((v) => v.id === voice)!.label}`;
+}
+$('voice').addEventListener('click', () => {
+  voice = VOICES[(VOICES.findIndex((v) => v.id === voice) + 1) % VOICES.length]!.id;
+  synth.setVoice(voice);
+  if (voice === 'grand') void synth.preload(); // all of it, in the background, so the first chord is already the real piano
+  safeSet('voice', voice);
+  renderVoice();
+  [60, 64, 67].forEach((n, i) => { // a short chord, so the change is heard at once
+    setTimeout(() => synth.noteOn(n), i * 110);
+    setTimeout(() => synth.noteOff(n), 900);
+  });
+});
+renderVoice();
+
 // ───────────── controls ─────────────
 $('hands').addEventListener('click', (e) => {
   const b = (e.target as HTMLElement).closest<HTMLButtonElement>('button[data-hands]');
@@ -1112,6 +1203,10 @@ $('restart').addEventListener('click', () => {
 $('stop').addEventListener('click', () => { stopTempo(); score.reset(); clearFeedback(); renderStatus(); });
 
 $('showNext').addEventListener('change', refreshKeys);
+$('line-earlier').addEventListener('click', () => nudgeLine(25));
+$('line-later').addEventListener('click', () => nudgeLine(-25));
+$<HTMLInputElement>('backing').checked = safeGet('backing') !== 'off';
+$('backing').addEventListener('change', () => safeSet('backing', $<HTMLInputElement>('backing').checked ? 'on' : 'off'));
 $('bpm').addEventListener('change', () => { readBpm(); if (current) safeSet('bpm:' + current.id, $<HTMLInputElement>('bpm').value); });
 
 $<HTMLInputElement>('import').addEventListener('change', async (e) => {
@@ -1281,7 +1376,7 @@ const courseCtl = createCourse({
 
 // ───────────── piece mode ─────────────
 const pieceCtl = createPiece({
-  pieces: () => catalog.filter((p) => !p.technique && !p.id.startsWith('sr-')).sort((a, b) => a.stage - b.stage || a.title.localeCompare(b.title)).map((p) => ({ id: p.id, title: p.title, stage: p.stage })),
+  pieces: () => catalog.filter((p) => p.pieceMode).sort((a, b) => a.stage - b.stage || a.title.localeCompare(b.title)).map((p) => ({ id: p.id, title: p.title, composer: p.composer, stage: p.stage })),
   analyze: async (id) => {
     const item = catalogById.get(id);
     if (!item) return undefined;
@@ -1302,6 +1397,7 @@ const pieceCtl = createPiece({
     resetPractice();
     renderControls();
   },
+  setMode: (m) => { stopEverything(); mode = m; resetPractice(); renderControls(); if (m === 'tempo') startTempo(); }, // Piece mode's "Play with rhythm": the run starts with the choice
   showCard,
   setKeyHandler: (h) => { cardKeyHandler = h; },
   setLayout: setAppLayout,
@@ -1327,13 +1423,24 @@ $('app-mode').addEventListener('click', (e) => {
 });
 
 // ───────────── MIDI status ─────────────
-bus.onStatus((devices, error) => {
+const MIDI_SHORT = { denied: 'MIDI: not allowed', unavailable: 'MIDI: not available', lost: 'MIDI: keyboard lost' } as const;
+bus.onStatus((devices, error, problem) => {
   const el = $('midi-status');
   el.className = 'pill ' + (devices.length ? 'ok' : error ? 'bad' : '');
-  el.textContent = devices.length ? `MIDI: ${devices.join(', ')}` : error ? error : 'MIDI: no piano found (keyboard and mouse work)';
+  el.textContent = devices.length ? `MIDI: ${devices.join(', ')}`
+    : bus.asking ? 'MIDI: waiting for Allow…'
+    : problem ? MIDI_SHORT[problem]
+    : bus.virtualOnly ? 'MIDI: no piano (only Midi Through)'
+    : 'MIDI: no piano';
+  el.title = error ?? '';
+  // Whatever you are doing, a lost or refused piano is shown in full, with the button to get it back.
+  $('midi-banner').hidden = !problem;
+  $('midi-banner-retry').textContent = problem === 'denied' ? 'Allow MIDI' : 'Reconnect';
+  el.dataset.ask = devices.length ? '' : 'yes'; // the pill asks again when clicked, as long as there is no piano
+  $('midi-banner-text').textContent = error ?? '';
 });
-$('midi-retry').addEventListener('click', () => void bus.connectMidi());
-$('midi-status').addEventListener('click', () => { if (view === 'minimal') void bus.connectMidi(); }); // the minimal view has no Reconnect button
+$('midi-banner-retry').addEventListener('click', () => void bus.connectMidi());
+$('midi-status').addEventListener('click', () => { if ($('midi-status').dataset.ask) void bus.connectMidi(); }); // also the way to ask in the minimal view, which has no Reconnect button
 
 applyView(view, false);
 bindThemes($('themes'));
@@ -1349,4 +1456,4 @@ const last = catalog.find((p) => p.id === safeGet('piece')) ?? catalog[0];
 if (last) void last.open();
 applyApp(((a) => (a === 'free' || a === 'piece' ? a : 'course'))(safeGet('app')), false); // the course is the main way in; Free is remembered once chosen
 void navigator.storage?.persist?.(); // ask the browser not to clear what the app remembers
-if (import.meta.env.DEV) (window as unknown as Record<string, unknown>).__piano = { course: courseCtl, piece: pieceCtl, bus, log, score }; // for the browser tests, never in the build
+if (import.meta.env.DEV) (window as unknown as Record<string, unknown>).__piano = { course: courseCtl, piece: pieceCtl, bus, log, score, tempo: () => tempo }; // for the browser tests, never in the build

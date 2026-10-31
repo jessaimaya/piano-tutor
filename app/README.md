@@ -4,7 +4,7 @@ Browser practice app for the plan in the parent folder. Reads a MusicXML score, 
 USB-MIDI (Web MIDI), and has two practice modes:
 
 - **Wait**: the cursor stays on a step until you play exactly those notes. For learning a piece.
-- **Tempo**: count-in, then the score follows a clock (with a metronome) and every note has a time window.
+- **Tempo**: count-in, then the score follows a clock (with a metronome, and the piece quietly in the background) and every note has a time window. A line runs across the score and is over each note when it is due.
   You get the share of steps played in time, missed/extra notes, and whether you rush or drag.
   The target key is always the **next note you haven't played yet** (it moves the moment you play or miss the previous
   one, and it skips rests), shown on the keyboard and as "Next C4" in the status line. Untick "Show the next key" to
@@ -29,12 +29,12 @@ npm test           # unit tests (vitest)
 npm run build      # typecheck + production build
 ```
 
-No piano plugged in? Play with the computer keyboard (shown in the sidebar) or click the on-screen keys.
-With the P-115 connected, the device name appears in the top bar and the sustain pedal value is shown live.
+No piano plugged in? Play with the computer keyboard (the keys are listed in the **☰ Pieces** drawer).
+The MIDI status only shows when something is wrong: a red banner says whether the browser refused MIDI (**Allow MIDI**) or the keyboard disconnected (**Reconnect**). The sustain pedal shows once one is heard. The drawn piano is hidden (`#keyboard` in `style.css`; delete that rule to bring it back).
 
 ## Course mode
 
-The app opens in Course; **Free | Course** at the top switches (and remembers the choice) between the app as it was (browse the library, play anything) and a daily session, Duolingo-style.
+The app opens in Course; **Free | Course | Piece** at the top switches (and remembers the choice) between the app as it was (browse the library, play anything) and a daily session, Duolingo-style.
 Course mode hides the library and the mode and hands switches: each step decides what you play. One dot per step shows where you are
 (filled = done, ring = here, dashed = skipped); a step counts when its goal is reached (a run, two readings, ten cards), **Next** or **Skip
 step** moves on, and **Menu** goes back to the course page. A day counts for the streak when its *core* steps (reading and new bars) are done.
@@ -83,9 +83,8 @@ stays in the full view. Built for a monochrome e-ink screen such as the Minimal 
 - the staff is drawn at the width of the window and shrinks until two systems fit its height (never below 0.4); `A−` / `A+` set the
   biggest size it may use, and it is drawn again when the window changes (turning the phone, a toolbar hiding);
 - held sideways (landscape, under 520 px high) the score takes the whole height on the left and the controls stack in a column on the right;
-- in a timed run the grey bar marks **the next note to play**, not where the clock is, and jumps the moment you play (or miss) it, so you see your key counted; there is no
-  moving line, since e-ink smears continuous movement. The count-in reads "1 2 3 4" up, like the clicks, and the first note is on the click after the last number. The
-  cue under the title says which note and how many clicks away it is ("Next D4 · in 2", then "Play D4 NOW"), and the line under it which note of how many you are on and what
+- in a timed run the controls go away and the score fills the screen (a thin strip at the bottom keeps the cue, **Earlier / Later** for the line and Stop). A thin black line crosses the staves and is over each note when it is due, already during the count-in. It is drawn from OSMD's own cursor bar (kept running but invisible) and ahead of the clock by the panel's delay, which Earlier / Later set. The count-in reads "1 2 3 4" up, like the clicks, and the first note is on the click after the last number. The
+  cue says which note and how many clicks away it is ("Next D4 · in 2", then "Play D4 NOW"), and the line under it which note of how many you are on and what
   counted. Every note you play gets a ✓ under it on the score, a missed one a ✕, until the run starts again, and the feedback line confirms each key ("✓ C4 counted, on the beat");
 - right notes show as a filled head on the staff, wrong ones as a dashed hollow head (no colour);
 - tap the result card to put it away; tap the MIDI label to reconnect.

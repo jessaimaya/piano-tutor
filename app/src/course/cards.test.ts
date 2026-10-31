@@ -78,6 +78,11 @@ describe('drawing cards', () => {
     expect(seen.size).toBe(deck.length);
   });
 
+  it('shows the only card again when the deck has just one note', () => {
+    const one = deck.slice(0, 1);
+    expect(cardKey(drawCard(Math.random, one, one[0]))).toBe(cardKey(one[0]!));
+  });
+
   it('survives the extremes of the random source', () => {
     expect(cardKey(drawCard(() => 0, deck))).toBe('treble:C4');
     expect(deck.map(cardKey)).toContain(cardKey(drawCard(() => 0.999999999, deck)));

@@ -1,8 +1,8 @@
-import { OpenSheetMusicDisplay, type GraphicalMeasure } from 'opensheetmusicdisplay';
+import { ClefEnum, OpenSheetMusicDisplay, type GraphicalMeasure } from 'opensheetmusicdisplay';
 import type { MeasuredCursor } from '../practice/range';
 import type { CursorNote } from '../practice/session';
 import type { Spot } from './playhead';
-import { clefFor, isSharp, ledgerSteps, staffStep } from './staff-position';
+import { clefFor, isSharp, ledgerSteps, staffStep, type Clef } from './staff-position';
 
 /** OSMD lays out in units of one staff space; at zoom 1 that is 10 px. */
 const UNIT_PX = 10;
@@ -21,10 +21,20 @@ const RESIZE_DEBOUNCE_MS = 200;
 export interface NoteAnchor {
   staves: GraphicalMeasure[];
   x: number;
+  /** The notes due at this spot and the staff each one is written on (0 = top). */
+  due: { midi: number; staff: number }[];
 }
 
 /** OSMD stores pitches with C4 = 48; MIDI has C4 = 60. */
 const OSMD_TO_MIDI = 12;
+
+/**
+ * Draw the triplet bracket and its 3 under the staff, as printed scores often do. Above the staff they share the space with the finger
+ * numbers, and a 3 between fingers gets read as "finger 3". A tuplet that says where it goes keeps its own place.
+ */
+export function tripletsBelow(xml: string): string {
+  return xml.replace(/<tuplet\b([^>]*)>/g, (all, attrs: string) => (/type="start"/.test(attrs) && !/placement=/.test(attrs) ? `<tuplet${attrs.replace(/\s*\/$/, '')} placement="below"${/\/\s*$/.test(attrs) ? '/' : ''}>` : all));
+}
 
 export class ScoreView implements MeasuredCursor {
   private osmd: OpenSheetMusicDisplay;
@@ -38,7 +48,11 @@ export class ScoreView implements MeasuredCursor {
   private seen = { w: 0, h: 0 };
   /** Which hand is being asked for: the other staff's notes are drawn faded. */
   private activeHands: 'rh' | 'lh' | 'both' = 'both';
+  /** The tied notes the cursor has gone over since `clearHeld`: they sound on, so they are not asked for again. */
+  heldTies: CursorNote[] = [];
   private resizeTimer: ReturnType<typeof setTimeout> | undefined;
+  /** Called after the score is drawn again (the window changed): where things sit on the page is different now. */
+  onRelayout: (() => void) | undefined;
 
   constructor(private container: HTMLElement) {
     this.osmd = new OpenSheetMusicDisplay(container, {
@@ -63,7 +77,7 @@ export class ScoreView implements MeasuredCursor {
     this.osmd.zoom = zoom ?? this.baseZoom;
     this.clearMarks();
     this.setPlayhead(undefined);
-    await this.osmd.load(xml);
+    await this.osmd.load(tripletsBelow(xml));
     this.draw();
     this.osmd.cursor.show();
     this.loaded = true;
@@ -105,7 +119,8 @@ export class ScoreView implements MeasuredCursor {
           for (const voice of entry.graphicalVoiceEntries) {
             for (const note of voice.notes) {
               const el = (note as unknown as { getSVGGElement?: () => SVGGElement | undefined }).getSVGGElement?.();
-              if (el) el.style.opacity = staff === faded && staves.length > 1 ? '0.25' : '';
+              const tied = note.sourceNote.NoteTie && note.sourceNote.NoteTie.StartNote !== note.sourceNote; // held, not played: not asked for
+              if (el) el.style.opacity = staff === faded && staves.length > 1 ? '0.25' : tied ? '0.4' : '';
             }
           }
         }
@@ -127,6 +142,17 @@ export class ScoreView implements MeasuredCursor {
     this.draw();
     this.osmd.cursor.update();
     this.page();
+    this.onRelayout?.();
+  }
+
+  /** Draw again now if the window has changed since the last drawing, instead of after the debounce. */
+  refit(): void {
+    const w = this.container.clientWidth;
+    const h = this.container.clientHeight;
+    if (w === this.seen.w && (!this.paged || h === this.seen.h)) return;
+    clearTimeout(this.resizeTimer);
+    this.seen = { w, h };
+    if (this.loaded && w) this.relayout();
   }
 
   private resized(): void {
@@ -208,6 +234,7 @@ export class ScoreView implements MeasuredCursor {
 
   reset(): void {
     this.pos = 0;
+    this.heldTies = [];
     this.clearMarks();
     if (!this.loaded) return;
     this.osmd.cursor.reset();
@@ -244,6 +271,19 @@ export class ScoreView implements MeasuredCursor {
     this.pos++;
     this.osmd.cursor.next();
     this.page();
+    if (this.done) return;
+    this.heldTies.push(...this.tiedHere());
+  }
+
+  clearHeld(): void {
+    this.heldTies = [];
+  }
+
+  /** The notes at the cursor that are the second half of a tie: still sounding, so nothing to press. */
+  private tiedHere(): CursorNote[] {
+    return this.osmd.cursor.NotesUnderCursor()
+      .filter((n) => !n.isRest() && n.NoteTie && n.NoteTie.StartNote !== n)
+      .map((n) => ({ midi: n.halfTone + OSMD_TO_MIDI, staff: n.ParentStaff.idInMusicSheet }));
   }
 
   notes(): CursorNote[] {
@@ -267,15 +307,32 @@ export class ScoreView implements MeasuredCursor {
     const staves = this.osmd.GraphicSheet.MeasureList[this.osmd.cursor.iterator.CurrentMeasureIndex];
     const gnote = this.osmd.cursor.GNotesUnderCursor()[0];
     if (!staves?.length || !gnote) return undefined;
-    return { staves, x: gnote.PositionAndShape.AbsolutePosition.x };
+    const due = this.osmd.cursor.NotesUnderCursor().filter((n) => !n.isRest())
+      .map((n) => ({ midi: n.halfTone + OSMD_TO_MIDI, staff: n.ParentStaff.idInMusicSheet }));
+    return { staves, x: gnote.PositionAndShape.AbsolutePosition.x, due };
   }
 
-  /** The cursor's place on the page, for the moving line: its x and the top and bottom of its system. */
+  /**
+   * Where the moving line goes for the step under the cursor, read off OSMD's own cursor bar: the bar OSMD puts over the step is by
+   * definition where the notes are (it picks the staff entry that is a reliable anchor, which a note or rest of mine may not be). The bar's
+   * centre is the line's x and its height is the system's. In the drawing's own units, like everything else here.
+   */
   spot(beat: number): Spot | undefined {
     const at = this.anchor();
-    if (!at) return undefined;
-    const top = (i: number) => at.staves[i]!.ParentStaffLine.PositionAndShape.AbsolutePosition.y;
-    return { beat, x: at.x, y0: top(0) - 0.8, y1: top(at.staves.length - 1) + 4.8 };
+    const bar = this.osmd.cursor.cursorElement as HTMLElement | undefined;
+    const svg = this.container.querySelector('svg');
+    if (!at || !bar || !svg) return undefined;
+    const b = bar.getBoundingClientRect();
+    const s = svg.getBoundingClientRect();
+    const vb = svg.viewBox.baseVal;
+    if (!b.width || !s.width || !vb.width) return undefined;
+    const k = (s.width / vb.width) * UNIT_PX; // screen px per OSMD unit
+    return { beat, x: (b.left + b.width / 2 - s.left) / k, left: at.staves[0]!.PositionAndShape.AbsolutePosition.x, y0: (b.top - s.top) / k, y1: (b.bottom - s.top) / k };
+  }
+
+  /** The cursor bar is kept moving (the line reads its place) but not drawn while the line shows the time. */
+  showCursor(on: boolean): void {
+    this.container.classList.toggle('cursor-quiet', !on);
   }
 
   /** Draw (or move) the line that crosses the staves at the tempo; `undefined` takes it away. */
@@ -283,7 +340,7 @@ export class ScoreView implements MeasuredCursor {
     const svg = this.container.querySelector('svg');
     let line = svg?.querySelector<SVGLineElement>('.playhead') ?? null;
     if (!svg || !spot) { line?.remove(); return; }
-    const u = UNIT_PX * this.osmd.zoom;
+    const u = UNIT_PX; // the drawing's own units: the zoom is the size the svg is shown at, not part of its coordinates
     if (!line) {
       line = document.createElementNS(SVG_NS, 'line');
       line.setAttribute('class', 'playhead');
@@ -310,9 +367,13 @@ export class ScoreView implements MeasuredCursor {
   private showNote(midi: number, kind: 'wrong' | 'right', at: NoteAnchor | undefined): void {
     const svg = this.container.querySelector('svg');
     if (!svg || !at) return;
-    const clef = at.staves.length > 1 ? clefFor(midi) : 'treble';
-    const staff = at.staves[clef === 'treble' ? 0 : 1] ?? at.staves[0]!;
-    const u = UNIT_PX * this.osmd.zoom;
+    // The staff the note it should have been is written on, whatever its pitch: the left hand's upper notes sit on the bass staff
+    // (above its top line), so a key from Middle C up still belongs there. With nothing due, fall back to the pitch's usual hand.
+    const mine = at.due.filter((d) => this.activeHands === 'both' || d.staff === (this.activeHands === 'rh' ? 0 : 1)); // only the hand being asked for
+    const near = mine.reduce<{ midi: number; staff: number } | undefined>((best, d) => (!best || Math.abs(d.midi - midi) < Math.abs(best.midi - midi) ? d : best), undefined);
+    const staff = at.staves[near?.staff ?? (at.staves.length > 1 && clefFor(midi) === 'bass' ? 1 : 0)] ?? at.staves[0]!;
+    const clef: Clef = staff.InitiallyActiveClef?.ClefType === ClefEnum.F ? 'bass' : 'treble';
+    const u = UNIT_PX; // the drawing's own units: the zoom is the size the svg is shown at, not part of its coordinates
     const top = staff.ParentStaffLine.PositionAndShape.AbsolutePosition.y;
     const step = staffStep(midi, clef);
     const cx = at.x * u;
@@ -354,15 +415,15 @@ export class ScoreView implements MeasuredCursor {
 
   /**
    * A check mark below the system under a note you played in time, a cross under one you missed. Unlike the coloured notes these stay until the run is
-   * restarted, so at the end you see which notes counted. Drawn in the minimal view only (the full view has colour and the moving line).
+   * restarted, so at the end you see which notes counted. Drawn in the minimal view only (the full view has colour).
    */
   markResult(at: NoteAnchor | undefined, kind: 'hit' | 'missed'): void {
     const svg = this.container.querySelector('svg');
     if (!this.paged || !svg || !at) return;
-    const u = UNIT_PX * this.osmd.zoom;
+    const u = UNIT_PX; // the drawing's own units: the zoom is the size the svg is shown at, not part of its coordinates
     const x = at.x * u;
     // Below the system: the fingering numbers sit above the treble staff and the notes' own numbers are inside, so the marks get a row of their own.
-    const bottom = at.staves[at.staves.length - 1]!.ParentStaffLine.PositionAndShape.AbsolutePosition.y + 4;
+    const bottom = at.staves[at.staves.length - 1]!.ParentStaffLine.PositionAndShape.AbsolutePosition.y + 6.5;
     const y = (bottom + 3.6) * u;
     const key = `${Math.round(x)}@${Math.round(y)}`;
     const old = svg.querySelector(`[data-result="${key}"]`);

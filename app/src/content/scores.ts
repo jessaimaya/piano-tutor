@@ -27,6 +27,8 @@ export interface ScoreEntry {
   difficulty?: number;
   /** Caveats shown next to the title, e.g. compound meter or a file that looks odd. */
   notes?: string;
+  /** Offered in Piece mode (learn one piece step by step). Set by hand, only on the pieces worked through that way. */
+  pieceMode?: boolean;
 }
 
 const manifests = import.meta.glob<ScoreEntry[]>('../../scores/library.json', { eager: true, import: 'default' });
