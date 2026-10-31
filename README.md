@@ -17,7 +17,7 @@ MIDI keyboard, and you can also play with your computer keyboard or the mouse.
 
 ![Wait mode on Ode to Joy: a right chord in green, a wrong key in red, and the feedback line](docs/screenshots/wait-mode.webp)
 
-**Tempo mode** (Night theme). A metronome sets the pace and every note has a timing window. The thin line crossing the staves moves at your tempo, so you can see when to press. The key you should play next is outlined in green, and the status line counts what was in time, missed or extra.
+**Tempo mode** (Night theme). A metronome sets the pace and every note has a timing window. A thin line runs across the staves and is over each note exactly when you should press it; it already runs through the count-in, entering from the start of the staff and reaching the first note on the first beat. The piece also plays quietly underneath, so you hear the tempo as well as see it. The key you should play next is outlined in green, and the status line counts what was in time, missed or extra. **Earlier** and **Later** next to Stop move the line a little if your screen shows it late or early.
 
 ![Tempo mode with the moving line, a green hit and a red wrong key](docs/screenshots/tempo-mode.webp)
 
@@ -42,7 +42,7 @@ runs ahead of the lesson ([12-lesson-ladder.md](12-lesson-ladder.md), [13-progre
 The **minimal view** is the same app for a small, black and white e-ink screen such as the Minimal Phone (4.3", 600×800): the score,
 the tempo and Start, big buttons, no animation. Open `?view=minimal` once to bookmark it, or tap the button at the top right of the full view.
 It is built for the phone on the music stand, held sideways: the score takes the whole height on the left and the controls stack in a column on the
-right. Held upright it works too (last row below). The staff is drawn at the width of the screen and shrinks until two rows fit, so you always
+right. Held upright it works too (last row below). **While a timed run is going, the controls go away**: the score fills the screen and only a thin strip stays at the bottom, with the cue, the **Earlier / Later** buttons for the line and **Stop**. Everything comes back when the run ends. The staff is drawn at the width of the screen and shrinks until two rows fit, so you always
 see the line after the one you are reading, and the page turns exactly at the start of a line, never through one.
 
 <table>
@@ -55,7 +55,7 @@ see the line after the one you are reading, and the page turns exactly at the st
 <td width="50%"><img src="docs/screenshots/minimal-wait.webp" alt="Wait mode in the minimal view: a right note filled in, a wrong note dashed"><br><sub><b>Free mode, wait mode.</b> What you play shows on the staff: filled when right, dashed when wrong, with no colour needed.</sub></td>
 </tr>
 <tr>
-<td width="50%"><img src="docs/screenshots/minimal-tempo.webp" alt="A timed run: the grey bar on the next note, a check mark under the note just played, and the cue 'Next C4, in 3'"><br><sub><b>A timed run.</b> The grey bar is the next note to play and jumps the moment you play it. The cue says which note and how many clicks away ("in 3", then NOW), and a ✓ stays under every note that counted (✕ for a missed one).</sub></td>
+<td width="50%"><img src="docs/screenshots/minimal-tempo.webp" alt="A timed run: the score fills the screen, a thin line crosses the staff, check marks under the notes played, and a strip at the bottom with the cue, Earlier and Later and Stop"><br><sub><b>A timed run.</b> The score takes the screen and a thin line crosses it: press each key when the line is over its note. The strip below has the cue ("Next C4 · in 3", then NOW), <b>Earlier / Later</b> to tune the line to your screen, and Stop. A ✓ stays under every note that counted (✕ for a missed one).</sub></td>
 <td width="50%"><img src="docs/screenshots/minimal-result.webp" alt="The result card after a run: 89 out of 100 with a Try again button"><br><sub><b>The result.</b> Score and stars, and <b>Try again</b>, which is on every piece and exercise. Tap anywhere else on the card to close it and see your marks.</sub></td>
 </tr>
 </table>
@@ -74,7 +74,7 @@ These screenshots show only the app's own exercises and generated pieces, with a
 
 The **Piece** switch at the top works one score until it is done: the app finds the easy and hard parts of each hand, then takes you from the notes the piece uses, through each hand alone, a few bars with both hands, and the trouble spots, up to the whole piece with the metronome.
 
-It opens on a short list of pieces **grouped by artist**. Pick one and you are practising at once, at the step where you stopped: there is no plan to read, only a row of dots at the top for how far along the path you are (filled = done, big = this one, dashed = skipped). **Pieces** takes you back to the list.
+It opens on a short list of pieces **grouped by artist**. Pick one and you are practising at once, at the step where you stopped: there is no plan to read, only a row of dots at the top for how far along the path you are (filled = done, big = this one, dashed = skipped). **Pieces** takes you back to the list. You can go anywhere on the path to practise freely: **tap any dot** to jump to that step, **← Back** goes to the one before, and on a finished step **Next →** goes to the next one even if it is done too. A finished note-card step keeps dealing cards, so you can drill them as long as you like.
 
 <table>
 <tr>
@@ -83,7 +83,7 @@ It opens on a short list of pieces **grouped by artist**. Pick one and you are p
 </tr>
 </table>
 
-Every playing step opens on the notes only, with the music waiting for you, and that practice is free: it never counts. A step is finished by the rhythm: press **Play with rhythm** and play it with the metronome. Only good runs with the beat count towards the goal, and **Back to the notes only** takes you back whenever you like.
+Every playing step opens on the notes only, with the music waiting for you, and that practice is free: it never counts. A step is finished by the rhythm: press **Play with rhythm** and play it with the metronome. **The run starts the moment you press it**, with no Start button. Only good runs with the beat count towards the goal, and **Notes only** takes you back whenever you like. When a run ends and its score is showing, **any key on the piano starts the next one**, so your hands never leave the keys; the key you pressed is not played into the new run.
 
 Only the scores marked `"pieceMode": true` in `app/scores/library.json` appear in its list, so the list holds just the pieces set up by hand for it (today: Tomorrow's Song). Add the flag to an entry to offer another.
 
@@ -96,7 +96,8 @@ Only the scores marked `"pieceMode": true` in `app/scores/library.json` appear i
 - **Sound.** Listen and the computer keyboard play through one of four instruments, picked with the **♪** button beside Listen: Grand (a recorded piano, one sample per key from C2 to B5, loaded the first time it is used), Piano (a built-in one made of overtones that die away at their own speed, with a hammer thump and a little room reverb), Soft (an electric piano) and Bells. The built-in ones are made in code and work with no files; if the recorded samples cannot be loaded, Grand plays the built-in Piano instead. The samples are MIT-licensed, from [piano-sound-samples](https://github.com/Leethring/piano-sound-samples); see `app/public/samples/piano/README.md`. A piano plugged in over MIDI always makes its own sound.
 - **Tempo mode.** After a count-in, the score follows a metronome and each note has a timing window. You get the share of notes played
   in time, missed and extra notes, and whether you rush or drag. After a clean run the tempo rises 4 bpm. Three clean runs at the target tempo finish the piece.
-  The tempo counts the piece's own beat, so 6/8 is counted in dotted quarters. A line slides across the score at the tempo: press each key as the line reaches its note. A level setting (Beginner, Intermediate, Advanced) sets how wide the timing window is, from about half a beat either side down to a strict ±150 ms at most.
+  The tempo counts the piece's own beat, so 6/8 is counted in dotted quarters. A thin line slides across the score at the tempo: press each key as the line is over its note (see *How the moving line works* below). The piece plays quietly under the run in the recorded piano (the **Play the music quietly** box next to the metronome), which makes a steady tempo much easier to keep. A level setting (Beginner, Intermediate, Advanced) sets how wide the timing window is, from about half a beat either side down to a strict ±150 ms at most.
+- **Triplets under the staff.** The bracket and the 3 of a triplet are drawn below the staff, as in printed scores, so the 3 is never mistaken for finger 3 above the notes.
 - **Try again.** Every result card has a **Try again** button, for every piece and exercise (wait or tempo, free or in the course): wait mode starts again from the first note, tempo mode from a fresh count-in, as often as you like. Every run is logged. In the course, a second go at the same generated reading piece is practice and does not count towards the step; the sight-reading test is one try on purpose.
 - **Listen.** Plays the piece (one hand or both) after a count-in, with the cursor and the keys lit, so you can hear the rhythm before you try it.
 - **Bar ranges and looping.** Practise bars 5 to 8 only, and loop them at a rising tempo.
@@ -114,7 +115,29 @@ Only the scores marked `"pieceMode": true` in `app/scores/library.json` appear i
 - **Minimal view.** A black and white layout for small and e-ink screens (see above), with a paged score instead of scrolling.
 - **Adding music.** Drop MusicXML files in `inbox/` and run one script. It checks each file, rates its difficulty, assigns a stage and rejects duplicates and pop.
 
-All the grading runs in your browser. There is no server, no account and no network use after the page loads.
+All the grading runs in your browser. The app is plain static files: there is no server of its own and no network use after the page loads. It can run on your laptop, or published on Cloudflare behind a login (see *Putting it online*); either way your practice log is kept in the browser.
+
+### How the moving line works
+
+The line has to be over the note when the note is due, on any screen. Three decisions make that so:
+
+- **It takes its position from OSMD's own cursor bar.** OSMD puts that bar over each step using the staff entry that is a reliable anchor; the app keeps the bar running but invisible, and reads its centre (and the height of its system) for every step. Computing the position from the notes themselves was wrong whenever a rest or another voice sat off the note's column. Measured against the real noteheads at due time, the line is within a few pixels at every screen size tested.
+- **Everything is measured on the final drawing.** A run changes the layout (the minimal view clears its controls), so the score is drawn for that first, the places of all the steps are measured, and only then does the clock start. If the window changes mid-run, the places are measured again. The drawing's units are 10 px per OSMD unit whatever the zoom: the zoom is only the size the SVG is displayed at, so anything drawn inside it must not be scaled by the zoom a second time.
+- **It is drawn ahead of the clock.** A screen shows what it was given a moment ago, and e-ink more than most. The line is drawn where the clock will be half a redraw from now (the redraw time is measured) plus a delay for the panel itself, and **Earlier / Later** set that delay on the device and remember it. Between two notes the line slides, so it is over a note exactly when the note is due; across a line break it waits at the last note and jumps on the beat.
+
+## Putting it online
+
+The app is static files, so it is published as a Cloudflare Worker with static assets (`app/wrangler.jsonc`), at a `workers.dev` address behind a **Cloudflare Access** login (one-time email PIN, a rule set in the Cloudflare dashboard, so the wall is not in the code). That gives a real HTTPS address, which also fixes Web MIDI on a phone without a self-signed certificate.
+
+```bash
+cd app
+npm run deploy      # checks the login wall, builds, checks the scores, uploads
+```
+
+- **Publish from your own computer, never from GitHub.** The scores are copyrighted and not in git, so a build made from the repository would have only the public-domain pieces. `npm run deploy` builds locally and uploads `dist`.
+- **The script refuses to publish** unless the address answers an anonymous request with a redirect to the Access login (so scores can never go out in the open), and unless the build holds as many score files as `app/scores/` does. Scores are always kept as separate files for this reason (`assetsInlineLimit` in `vite.config.ts`).
+- **Preview URLs are off** (`preview_urls: false`): each would be a second public address the login does not cover.
+- Saving the practice log in the cloud (a D1 database behind the same login) is planned, not built: for now it lives in each browser, with the backup file as the safeguard.
 
 ## Quick start
 
@@ -209,6 +232,8 @@ app/                    Vite + TypeScript app
   course/course.json    The units: exercises, reading rungs, cards, exits
   scores/library.json   Manifest of imported scores (files are not tracked)
   public/samples/piano/ The recorded piano (MIT, with its credit), one sample per key
+  scripts/deploy.mjs    npm run deploy: the checks, the build and the upload
+  wrangler.jsonc        The Cloudflare Worker that serves the build
 tools/                  import-scores.py, score-difficulty.py, midi-check.html, ledger.py, fingering.py (finger numbers for Tomorrow's Song), piano-samples.py (picks the piano samples)
 tools/omr/              PDF to MusicXML (homr plus checks), local only
 tools/screenshots/      Takes the screenshots for this README (minimal.mjs and full.mjs)
@@ -227,7 +252,7 @@ Wait mode, tempo mode, hands, listen, ranges and looping, the sight-reading test
 (with its introduction week and reading ladder), the minimal view and backup files are done. The course reaches unit 2.3; the
 next job is **more content**: Faber Book 1 Units 14 to 16 and four lyric-heavy pieces to transcribe by hand, then Book 2 for Stage 3 (what is converted and
 what is missing is in [11-ingestion-ledger.md](11-ingestion-ledger.md)). Also open: a finer placement test, a rhythm-only step before reading, a history page, and
-storage more durable than the browser (the backup file is the safeguard for now). Ideas that haven't been scheduled: clicking the score to set a bar range, pedal marks in Listen, and
+storage more durable than the browser (the backup file is the safeguard for now; a D1 database on Cloudflare is the plan). Ideas that haven't been scheduled: clicking the score to set a bar range, pedal marks in Listen, and
 an import tool for single [Mutopia](https://www.mutopiaproject.org/) pieces. Things that were considered and dropped, with the reasons, are listed in
 [06-app-notes.md](06-app-notes.md).
 
