@@ -81,6 +81,10 @@ interface TempoState {
   lastRaw: number;
   /** Where each step sits on the page, for the moving line (indexed like `steps`). */
   spots: Spot[];
+  /** Quarter-note beats of the count-in, which the line runs through before the first note. */
+  countIn: number;
+  /** Not read from storage every frame. */
+  lag: number;
   /** Where each step's notes sit on the page (indexed like `steps`), so a hit is marked on its own note even when you are early. */
   anchors: (NoteAnchor | undefined)[];
 }
@@ -444,6 +448,8 @@ function renderControls(): void {
   $('beat-hint').textContent = current && current.unit.quarters !== 1 ? `Beat = ${current.unit.name} note, ${current.unit.perBar} per bar` : '';
   $('restart').textContent = mode === 'tempo' && !tempo ? 'Start' : 'Restart';
   $('stop').hidden = !(mode === 'tempo' && tempo);
+  $('line-sync').hidden = !tempo;
+  document.documentElement.toggleAttribute('data-run', !!tempo); // the minimal view clears the side column during a run: the score needs the width
   $<HTMLButtonElement>('listen').disabled = !!sight;
   if (current) renderRange();
   renderLatency();
@@ -510,6 +516,9 @@ function startTempo(): void {
   const cursor = activeCursor();
   const steps = readTimeline(cursor, hands);
   if (!steps.some((s) => s.notes.length > 0)) { showResult('Nothing to play for that hand.', true); return; }
+  // The music is played quietly under the run, as a tempo to follow. Its notes come from the recorded piano, fetched on first use.
+  const backing = $<HTMLInputElement>('backing').checked ? soundsOf(readPlayback(cursor, 'both')) : [];
+  if (backing.length && !synth.hasSamples(backing.map((s) => s.midi))) { setFeedback('Loading the piano…', 'good'); void synth.preload(backing.map((s) => s.midi)).then(startTempo); return; }
   $('result').hidden = true;
   clearFeedback();
   score.clearMarks(); // the check marks and crosses of the last run
@@ -518,9 +527,15 @@ function startTempo(): void {
   if (!sight) safeSet('bpm:' + current.id, String(bpm));
   // The player's tempo counts the piece's own beat; the run and the score count quarter notes.
   const { quarters: q, perBar } = current.unit;
+
+  // The run changes the layout (the minimal view clears its side column), so draw the score for that first, and measure where everything sits
+  // on the final drawing. All of it before the clock starts: the count-in must not be eaten by drawing.
+  document.documentElement.toggleAttribute('data-run', true);
+  score.refit();
+  const { spots, anchors } = stepPlaces(cursor, steps);
+
   const run = new TempoRun(steps, { bpm: bpm * q, countInBeats: perBar * q, beatQuarters: q, level });
-  const t0 = performance.now();
-  run.start(t0);
+  run.start(performance.now());
 
   // Clicks: always for the count-in; during the piece only if the metronome is on.
   const lastBeat = Math.ceil(Math.max(...steps.map((s) => s.beat)) / q) + 1;
@@ -531,13 +546,51 @@ function startTempo(): void {
     clicks.push({ atMs: run.timeOfBeat(k * q), accent: ((k % perBar) + perBar) % perBar === 0 });
   }
   const cancelClicks = synth.scheduleClicks(clicks);
-
-  const { spots, anchors } = stepPlaces(cursor, steps);
-  tempo = { run, cursor, steps, bpm, cancelClicks, raf: 0, lastRaw: 0, spots, anchors };
+  const cancelMusic = backing.length ? synth.scheduleNotes(schedule(backing, run.beatZeroAt, run.beatMs), BACKING_VELOCITY) : () => {};
+  tempo = { run, cursor, steps, bpm, cancelClicks: () => { cancelClicks(); cancelMusic(); }, raf: 0, lastRaw: 0, spots: withLeadIn(spots, perBar * q), countIn: perBar * q, lag: lineLag(), anchors };
   cursor.reset();
+  score.showCursor(false); // the moving line is the marker now, not the bar
+  lastFrameAt = 0;
+  $('line-lag').textContent = `${tempo.lag} ms`;
   renderControls();
   tick();
 }
+
+/** How loud the music under a run is: the notes you play must stay the loudest thing in the room. */
+const BACKING_VELOCITY = 0.3;
+
+// A redraw during a run (the phone turned) moves every note: measure again and put the cursor back where the clock has it.
+score.onRelayout = () => {
+  if (!tempo) return;
+  const { spots, anchors } = stepPlaces(tempo.cursor, tempo.steps);
+  tempo.spots = withLeadIn(spots, tempo.countIn);
+  tempo.anchors = anchors;
+  tempo.cursor.moveTo(tempo.lastRaw);
+  score.showCursor(false);
+};
+
+/** The line is not only for the notes: it enters from the start of the staff during the count-in and reaches the first note on the first beat. */
+function withLeadIn(spots: Spot[], beats: number): Spot[] {
+  const f = spots[0];
+  if (!f) return spots;
+  return [{ ...f, beat: -beats, x: f.left !== undefined && f.left < f.x - 2 ? f.left : f.x - 6 }, ...spots];
+}
+
+/**
+ * Seen on the screen the line is always late: the panel takes a moment, and a slow screen redraws only every few frames, so what it shows
+ * is already old. The line is drawn where the clock will be half a redraw from now (the measured time between redraws) plus the panel's own delay.
+ */
+const SCREEN_LAG_MS = { full: 0, minimal: 80 }; // until you set it with the Earlier / Later buttons beside Stop
+const lagKey = () => 'lineLag:' + view;
+const lineLag = (): number => { const v = safeGet(lagKey()); return v === null || v === '' || !Number.isFinite(Number(v)) ? SCREEN_LAG_MS[view] : Number(v); };
+function nudgeLine(by: number): void {
+  const v = Math.max(-300, Math.min(600, lineLag() + by));
+  safeSet(lagKey(), String(v));
+  if (tempo) tempo.lag = v;
+  $('line-lag').textContent = `${v} ms`;
+}
+let frameMs = 16;
+let lastFrameAt = 0;
 
 /** Walk the score once to learn where each step sits on the page. */
 function stepPlaces(cursor: RangeCursor, steps: TimedStep[]): { spots: Spot[]; anchors: (NoteAnchor | undefined)[] } {
@@ -565,9 +618,8 @@ function tick(): void {
   if (!tempo || !current) return;
   const now = performance.now() - latencyMs;
   const u = tempo.run.update(now);
-  // The minimal view marks the note you are about to play, and moves on the moment you play or miss it: you see your key counted.
-  // The clock-driven cursor jumps only when a note is already due, which on a slow screen is too late to be of any use.
-  const raw = view === 'minimal' ? tempo.run.upcomingRaw() ?? u.cursorRawIndex : u.cursorRawIndex;
+  // The hidden cursor follows the clock, so the page turns as the line reaches the last system on it.
+  const raw = u.cursorRawIndex;
   if (raw !== tempo.lastRaw) {
     tempo.lastRaw = raw;
     tempo.cursor.moveTo(raw);
@@ -577,8 +629,11 @@ function tick(): void {
     setFeedback(describeMissed(u.newlyMissed));
     for (const i of u.newlyMissedSteps) score.markResult(tempo.anchors[i], 'missed');
   }
-  // The moving line is smooth on a screen and a smear on e-ink: the minimal view only steps the cursor from note to note.
-  if (view === 'full') score.setPlayhead(playheadAt(tempo.spots, Math.max(0, (now - tempo.run.beatZeroAt) / tempo.run.beatMs)));
+  // The line crosses the staves and reaches a note when it is due.
+  const clock = performance.now();
+  if (lastFrameAt) frameMs = 0.8 * frameMs + 0.2 * Math.min(300, clock - lastFrameAt);
+  lastFrameAt = clock;
+  score.setPlayhead(playheadAt(tempo.spots, (clock + tempo.lag + frameMs / 2 - tempo.run.beatZeroAt) / tempo.run.beatMs));
   refreshKeys();
 
   const html = tempoStatus(u, now);
@@ -626,6 +681,7 @@ function stopTempo(): void {
   tempo.cancelClicks();
   tempo = undefined;
   score.setPlayhead(undefined);
+  score.showCursor(true);
   renderControls();
   refreshKeys();
 }
@@ -1017,6 +1073,11 @@ bus.on((event, source) => {
   }
   if (calibration) { calibration.taps.push(performance.now()); return; }
   if (listening) return; // the cursor belongs to the playback until it ends
+  // Piece mode, a finished run on the screen: any key goes again, so the hands can stay on the piano. The key itself is not played into the new run.
+  if (!tempo && !$('result').hidden && document.getElementById('try-again') && document.querySelector('#app-mode [data-app="piece"]')?.getAttribute('aria-pressed') === 'true') {
+    setTimeout(tryAgain, 0);
+    return;
+  }
 
   if (mode === 'wait') {
     const at = score.anchor(); // before the press moves the cursor
@@ -1142,6 +1203,10 @@ $('restart').addEventListener('click', () => {
 $('stop').addEventListener('click', () => { stopTempo(); score.reset(); clearFeedback(); renderStatus(); });
 
 $('showNext').addEventListener('change', refreshKeys);
+$('line-earlier').addEventListener('click', () => nudgeLine(25));
+$('line-later').addEventListener('click', () => nudgeLine(-25));
+$<HTMLInputElement>('backing').checked = safeGet('backing') !== 'off';
+$('backing').addEventListener('change', () => safeSet('backing', $<HTMLInputElement>('backing').checked ? 'on' : 'off'));
 $('bpm').addEventListener('change', () => { readBpm(); if (current) safeSet('bpm:' + current.id, $<HTMLInputElement>('bpm').value); });
 
 $<HTMLInputElement>('import').addEventListener('change', async (e) => {
@@ -1332,7 +1397,7 @@ const pieceCtl = createPiece({
     resetPractice();
     renderControls();
   },
-  setMode: (m) => { stopEverything(); mode = m; resetPractice(); renderControls(); },
+  setMode: (m) => { stopEverything(); mode = m; resetPractice(); renderControls(); if (m === 'tempo') startTempo(); }, // Piece mode's "Play with rhythm": the run starts with the choice
   showCard,
   setKeyHandler: (h) => { cardKeyHandler = h; },
   setLayout: setAppLayout,
@@ -1391,4 +1456,4 @@ const last = catalog.find((p) => p.id === safeGet('piece')) ?? catalog[0];
 if (last) void last.open();
 applyApp(((a) => (a === 'free' || a === 'piece' ? a : 'course'))(safeGet('app')), false); // the course is the main way in; Free is remembered once chosen
 void navigator.storage?.persist?.(); // ask the browser not to clear what the app remembers
-if (import.meta.env.DEV) (window as unknown as Record<string, unknown>).__piano = { course: courseCtl, piece: pieceCtl, bus, log, score }; // for the browser tests, never in the build
+if (import.meta.env.DEV) (window as unknown as Record<string, unknown>).__piano = { course: courseCtl, piece: pieceCtl, bus, log, score, tempo: () => tempo }; // for the browser tests, never in the build

@@ -95,9 +95,9 @@ export class Synth {
 
   /**
    * Play a written-out piece: each note starts at an absolute `performance.now()` time and is let go after `durMs`.
-   * Scheduled on the audio clock like the metronome clicks. Returns a function that silences everything (also what is sounding).
+   * Scheduled on the audio clock like the metronome clicks; `velocity` is how loud (0–1), low for music heard in the background. Returns a function that silences everything (also what is sounding).
    */
-  scheduleNotes(notes: { atMs: number; durMs: number; midi: number }[]): () => void {
+  scheduleNotes(notes: { atMs: number; durMs: number; midi: number }[], velocity = 0.7): () => void {
     const playing: Playing[] = [];
     try {
       this.ctx ??= new AudioContext();
@@ -109,7 +109,7 @@ export class Synth {
         const t = n.atMs / 1000 + offsetSec;
         const end = t + Math.max(0.08, n.durMs / 1000 * 0.97);
         if (end < ctx.currentTime) continue;
-        const note = play(ctx, bus, this.voice, n.midi, Math.max(t, ctx.currentTime), 0.7);
+        const note = play(ctx, bus, this.voice, n.midi, Math.max(t, ctx.currentTime), velocity);
         note.release(end);
         playing.push(note);
       }

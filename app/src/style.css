@@ -426,10 +426,11 @@ main { min-width: 0; }
 .piece-artist { font-size: 11px; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); margin: 18px 0 8px; }
 [data-view='minimal'] .piece-artist { color: #000; font-size: 13px; }
 .piece-dots { display: flex; flex-wrap: wrap; gap: 5px; align-items: center; }
-.piece-dots i { width: 9px; height: 9px; border-radius: 50%; border: 1.5px solid var(--muted); box-sizing: border-box; }
+.piece-dots i { position: relative; cursor: pointer; width: 9px; height: 9px; border-radius: 50%; border: 1.5px solid var(--muted); box-sizing: border-box; }
 .piece-dots i[data-state='done'] { background: var(--good); border-color: var(--good); }
 .piece-dots i[data-state='skipped'] { border-style: dashed; opacity: .6; }
 .piece-dots i[data-state='now'] { width: 13px; height: 13px; background: var(--ink); border-color: var(--ink); }
+.piece-dots i::after { content: ''; position: absolute; inset: -6px; } /* a bigger target to tap */
 [data-view='minimal'] .piece-dots i { border-color: #000; }
 [data-view='minimal'] .piece-dots i[data-state='done'], [data-view='minimal'] .piece-dots i[data-state='now'] { background: #000; }
 .course-notice { border-left: 3px solid var(--good); padding: 6px 12px; margin: 10px 0; background: color-mix(in srgb, var(--good) 11%, var(--card)); border-radius: 10px; }
@@ -509,7 +510,7 @@ html[data-app='course'][data-step='test'] #mode, html[data-app='course'][data-st
  * portrait rules above. Column 1 is the score; columns 2-4 are the side column, split in three for the tempo row. */
 @media (orientation: landscape) and (max-height: 520px) {
   html[data-view='minimal'] .shell { display: grid; height: auto; min-height: 100dvh; column-gap: 6px; padding: 0 6px 0 0;
-    grid-template-columns: minmax(0, 1fr) repeat(4, 48px); grid-template-rows: repeat(11, auto) minmax(0, 1fr); align-content: stretch; }
+    grid-template-columns: minmax(0, 1fr) repeat(4, 40px); grid-template-rows: repeat(11, auto) minmax(0, 1fr); align-content: stretch; }
   html[data-view='minimal'] .layout, html[data-view='minimal'] main { display: contents; }
   html[data-view='minimal'] .shell > *, html[data-view='minimal'] main > * { grid-column: 2 / 6; }
   html[data-view='minimal'] .topbar { grid-row: 1; flex-wrap: wrap; gap: 4px; padding: 4px 0; border-bottom: 2px solid #000; }
@@ -522,8 +523,8 @@ html[data-app='course'][data-step='test'] #mode, html[data-app='course'][data-st
   /* the score is as tall as the window, pinned while the side column scrolls if it has to; size containment keeps its drawing from stretching the rows */
   html[data-view='minimal'] #score { grid-column: 1; grid-row: 1 / -1; align-self: start; position: sticky; top: 0; height: calc(100dvh - 8px); min-height: 0; margin: 4px 0; contain: size; }
   /* Pinned to the bottom of the visible score area (the page can be taller than the screen), with room left for the side column:
-     4 columns of 48 px, 4 gaps of 6 px and the shell's 6 px. The button is inside it, so it is always on screen. */
-  html[data-view='minimal'] .result { position: fixed; left: 6px; bottom: 6px; z-index: 5; width: calc(100vw - 234px); max-height: calc(100dvh - 12px); overflow-y: auto; margin: 0; }
+     4 columns of 40 px, 4 gaps of 6 px and the shell's 6 px. The button is inside it, so it is always on screen. */
+  html[data-view='minimal'] .result { position: fixed; left: 6px; bottom: 6px; z-index: 5; width: calc(100vw - 202px); max-height: calc(100dvh - 12px); overflow-y: auto; margin: 0; }
   html[data-view='minimal'] .score-num { font-size: 32px; }
   html[data-view='minimal'] .result-actions { margin-top: 6px; }
   html[data-view='minimal'] #course, html[data-view='minimal'][data-phase='home'] #course { grid-row: 2; margin: 4px 0 0; overflow: visible; }
@@ -564,3 +565,22 @@ html[data-app='course'][data-step='test'] #mode, html[data-app='course'][data-st
   html[data-view='minimal'] .course-bar .course-actions button { width: 100%; min-height: 36px; font-size: 13px; padding: 2px 4px; }
   html[data-view='minimal'] .course-bar #course-menu { grid-column: 2; grid-row: 4; min-height: 36px; font-size: 13px; padding: 2px 4px; }
 }
+
+/* A timed run in the minimal view, held either way: the score is the whole screen, with one thin strip at the bottom for the cue and Stop.
+ * Everything else is hidden (not removed, so nothing has to be rebuilt after), and the three things that stay are placed on the screen itself. */
+html[data-view='minimal'][data-run], html[data-view='minimal'][data-run] body { overflow: hidden; }
+html[data-view='minimal'][data-run] .shell { visibility: hidden; }
+html[data-view='minimal'][data-run] #score { visibility: visible; position: fixed !important; top: 0 !important; left: 0 !important; width: 100vw !important; height: calc(100dvh - 52px) !important; max-height: none !important; margin: 0 !important; z-index: 1; contain: none; }
+html[data-view='minimal'][data-run] #status { visibility: visible; position: fixed; left: 6px; right: 128px; bottom: 4px; height: 44px; margin: 0; overflow: hidden; z-index: 2; background: #fff; font-size: 13px; line-height: 1.2; white-space: normal; }
+html[data-view='minimal'][data-run] #line-sync { visibility: visible; position: fixed; right: 128px; bottom: 4px; height: 44px; display: flex; align-items: center; gap: 4px; margin: 0; z-index: 2; font-size: 12px; background: #fff; }
+html[data-view='minimal'][data-run] #line-sync button { min-height: 40px; padding: 2px 6px; font-size: 13px; }
+html[data-view='minimal'][data-run] #status { right: 330px; }
+html[data-view='minimal'][data-run] #stop { visibility: visible; position: fixed; right: 6px; bottom: 4px; width: 116px; height: 44px; margin: 0; z-index: 2; }
+.line-sync { display: inline-flex; align-items: center; gap: 4px; }
+.line-sync[hidden] { display: none; }
+
+/* the bar OSMD draws over the step: kept in place (the moving line takes its position from it) but not seen during a timed run */
+.cursor-quiet img[id^='cursorImg'] { visibility: hidden; }
+
+/* the check marks and crosses sit just below the last system, which can be past the edge of the drawing */
+#score svg { overflow: visible; }

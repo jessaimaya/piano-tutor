@@ -122,6 +122,12 @@
         <button id="voice" type="button" title="The sound of Listen and the computer keyboard: tap to change"></button>
         <button id="listen" type="button" title="Hear the piece at the tempo below, with the cursor following">▶ Listen</button>
         <button id="restart" type="button" class="primary">Restart</button>
+        <span id="line-sync" class="line-sync" role="group" aria-label="Where the line is drawn" hidden>
+          <span class="muted">Line</span>
+          <button id="line-earlier" type="button" title="The line reaches the note too late: draw it earlier">Earlier</button>
+          <button id="line-later" type="button" title="The line reaches the note too early: draw it later">Later</button>
+          <span id="line-lag" class="muted"></span>
+        </span>
         <button id="stop" type="button" class="stop" hidden>Stop</button>
       </div>
 
@@ -162,6 +168,7 @@
               <button type="button" data-level="advanced" title="Strict: a small window around the beat">Advanced</button>
             </div>
             <label><input id="metronome" type="checkbox" checked> Metronome while playing</label>
+            <label><input id="backing" type="checkbox" checked> Play the music quietly</label>
             <label><input id="showNext" type="checkbox" checked> Show the next key</label>
             <span class="calib">
               <button id="calibrate" type="button" title="Tap along with 16 clicks to measure the delay of your speakers and piano">Calibrate timing</button>
