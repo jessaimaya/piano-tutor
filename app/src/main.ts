@@ -34,6 +34,7 @@ import { createCourse } from './course/ui';
 import type { StepTarget } from './course/state';
 import { readSteps, analyse } from './piece/analysis';
 import { createPiece } from './piece/ui';
+import { keepScreenOn } from './ui/wake-lock';
 import { resolveZoom, stepZoom, type ViewId } from './ui/view';
 
 const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
@@ -1407,6 +1408,8 @@ const pieceCtl = createPiece({
   save: safeSet,
   now: () => new Date(),
 });
+
+keepScreenOn();
 
 type AppMode = 'free' | 'course' | 'piece';
 function applyApp(next: AppMode, remember: boolean): void {

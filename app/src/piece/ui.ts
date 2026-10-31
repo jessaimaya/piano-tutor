@@ -262,6 +262,11 @@ export function createPiece(host: Host) {
       save();
       renderBar();
     }
+    if (isComplete(loaded.state, task)) { // the goal is met: stop dealing cards, the bar now offers Next
+      cardsOn = undefined;
+      msg('Step complete. 🎉 Tap Next.');
+      return;
+    }
     msg(missed ? `✓ ${card.name}` : j.fast ? `✓ ${(ms / 1000).toFixed(1)} s` : `✓ ${(ms / 1000).toFixed(1)} s (aim for under 2)`);
     setTimeout(() => { if (active && running === task) void nextCard(); }, 600);
   }
