@@ -2,6 +2,8 @@ import { cardKey, cardXml, drawCard, judgeCard, type Card } from '../course/card
 import type { Hands } from '../practice/log';
 import { midiName, type Analysis } from './analysis';
 import { buildPath, type Task } from './path';
+import { BADGE, cardMessage, cardRule, countingOf } from './rule';
+import { CARD_LIMIT_MS } from '../course/state';
 import {
   currentTask, have, isComplete, isSettled, isSkipped, noteCard, noteRun, parsePieceState, redoTask, skipTask, type PieceState,
 } from './state';
@@ -55,7 +57,8 @@ export function createPiece(host: Host) {
   let active = false;
   let loaded: (Loaded & { id: string; tasks: Task[]; state: PieceState }) | undefined;
   let running: Task | undefined;
-  let cardsOn: { card: Card; t0: number; missed?: boolean } | undefined;
+  let cardsOn: { card: Card; t0: number; missed?: boolean; late?: number } | undefined; // `late`: the timer that marks the card as past the limit
+  let practice = false; // the note cards are being played as practice: untimed, nothing counts
   let rhythm = false; // the running step is being played with the metronome (steps that finish with the rhythm open on the notes only)
   let lastCard: Card | undefined; // the card before this one (`cardsOn` is cleared when it is answered), so the next is never the same note
   let busy = false;
@@ -140,6 +143,7 @@ export function createPiece(host: Host) {
     cardsOn = undefined;
     lastCard = undefined;
     rhythm = false;
+    practice = false;
     host.stopEverything();
     host.setKeyHandler(undefined);
     $('course-home').hidden = true;
@@ -159,6 +163,7 @@ export function createPiece(host: Host) {
     const { tasks, state } = loaded;
     const t = running;
     const complete = isComplete(state, t);
+    const counting = countingOf(state, t, { practice, rhythm });
     const i = tasks.indexOf(t);
     document.documentElement.dataset.phase = 'session';
     document.documentElement.dataset.step = t.mode === 'cards' ? 'cards' : 'newbars';
@@ -185,19 +190,31 @@ export function createPiece(host: Host) {
         dot.addEventListener('keydown', (e) => { if ((e.key === 'Enter' || e.key === ' ') && x !== t) { e.preventDefault(); go(x); } });
         return dot;
       }));
+    const practiceBtn = t.mode === 'cards' && !complete ? h('button', { type: 'button', id: 'piece-practice', 'aria-pressed': String(practice), title: 'Untimed, nothing counts' }, 'Practice') : null;
+    practiceBtn?.addEventListener('click', () => {
+      practice = !practice;
+      renderBar();
+      if (cardsOn) armTimer();
+      msg(practice ? 'Practice: no timer, nothing counts.' : cardRule(t.goal));
+    });
     const rhythmBtn = t.rhythm ? h('button', { type: 'button', id: 'piece-rhythm', 'aria-pressed': String(rhythm) }, rhythm ? 'Notes only' : 'Play with rhythm') : null;
     rhythmBtn?.addEventListener('click', () => {
       rhythm = !rhythm;
       host.setMode(rhythm ? 'tempo' : 'wait');
       renderBar();
-      msg(rhythm ? 'With rhythm: this counts.' : 'Notes only: does not count.');
+      msg(rhythm ? 'With rhythm: this counts.' : 'Notes only: practice, it does not count.');
     });
     bar.replaceChildren(
       h('div', { class: 'course-top' }, dots, h('button', { type: 'button', id: 'course-menu', title: 'Back to the pieces' }, 'Pieces')),
       h('h2', { id: 'course-step-title' }, t.title),
-      h('p', { id: 'course-step-text' }, t.text, h('span', { class: 'muted' }, ` ${have(state, t)} of ${t.goal}${complete ? ' ✓' : ''}`)),
+      h('p', { id: 'course-step-text' }, t.text),
+      h('div', { class: 'piece-status' },
+        h('span', { id: 'piece-badge', 'data-counting': counting, title: counting === 'counts' ? 'What you play now counts towards the step' : counting === 'done' ? 'This step is finished: play for fun' : 'Free practice: nothing you play now counts' }, BADGE[counting]),
+        h('span', { class: 'piece-pips', 'aria-label': `${have(state, t)} of ${t.goal}` }, ...Array.from({ length: t.goal }, (_, k) => h('i', { 'data-on': String(k < have(state, t)) }))),
+        h('span', { class: 'muted piece-count' }, `${have(state, t)} of ${t.goal}`),
+        t.mode === 'cards' ? h('span', { id: 'card-timer', 'data-state': 'idle', title: `Right in under ${CARD_LIMIT_MS / 1000} s counts` }, h('i')) : null),
       h('p', { id: 'course-msg', class: 'course-msg', 'aria-live': 'polite' }),
-      h('div', { class: 'course-actions' }, ...(back ? [back] : []), ...(rhythmBtn ? [rhythmBtn] : []), primary),
+      h('div', { class: 'course-actions' }, ...(back ? [back] : []), ...(practiceBtn ? [practiceBtn] : []), ...(rhythmBtn ? [rhythmBtn] : []), primary),
     );
     document.getElementById('course-menu')?.addEventListener('click', () => { host.stopEverything(); host.setKeyHandler(undefined); running = undefined; renderHome(); });
   }
@@ -226,6 +243,21 @@ export function createPiece(host: Host) {
     return loaded.analysis.order[t.cardHand].map((midi) => ({ clef: t.cardHand === 'rh' ? 'treble' : 'bass', name: midiName(midi, loaded!.flats), midi }));
   }
 
+  /** Starts the bar that drains over the time limit for the card on the screen, or leaves it idle in practice and on a finished step. */
+  function armTimer(): void {
+    if (!cardsOn || !loaded || !running) return;
+    clearTimeout(cardsOn.late);
+    const bar = document.getElementById('card-timer');
+    const counts = countingOf(loaded.state, running, { practice, rhythm }) === 'counts';
+    cardsOn.t0 = performance.now();
+    if (!bar) return;
+    bar.dataset.state = 'idle';
+    if (!counts) return;
+    void bar.offsetWidth; // restart the animation for this card
+    bar.dataset.state = 'running';
+    cardsOn.late = window.setTimeout(() => { bar.dataset.state = 'late'; }, CARD_LIMIT_MS);
+  }
+
   async function nextCard(): Promise<void> {
     if (!loaded || !running) { host.setKeyHandler(undefined); return; } // cards go on after the step is done: free practice
     const cards = deck(running);
@@ -234,7 +266,8 @@ export function createPiece(host: Host) {
     lastCard = card;
     await host.showCard(cardXml(card));
     cardsOn = { card, t0: performance.now() };
-    msg('Play the note you see.');
+    armTimer();
+    msg(countingOf(loaded.state, running, { practice, rhythm }) === 'counts' ? cardRule(running.goal) : 'Play the note you see.');
     host.setKeyHandler(onCardKey);
   }
 
@@ -244,30 +277,34 @@ export function createPiece(host: Host) {
     const ms = performance.now() - t0;
     const j = judgeCard(card, midi, ms);
     const task = running;
+    const counting = countingOf(loaded.state, task, { practice, rhythm }) === 'counts';
     if (!j.right) { // stay on this card until it is played right; the miss counts once
-      if (!cardsOn.missed) {
-        cardsOn.missed = true;
+      if (!cardsOn.missed && counting) {
         loaded.state = noteCard(loaded.state, task, cardKey(card), false, false, host.now());
         save();
         renderBar();
+        clearTimeout(cardsOn.late);
+        document.getElementById('card-timer')?.setAttribute('data-state', 'late'); // a missed card cannot count any more
       }
+      cardsOn.missed = true;
       msg(`✗ ${midiName(midi, loaded.flats)}. Find ${card.name}.`);
       return;
     }
     const missed = cardsOn.missed;
+    clearTimeout(cardsOn.late);
+    document.getElementById('card-timer')?.setAttribute('data-state', 'idle');
     cardsOn = undefined;
     host.setKeyHandler(undefined);
-    if (!missed) { // a card corrected after a miss earns nothing: the miss is already on record
+    if (!missed && counting) { // a card corrected after a miss earns nothing: the miss is already on record
       loaded.state = noteCard(loaded.state, task, cardKey(card), true, j.fast, host.now());
       save();
       renderBar();
     }
-    if (isComplete(loaded.state, task)) { // the goal is met: stop dealing cards, the bar now offers Next
-      cardsOn = undefined;
+    if (counting && isComplete(loaded.state, task)) { // the goal is met: stop dealing cards, the bar now offers Next
       msg('Step complete. 🎉 Tap Next.');
       return;
     }
-    msg(missed ? `✓ ${card.name}` : j.fast ? `✓ ${(ms / 1000).toFixed(1)} s` : `✓ ${(ms / 1000).toFixed(1)} s (aim for under 2)`);
+    msg(cardMessage({ name: card.name, ms, fast: j.fast, missed: !!missed, counting }));
     setTimeout(() => { if (active && running === task) void nextCard(); }, 600);
   }
 

@@ -1,11 +1,15 @@
 import { defineConfig } from 'vite';
 import basicSsl from '@vitejs/plugin-basic-ssl';
+import { readFileSync } from 'node:fs';
+
+const { version } = JSON.parse(readFileSync(new URL('./package.json', import.meta.url), 'utf8')) as { version: string };
 
 // https + all network interfaces, so a phone on the same wifi gets a secure origin (Web MIDI needs one).
 // `npm run dev:http` is the plain localhost server.
 const plain = process.env.PLAIN_HTTP === '1';
 
 export default defineConfig({
+  define: { __APP_VERSION__: JSON.stringify(version) }, // shown top-right so you can tell which build a device has
   plugins: plain ? [] : [basicSsl()],
   server: { port: 5173, host: !plain },
   preview: { host: !plain },

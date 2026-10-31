@@ -559,11 +559,12 @@ html[data-app='course'][data-step='test'] #mode, html[data-app='course'][data-st
   html[data-view='minimal'] .course-bar .dot { width: 22px; height: 22px; }
   html[data-view='minimal'] #course-step-title { grid-column: 1 / -1; grid-row: 2; margin: 3px 0; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   html[data-view='minimal'] #course-step-text { display: none; }
-  html[data-view='minimal'] .course-bar .course-msg { grid-column: 1 / -1; grid-row: 3; margin: 0; font-size: 11px; }
+  html[data-view='minimal'] .course-bar .piece-status { grid-column: 1 / -1; grid-row: 3; }
+  html[data-view='minimal'] .course-bar .course-msg { grid-column: 1 / -1; grid-row: 4; margin: 0; font-size: 11px; }
   html[data-view='minimal'] .course-bar .course-msg:empty { display: none; }
-  html[data-view='minimal'] .course-bar .course-actions { grid-column: 1; grid-row: 4; margin: 0; justify-content: stretch; }
+  html[data-view='minimal'] .course-bar .course-actions { grid-column: 1; grid-row: 5; margin: 0; justify-content: stretch; }
   html[data-view='minimal'] .course-bar .course-actions button { width: 100%; min-height: 36px; font-size: 13px; padding: 2px 4px; }
-  html[data-view='minimal'] .course-bar #course-menu { grid-column: 2; grid-row: 4; min-height: 36px; font-size: 13px; padding: 2px 4px; }
+  html[data-view='minimal'] .course-bar #course-menu { grid-column: 2; grid-row: 5; min-height: 36px; font-size: 13px; padding: 2px 4px; }
 }
 
 /* A timed run in the minimal view, held either way: the score is the whole screen, with one thin strip at the bottom for the cue and Stop.
@@ -584,3 +585,32 @@ html[data-view='minimal'][data-run] #stop { visibility: visible; position: fixed
 
 /* the check marks and crosses sit just below the last system, which can be past the edge of the drawing */
 #score svg { overflow: visible; }
+
+/* the build number, small in the top-right corner of every page and view */
+#app-version { position: fixed; top: 1px; right: 4px; z-index: 50; font: 9px/1 ui-monospace, monospace; opacity: .55; pointer-events: none; }
+
+/* Piece mode: whether a step counts (badge), how far along it is (pips) and the time left on a card (bar) */
+.piece-status { display: flex; align-items: center; gap: 8px; margin: 8px 0 0; min-height: 22px; }
+#piece-badge { font: 700 11px/1 var(--mono); letter-spacing: .06em; padding: 4px 7px; border-radius: 6px; border: 2px solid var(--muted); color: var(--muted); }
+#piece-badge[data-counting='counts'] { background: var(--good); border-color: var(--good); color: #fff; }
+#piece-badge[data-counting='done'] { border-style: dashed; }
+.piece-pips { display: flex; flex-wrap: wrap; gap: 4px; }
+.piece-pips i { width: 10px; height: 10px; border-radius: 50%; border: 1.5px solid var(--muted); box-sizing: border-box; }
+.piece-pips i[data-on='true'] { background: var(--good); border-color: var(--good); }
+.piece-count { font: 12px var(--mono); }
+#card-timer { flex: 1; min-width: 60px; max-width: 220px; height: 8px; border: 1.5px solid var(--muted); border-radius: 4px; overflow: hidden; box-sizing: border-box; }
+#card-timer i { display: block; height: 100%; background: var(--good); transform-origin: left; }
+#card-timer[data-state='running'] i { animation: card-drain 2s linear forwards; }
+#card-timer[data-state='late'] { border-style: dashed; opacity: .6; }
+#card-timer[data-state='late'] i { transform: scaleX(0); }
+#card-timer[data-state='idle'] i { opacity: .25; }
+@keyframes card-drain { from { transform: scaleX(1); } to { transform: scaleX(0); } }
+/* the minimal view draws nothing that moves: the pips and the line under the card say it */
+[data-view='minimal'] #piece-badge { border-color: #000; color: #000; border-radius: 0; }
+[data-view='minimal'] #piece-badge[data-counting='counts'] { background: #000; color: #fff; }
+[data-view='minimal'] .piece-pips i { border-color: #000; }
+[data-view='minimal'] .piece-pips i[data-on='true'] { background: #000; }
+[data-view='minimal'] #card-timer { display: none; }
+[data-view='minimal'] .piece-status { margin: 2px 0 0; gap: 6px; }
+[data-view='minimal'] .piece-count { color: #000; }
+[data-view='minimal'] #piece-practice[aria-pressed='true'] { background: #000; color: #fff; }

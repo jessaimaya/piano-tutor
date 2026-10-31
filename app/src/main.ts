@@ -1410,6 +1410,7 @@ const pieceCtl = createPiece({
 });
 
 keepScreenOn();
+$('app-version').textContent = `v${__APP_VERSION__}`;
 
 type AppMode = 'free' | 'course' | 'piece';
 function applyApp(next: AppMode, remember: boolean): void {
