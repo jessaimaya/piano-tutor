@@ -15,19 +15,19 @@ MIDI keyboard, and you can also play with your computer keyboard or the mouse.
 
 **Wait mode** (Warm theme). The cursor waits for the right notes. The notes you play appear on the staff, green when right and red when wrong, at the height of the key you pressed, with a plain explanation underneath. The screen stays bare: the list of pieces is a drawer (**☰ Pieces**), the drawn piano is hidden, and the MIDI status only shows when something is wrong.
 
-![Wait mode on Ode to Joy: a right chord in green, a wrong key in red, and the feedback line](docs/screenshots/wait-mode.webp)
+![Wait mode on Ode to Joy: a right chord in green, a wrong key in red, and the feedback line](docs/screenshots/full-wait-mode.webp)
 
 **Tempo mode** (Night theme). A metronome sets the pace and every note has a timing window. A thin line runs across the staves and is over each note exactly when you should press it; it already runs through the count-in, entering from the start of the staff and reaching the first note on the first beat. The piece also plays quietly underneath, so you hear the tempo as well as see it. The key you should play next is outlined in green, and the status line counts what was in time, missed or extra. **Earlier** and **Later** next to Stop move the line a little if your screen shows it late or early.
 
-![Tempo mode with the moving line, a green hit and a red wrong key](docs/screenshots/tempo-mode.webp)
+![Tempo mode with the moving line, a green hit and a red wrong key](docs/screenshots/full-tempo-mode.webp)
 
 **Scores** (Cold blues theme). Every run gets a score out of 100 and up to three stars, with how it compares to your last run and your best. The library shows the last score of each piece you have played, and the sort "Needs practice first" puts the weakest at the top. The history in these screenshots is sample data.
 
-![Result card after a run: 90 out of 100, three stars, 14 better than last time](docs/screenshots/scores.webp)
+![Result card after a run: 90 out of 100, three stars, 14 better than last time](docs/screenshots/full-scores.webp)
 
 **Sight-reading test** (Warm theme). Freshly generated pieces in seven levels, so you never see the same one twice.
 
-![Sight-reading test, level 1](docs/screenshots/sight-reading.webp)
+![Sight-reading test, level 1](docs/screenshots/full-sight-reading.webp)
 
 The three dots at the top right switch between the Warm, Cold blues and Night themes, and the choice is remembered. The screenshots use a stand-in for the piano connection. `node tools/screenshots/full.mjs` takes the full-view ones again (see its header).
 

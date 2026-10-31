@@ -69,7 +69,7 @@ await press(await wanted());
 await sleep(300);
 await press([72]);
 await sleep(600);
-await shot('wait-mode');
+await shot('full-wait-mode');
 
 // 2. Tempo mode: the moving line, a green hit and a red wrong key. The notes are played by script, one skipped and one wrong.
 await seed({ app: 'free', piece: 's0-two-notes', mode: 'tempo', 'bpm:s0-two-notes': '60', theme: 'night' });
@@ -83,7 +83,7 @@ await run(`(async () => {
   setTimeout(() => { __piano.bus.noteOn(65, 'midi'); __piano.bus.noteOff(65, 'midi'); }, 4000 + 3500 - (performance.now() - t0)); // a wrong key between two notes, early enough that its red note has not faded yet
 })()`);
 await sleep(8700);
-await shot('tempo-mode');
+await shot('full-tempo-mode');
 
 // 3. The result card after two runs of the same piece: the second one better than the first.
 await seed({ app: 'free', piece: 's0-two-notes', theme: 'cold' });
@@ -99,13 +99,13 @@ for (const wrongAt of [[1, 3, 4], [2]]) {
 }
 await run(`(async () => { const r = document.getElementById('result'); while (r.hidden) await new Promise((x) => setTimeout(x, 100)); })()`);
 await sleep(500);
-await shot('scores');
+await shot('full-scores');
 
 // 4. The sight-reading test, level 1.
 await seed({ app: 'free', piece: 's0-two-notes' });
 await click('#sr-start');
 await sleep(2500);
-await shot('sight-reading');
+await shot('full-sight-reading');
 
 // 5. Piece mode: the pieces grouped by artist, then the first step, with the dots for how far along the path you are.
 const fit = (height) => send('Emulation.setDeviceMetricsOverride', { ...DESKTOP, height, deviceScaleFactor: 2, mobile: false }); // these pages are short
