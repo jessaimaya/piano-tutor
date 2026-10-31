@@ -3,7 +3,7 @@ import type { Hands } from '../practice/log';
 import { midiName, type Analysis } from './analysis';
 import { buildPath, type Task } from './path';
 import {
-  currentTask, have, isComplete, isSkipped, noteCard, noteRun, parsePieceState, redoTask, skipTask, type PieceState,
+  currentTask, have, isComplete, isSettled, isSkipped, noteCard, noteRun, parsePieceState, redoTask, skipTask, type PieceState,
 } from './state';
 
 /**
@@ -164,16 +164,27 @@ export function createPiece(host: Host) {
     document.documentElement.dataset.step = t.mode === 'cards' ? 'cards' : 'newbars';
     const bar = $('course-bar');
     bar.hidden = false;
-    const next = tasks.find((x, j) => j > i && !isComplete(state, x) && !isSkipped(state, x));
+    const go = (to: Task | undefined) => {
+      host.stopEverything();
+      host.setKeyHandler(undefined);
+      if (to) void enterTask(to); else renderPractice();
+    };
+    // Skip goes on to the next step that is still open; once a step is done, Next simply goes to the one after it, so you can walk through them all.
+    const next = complete ? tasks[i + 1] : tasks.find((x, j) => j > i && !isSettled(state, x));
     const primary = h('button', { type: 'button', class: complete ? 'primary' : '', id: 'course-primary' }, complete ? (next ? 'Next →' : 'Finish ✓') : 'Skip');
     primary.addEventListener('click', () => {
       if (!complete) { loaded!.state = skipTask(loaded!.state, t, host.now()); save(); }
-      host.stopEverything();
-      host.setKeyHandler(undefined);
-      if (next) void enterTask(next); else renderPractice();
+      go(next);
     });
-    const dots = h('span', { class: 'piece-dots', role: 'img', 'aria-label': `Step ${i + 1} of ${tasks.length}` },
-      ...tasks.map((x) => h('i', { 'data-state': isComplete(state, x) ? 'done' : isSkipped(state, x) ? 'skipped' : x === t ? 'now' : 'todo', title: x.title })));
+    const back = i > 0 ? h('button', { type: 'button', id: 'piece-back-step' }, '← Back') : null;
+    back?.addEventListener('click', () => go(tasks[i - 1]));
+    const dots = h('span', { class: 'piece-dots', 'aria-label': `Step ${i + 1} of ${tasks.length}` },
+      ...tasks.map((x) => {
+        const dot = h('i', { role: 'button', tabindex: '0', 'data-state': x === t ? 'now' : isComplete(state, x) ? 'done' : isSkipped(state, x) ? 'skipped' : 'todo', title: x.title });
+        dot.addEventListener('click', () => { if (x !== t) go(x); });
+        dot.addEventListener('keydown', (e) => { if ((e.key === 'Enter' || e.key === ' ') && x !== t) { e.preventDefault(); go(x); } });
+        return dot;
+      }));
     const rhythmBtn = t.rhythm ? h('button', { type: 'button', id: 'piece-rhythm', 'aria-pressed': String(rhythm) }, rhythm ? 'Notes only' : 'Play with rhythm') : null;
     rhythmBtn?.addEventListener('click', () => {
       rhythm = !rhythm;
@@ -186,7 +197,7 @@ export function createPiece(host: Host) {
       h('h2', { id: 'course-step-title' }, t.title),
       h('p', { id: 'course-step-text' }, t.text, h('span', { class: 'muted' }, ` ${have(state, t)} of ${t.goal}${complete ? ' ✓' : ''}`)),
       h('p', { id: 'course-msg', class: 'course-msg', 'aria-live': 'polite' }),
-      h('div', { class: 'course-actions' }, ...(rhythmBtn ? [rhythmBtn] : []), primary),
+      h('div', { class: 'course-actions' }, ...(back ? [back] : []), ...(rhythmBtn ? [rhythmBtn] : []), primary),
     );
     document.getElementById('course-menu')?.addEventListener('click', () => { host.stopEverything(); host.setKeyHandler(undefined); running = undefined; renderHome(); });
   }
@@ -216,7 +227,7 @@ export function createPiece(host: Host) {
   }
 
   async function nextCard(): Promise<void> {
-    if (!loaded || !running || isComplete(loaded.state, running)) { host.setKeyHandler(undefined); return; }
+    if (!loaded || !running) { host.setKeyHandler(undefined); return; } // cards go on after the step is done: free practice
     const cards = deck(running);
     if (!cards.length) return;
     const card = drawCard(Math.random, cards, lastCard, loaded.state.cardFast);
@@ -252,7 +263,7 @@ export function createPiece(host: Host) {
       renderBar();
     }
     msg(missed ? `✓ ${card.name}` : j.fast ? `✓ ${(ms / 1000).toFixed(1)} s` : `✓ ${(ms / 1000).toFixed(1)} s (aim for under 2)`);
-    if (!isComplete(loaded.state, task)) setTimeout(() => { if (active && running === task) void nextCard(); }, 600);
+    setTimeout(() => { if (active && running === task) void nextCard(); }, 600);
   }
 
   return {
