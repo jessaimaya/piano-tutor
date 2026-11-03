@@ -575,6 +575,7 @@ function startTempo(): void {
   $('line-lag').textContent = `${tempo.lag} ms`;
   renderControls();
   tick();
+  pieceCtl.refresh();
 }
 
 /** How loud the music under a run is: the notes you play must stay the loudest thing in the room. */
@@ -698,6 +699,7 @@ function stopTempo(): void {
   score.showCursor(true);
   renderControls();
   refreshKeys();
+  pieceCtl.refresh();
 }
 
 function describeTiming(s: TempoSummary): string {
@@ -1413,6 +1415,7 @@ const pieceCtl = createPiece({
     renderControls();
   },
   setMode: (m) => { stopEverything(); mode = m; resetPractice(); renderControls(); if (m === 'tempo') startTempo(); }, // Piece mode's "Play with rhythm": the run starts with the choice
+  running: () => !!tempo,
   showCard,
   setKeyHandler: (h) => { cardKeyHandler = h; },
   setLayout: (on) => { score.setEvenBars(on); setAppLayout(on); }, // bars of one width: the moving line keeps an even speed

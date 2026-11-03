@@ -31,6 +31,8 @@ export interface Host {
   open: (t: { pieceId: string; hands: Hands; bars?: [number, number]; mode: 'wait' | 'tempo' }) => Promise<void>;
   /** Switch the open step between the notes only and the metronome, keeping its hands and bars. */
   setMode: (mode: 'wait' | 'tempo') => void;
+  /** A metronome run is going now. */
+  running: () => boolean;
   showCard: (xml: string) => Promise<void>;
   setKeyHandler: (handler: ((midi: number) => void) | undefined) => void;
   setLayout: (on: boolean) => void;
@@ -199,8 +201,16 @@ export function createPiece(host: Host) {
       if (cardsOn) armTimer();
       msg(practice ? 'Practice: no timer, nothing counts.' : cardRule(t.goal));
     });
-    const rhythmBtn = t.rhythm ? h('button', { type: 'button', id: 'piece-rhythm', 'aria-pressed': String(rhythm) }, rhythm ? 'Notes only' : 'Play with rhythm') : null;
+    // With the rhythm chosen and no run going (it was stopped, or it ended), the button starts a run again instead of leaving the rhythm.
+    const idle = rhythm && !host.running();
+    const rhythmBtn = t.rhythm ? h('button', { type: 'button', id: 'piece-rhythm', class: idle ? 'primary' : '', 'aria-pressed': String(rhythm && !idle) }, idle ? 'Start with rhythm' : rhythm ? 'Notes only' : 'Play with rhythm') : null;
     rhythmBtn?.addEventListener('click', () => {
+      if (rhythm && !host.running()) {
+        host.setMode('tempo');
+        renderBar();
+        msg('With rhythm: this counts.');
+        return;
+      }
       rhythm = !rhythm;
       host.setMode(rhythm ? 'tempo' : 'wait');
       renderBar();
@@ -332,6 +342,8 @@ export function createPiece(host: Host) {
       delete document.documentElement.dataset.step;
     },
     onRun,
+    /** The run started or stopped: the rhythm button says what it will do now. */
+    refresh(): void { if (active && loaded && running && running.mode !== 'cards') renderBar(); },
     get active(): boolean { return active; },
     /** For tests and the console. */
     snapshot: () => loaded && { id: loaded.id, state: loaded.state, tasks: loaded.tasks },
