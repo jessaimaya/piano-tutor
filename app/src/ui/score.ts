@@ -1,7 +1,8 @@
 import { ClefEnum, OpenSheetMusicDisplay, type GraphicalMeasure } from 'opensheetmusicdisplay';
-import type { MeasuredCursor } from '../practice/range';
+import type { BarRange, MeasuredCursor } from '../practice/range';
 import type { CursorNote } from '../practice/session';
 import type { Spot } from './playhead';
+import { DEFAULT_ZOOM } from './view';
 import { clefFor, isSharp, ledgerSteps, staffStep, type Clef } from './staff-position';
 
 /** OSMD lays out in units of one staff space; at zoom 1 that is 10 px. */
@@ -16,6 +17,9 @@ const ROWS_IN_VIEW = 2;
 /** Breathing room kept around the systems in the window, in px. */
 const FIT_SLACK_PX = 3;
 const RESIZE_DEBOUNCE_MS = 200;
+/** Equal-width bars take the width of the busiest one: the staff may shrink this far, in these steps, to keep two of them on a line. */
+const MIN_EVEN_ZOOM = 0.7;
+const EVEN_ZOOM_STEP = 0.1;
 
 /** Where a coloured note goes: the measure's staves and the cursor's x, in OSMD units. */
 export interface NoteAnchor {
@@ -48,6 +52,12 @@ export class ScoreView implements MeasuredCursor {
   private seen = { w: 0, h: 0 };
   /** Which hand is being asked for: the other staff's notes are drawn faded. */
   private activeHands: 'rh' | 'lh' | 'both' = 'both';
+  /** Only these bars are drawn; the whole piece when undefined. */
+  private drawnBars: BarRange | undefined;
+  /** Draw every bar the same width where there is room for it, so the moving line keeps an even speed. */
+  private evenBars = false;
+  /** What `evenZoom` found for this piece, by window width and wanted size. */
+  private evenZooms = new Map<string, number>();
   /** The tied notes the cursor has gone over since `clearHeld`: they sound on, so they are not asked for again. */
   heldTies: CursorNote[] = [];
   private resizeTimer: ReturnType<typeof setTimeout> | undefined;
@@ -77,6 +87,9 @@ export class ScoreView implements MeasuredCursor {
     this.osmd.zoom = zoom ?? this.baseZoom;
     this.clearMarks();
     this.setPlayhead(undefined);
+    this.drawnBars = undefined;
+    this.evenZooms.clear();
+    this.applyDrawnBars();
     await this.osmd.load(tripletsBelow(xml));
     this.draw();
     this.osmd.cursor.show();
@@ -128,11 +141,58 @@ export class ScoreView implements MeasuredCursor {
     }
   }
 
-  /** Draw the loaded piece. In the minimal view `baseZoom` is the biggest staff wanted; it shrinks until the window shows two systems. */
+  /**
+   * Draw only these bars (1-based, inclusive), so the first one to play opens the first line and nothing you are not practising is on the
+   * page; `undefined` draws the whole piece. The cursor stays inside them too: OSMD starts and ends its walk at the drawn bars.
+   */
+  setDrawnBars(range: BarRange | undefined): void {
+    if (this.drawnBars?.from === range?.from && this.drawnBars?.to === range?.to) return;
+    this.drawnBars = range;
+    this.applyDrawnBars();
+    if (!this.loaded) return;
+    this.relayout();
+    this.reset();
+  }
+
+  private applyDrawnBars(): void {
+    const rules = this.osmd.EngravingRules;
+    rules.MinMeasureToDrawIndex = this.drawnBars ? this.drawnBars.from - 1 : 0;
+    rules.MaxMeasureToDrawIndex = this.drawnBars ? this.drawnBars.to - 1 : Number.MAX_VALUE;
+  }
+
+  /** Takes effect the next time a score is drawn. */
+  setEvenBars(on: boolean): void {
+    this.evenBars = on;
+  }
+
+  /** Draw the loaded piece at the staff size set in `osmd.zoom`. In the minimal view that is the biggest wanted; it shrinks until the window shows two systems. */
   private draw(): void {
-    if (this.paged && !this.fixedZoom) this.fit();
+    this.osmd.EngravingRules.FixedMeasureWidth = this.evenBars;
+    const zoom = this.evenZoom(this.osmd.zoom);
+    this.osmd.zoom = zoom;
+    if (this.paged && !this.fixedZoom) this.fit(zoom);
     else this.osmd.render();
     this.fade();
+  }
+
+  /**
+   * The staff size at which two equal-width bars fit on a line, or `wanted` when even the smallest allowed will not (a very narrow window
+   * then reads one bar a line) or when the player asked for a bigger staff than usual. Each try is a full drawing, so the answer is kept for this window.
+   */
+  private evenZoom(wanted: number): number {
+    const bars = this.drawnBars ? this.drawnBars.to - this.drawnBars.from + 1 : this.osmd.Sheet.SourceMeasures.length;
+    if (!this.evenBars || this.fixedZoom || wanted > DEFAULT_ZOOM || bars < 2) return wanted;
+    const key = `${this.inner().w}:${wanted}`;
+    const known = this.evenZooms.get(key);
+    if (known !== undefined) return known;
+    let found = wanted;
+    for (let zoom = wanted; zoom >= MIN_EVEN_ZOOM - 1e-6; zoom -= EVEN_ZOOM_STEP) {
+      this.osmd.zoom = zoom;
+      this.osmd.render();
+      if ((this.osmd.GraphicSheet.MusicPages[0]?.MusicSystems[0]?.GraphicalMeasures.length ?? 0) >= 2) { found = zoom; break; }
+    }
+    this.evenZooms.set(key, found);
+    return found;
   }
 
   /** Draw again for the window as it is now (turned sideways, a toolbar gone) and put the cursor and the page back. */
@@ -187,12 +247,12 @@ export class ScoreView implements MeasuredCursor {
   }
 
   /**
-   * Render at the biggest staff (`baseZoom`) that still shows the first two systems in the window, with no bar running past the right
+   * Render at the biggest staff (from `start`) that still shows the first two systems in the window, with no bar running past the right
    * edge. Each pass scales by how much too big the drawing was; a smaller staff also fits more bars on a line, so the systems change
    * and the next pass measures again.
    */
-  private fit(): void {
-    let zoom = this.baseZoom;
+  private fit(start: number): void {
+    let zoom = start;
     for (let pass = 0; ; pass++) {
       this.osmd.zoom = zoom;
       this.osmd.render();
@@ -313,9 +373,9 @@ export class ScoreView implements MeasuredCursor {
   }
 
   /**
-   * Where the moving line goes for the step under the cursor, read off OSMD's own cursor bar: the bar OSMD puts over the step is by
-   * definition where the notes are (it picks the staff entry that is a reliable anchor, which a note or rest of mine may not be). The bar's
-   * centre is the line's x and its height is the system's. In the drawing's own units, like everything else here.
+   * Where the moving line goes for the step under the cursor: on the noteheads as drawn, since that is what the eye holds it against. OSMD's cursor
+   * bar can sit 6 px off them (after a rest in the other voice), so it only gives the x of a step with no notes, and the height of the system.
+   * In the drawing's own units, like everything else here.
    */
   spot(beat: number): Spot | undefined {
     const at = this.anchor();
@@ -327,7 +387,22 @@ export class ScoreView implements MeasuredCursor {
     const vb = svg.viewBox.baseVal;
     if (!b.width || !s.width || !vb.width) return undefined;
     const k = (s.width / vb.width) * UNIT_PX; // screen px per OSMD unit
-    return { beat, x: (b.left + b.width / 2 - s.left) / k, left: at.staves[0]!.PositionAndShape.AbsolutePosition.x, y0: (b.top - s.top) / k, y1: (b.bottom - s.top) / k };
+    const x = this.noteheadCentre() ?? b.left + b.width / 2;
+    return { beat, x: (x - s.left) / k, left: at.staves[0]!.PositionAndShape.AbsolutePosition.x, y0: (b.top - s.top) / k, y1: (b.bottom - s.top) / k };
+  }
+
+  /** Screen x of the noteheads under the cursor: the middle one, so a head pushed aside in a chord does not pull the line off the others. */
+  private noteheadCentre(): number | undefined {
+    const xs: number[] = [];
+    for (const note of this.osmd.cursor.GNotesUnderCursor()) {
+      if (note.sourceNote.isRest()) continue;
+      const el = (note as unknown as { getSVGGElement?: () => SVGGElement | undefined }).getSVGGElement?.();
+      for (const head of el?.querySelectorAll('.vf-notehead') ?? []) {
+        const r = head.getBoundingClientRect();
+        if (r.width) xs.push(r.left + r.width / 2);
+      }
+    }
+    return xs.sort((a, b) => a - b)[xs.length >> 1];
   }
 
   /** The cursor bar is kept moving (the line reads its place) but not drawn while the line shows the time. */

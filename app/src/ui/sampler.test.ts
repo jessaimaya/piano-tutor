@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { nearestRoot } from './sampler';
+import { attackOf, nearestRoot } from './sampler';
 
 const roots = [36, 37, 38, 60, 61, 79, 81].map((midi) => ({ midi }));
 
@@ -23,4 +23,18 @@ describe('nearestRoot', () => {
     expect(nearestRoot(roots, 84)?.root.midi).toBe(81); // within the limit
     expect(nearestRoot([], 60)).toBeUndefined();
   });
+});
+
+describe('attackOf', () => {
+  const RATE = 1000;
+  const recording = (silence: number, peak = 1) => Float32Array.from({ length: 200 }, (_, i) => (i < silence ? 0.001 : peak));
+
+  it('skips the silence before the hammer, keeping a moment of the rise', () => {
+    expect(attackOf(recording(54), RATE)).toBeCloseTo(0.052, 6);
+  });
+  it('judges by the loudness of this recording, so a soft one is not cut short', () => {
+    expect(attackOf(recording(54, 0.05), RATE)).toBeCloseTo(0.052, 6);
+  });
+  it('never starts before the recording does', () => expect(attackOf(recording(0), RATE)).toBe(0));
+  it('leaves a silent recording alone', () => expect(attackOf(new Float32Array(10), RATE)).toBe(0));
 });

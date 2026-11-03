@@ -801,6 +801,7 @@ function setRange(from: number, to: number, remember = true): void {
   const r = clampRange(from, to, score.measureCount);
   barRange = isWholePiece(r, score.measureCount) ? undefined : r;
   if (remember && !current.id.startsWith('sr-')) safeSet('range:' + current.id, barRange ? `${barRange.from}-${barRange.to}` : '');
+  if (pieceCtl.active) score.setDrawnBars(barRange); // a step shows its own bars only, so its first bar opens the first line
   renderRange();
   resetPractice();
 }
@@ -1401,7 +1402,7 @@ const pieceCtl = createPiece({
   setMode: (m) => { stopEverything(); mode = m; resetPractice(); renderControls(); if (m === 'tempo') startTempo(); }, // Piece mode's "Play with rhythm": the run starts with the choice
   showCard,
   setKeyHandler: (h) => { cardKeyHandler = h; },
-  setLayout: setAppLayout,
+  setLayout: (on) => { score.setEvenBars(on); setAppLayout(on); }, // bars of one width: the moving line keeps an even speed
   stopEverything,
   say: (text, tone) => showResult(text, tone === 'bad'),
   load: safeGet,

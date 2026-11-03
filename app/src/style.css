@@ -276,6 +276,8 @@ main { min-width: 0; }
 
 /* the line that moves across the score at the tempo: press the key when it reaches the note */
 .playhead { stroke: var(--accent); stroke-linecap: round; opacity: 0.85; pointer-events: none; }
+/* black and white: thin and black it reads as one more stem or barline, so here it is a wide grey band with the notes showing through */
+[data-view='minimal'] .playhead { stroke: #000; stroke-width: 6px; stroke-linecap: butt; opacity: 0.4; }
 
 /* scores: the result card, the progress strip under the title, and the chip in the library */
 .good { --tone: var(--good); } .fine { --tone: var(--accent); } .warn { --tone: var(--warn); } .bad { --tone: var(--bad); }
@@ -576,6 +578,11 @@ html[data-view='minimal'][data-run] #status { visibility: visible; position: fix
 html[data-view='minimal'][data-run] #line-sync { visibility: visible; position: fixed; right: 128px; bottom: 4px; height: 44px; display: flex; align-items: center; gap: 4px; margin: 0; z-index: 2; font-size: 12px; background: #fff; }
 html[data-view='minimal'][data-run] #line-sync button { min-height: 40px; padding: 2px 6px; font-size: 13px; }
 html[data-view='minimal'][data-run] #status { right: 330px; }
+/* narrow: the buttons leave the status no room beside them, so it gets a row of its own above them */
+@media (max-width: 720px) {
+  html[data-view='minimal'][data-run] #score { height: calc(100dvh - 110px) !important; }
+  html[data-view='minimal'][data-run] #status { left: 6px; right: 6px; bottom: 52px; height: 56px; }
+}
 html[data-view='minimal'][data-run] #stop { visibility: visible; position: fixed; right: 6px; bottom: 4px; width: 116px; height: 44px; margin: 0; z-index: 2; }
 .line-sync { display: inline-flex; align-items: center; gap: 4px; }
 .line-sync[hidden] { display: none; }

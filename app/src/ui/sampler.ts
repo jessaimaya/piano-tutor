@@ -5,8 +5,6 @@
 export interface Root {
   midi: number;
   file: string;
-  /** Seconds of silence before the hammer. */
-  onset: number;
   /** Makes this key as loud as the others. */
   gain: number;
 }
@@ -19,6 +17,23 @@ export function nearestRoot<T extends { midi: number }>(roots: readonly T[], mid
   return { root: best, rate: 2 ** ((midi - best.midi) / 12) };
 }
 
+/** How much sound counts as the hammer having landed, as a share of the recording's peak. */
+const ATTACK_SHARE = 0.1;
+/** Start this many seconds ahead of it, to keep the first rise of the note and not click. */
+const ATTACK_LEAD = 0.002;
+
+/**
+ * Seconds of silence to skip so a note sounds when it is due. Measured on the decoded audio because that is what plays: MP3 files carry padding
+ * of their own, and how much of it survives decoding depends on the browser.
+ */
+export function attackOf(samples: Float32Array, sampleRate: number): number {
+  let peak = 0;
+  for (const v of samples) peak = Math.max(peak, Math.abs(v));
+  if (!peak) return 0;
+  const first = samples.findIndex((v) => Math.abs(v) >= ATTACK_SHARE * peak);
+  return Math.max(0, first / sampleRate - ATTACK_LEAD);
+}
+
 export interface Picked {
   buffer: AudioBuffer;
   rate: number;
@@ -28,7 +43,7 @@ export interface Picked {
 
 export class Sampler {
   private roots: Root[] = [];
-  private buffers = new Map<number, AudioBuffer>();
+  private buffers = new Map<number, { buffer: AudioBuffer; onset: number }>();
   private pending = new Map<number, Promise<void>>();
   private manifest: Promise<void> | undefined;
   /** The samples could not be fetched (not installed, offline): everything falls back to the built-in piano. */
@@ -66,7 +81,7 @@ export class Sampler {
       p = fetch(this.base + root.file)
         .then((res) => (res.ok ? res.arrayBuffer() : Promise.reject(new Error(String(res.status)))))
         .then((data) => ctx.decodeAudioData(data))
-        .then((buf) => { this.buffers.set(midi, buf); })
+        .then((buffer) => { this.buffers.set(midi, { buffer, onset: attackOf(buffer.getChannelData(0), buffer.sampleRate) }); })
         .catch(() => { this.failed = true; })
         .finally(() => this.pending.delete(midi));
       this.pending.set(midi, p);
@@ -87,7 +102,7 @@ export class Sampler {
   /** The decoded sample for a key, or undefined if it is not loaded (yet). */
   pick(midi: number): Picked | undefined {
     const near = nearestRoot(this.roots, midi);
-    const buffer = near && this.buffers.get(near.root.midi);
-    return near && buffer ? { buffer, rate: near.rate, gain: near.root.gain, onset: near.root.onset } : undefined;
+    const loaded = near && this.buffers.get(near.root.midi);
+    return near && loaded ? { ...loaded, rate: near.rate, gain: near.root.gain } : undefined;
   }
 }

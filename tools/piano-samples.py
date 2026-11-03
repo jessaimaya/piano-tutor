@@ -5,8 +5,8 @@ The set is github.com/Leethring/piano-sound-samples (MIT, see app/public/samples
 names cannot be trusted (many files are copies under another name, some names are wrong), so each file's pitch is measured instead
 and the sample chosen for a key is the one that really is that key. Needs ffmpeg and numpy.
 
-Writes app/public/samples/piano/<midi>.mp3 and manifest.json: per sample, the seconds of silence before the hammer (`onset`) and the
-gain that makes every key equally loud. Keys outside the measured range are made by the app from the nearest sample (see ui/sampler.ts).
+Writes app/public/samples/piano/<midi>.mp3 and manifest.json: per sample, the gain that makes every key equally loud (the silence before
+the hammer is measured by the app on the decoded audio). Keys outside the measured range are made by the app from the nearest sample (see ui/sampler.ts).
 """
 import hashlib, json, os, shutil, subprocess, sys, tempfile
 import numpy as np
@@ -20,9 +20,9 @@ TARGET_RMS = 0.12
 
 
 def decode(path: str, tmp: str) -> np.ndarray:
-    wav = os.path.join(tmp, hashlib.md5(path.encode()).hexdigest() + '.wav')
-    subprocess.run(['ffmpeg', '-v', 'error', '-y', '-i', path, '-ac', '1', '-ar', str(RATE), wav], check=True)
-    return np.frombuffer(open(wav, 'rb').read()[44:], dtype=np.int16).astype(np.float64) / 32768
+    raw = os.path.join(tmp, hashlib.md5(path.encode()).hexdigest() + '.pcm')
+    subprocess.run(['ffmpeg', '-v', 'error', '-y', '-i', path, '-ac', '1', '-ar', str(RATE), '-f', 's16le', raw], check=True)
+    return np.frombuffer(open(raw, 'rb').read(), dtype=np.int16).astype(np.float64) / 32768
 
 
 def measure(x: np.ndarray) -> dict:
@@ -58,7 +58,7 @@ def main(folder: str) -> None:
             continue
         best = min(near, key=lambda s: (abs(s['midi'] - midi), s['name']))
         shutil.copyfile(best['path'], os.path.join(OUT, f'{midi}.mp3'))
-        roots.append({'midi': midi, 'file': f'{midi}.mp3', 'onset': round(best['onset'], 3), 'gain': round(TARGET_RMS / best['rms'], 3)})
+        roots.append({'midi': midi, 'file': f'{midi}.mp3', 'gain': round(TARGET_RMS / best['rms'], 3)})
     manifest = {'source': 'https://github.com/Leethring/piano-sound-samples', 'license': 'MIT', 'roots': roots}
     json.dump(manifest, open(os.path.join(OUT, 'manifest.json'), 'w'), indent=1)
     missing = [m for m in range(LOW, HIGH + 1) if m not in {r['midi'] for r in roots}]
