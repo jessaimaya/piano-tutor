@@ -216,6 +216,14 @@ export function createPiece(host: Host) {
       renderBar();
       msg(rhythm ? 'With rhythm: this counts.' : 'Notes only: practice, it does not count.');
     });
+    // Stopped with the rhythm chosen: the other way out is here too, so both choices are one tap away.
+    const notesBtn = t.rhythm && idle ? h('button', { type: 'button', id: 'piece-notes' }, 'Notes only') : null;
+    notesBtn?.addEventListener('click', () => {
+      rhythm = false;
+      host.setMode('wait');
+      renderBar();
+      msg('Notes only: practice, it does not count.');
+    });
     bar.replaceChildren(
       h('div', { class: 'course-top' }, dots, h('button', { type: 'button', id: 'course-menu', title: 'Back to the pieces' }, 'Pieces')),
       h('h2', { id: 'course-step-title' }, t.title),
@@ -227,7 +235,7 @@ export function createPiece(host: Host) {
         t.mode === 'cards' || !bestOf(state, t) ? null : h('span', { id: 'piece-stars', title: `Best run ${Math.round(bestOf(state, t) * 100)}%` }, starText(starsOf(bestOf(state, t), t.minAccuracy))),
         t.mode === 'cards' ? h('span', { id: 'card-timer', 'data-state': 'idle', title: `Right in under ${CARD_LIMIT_MS / 1000} s counts` }, h('i')) : null),
       h('p', { id: 'course-msg', class: 'course-msg', 'aria-live': 'polite' }),
-      h('div', { class: 'course-actions' }, ...(back ? [back] : []), ...(practiceBtn ? [practiceBtn] : []), ...(rhythmBtn ? [rhythmBtn] : []), primary),
+      h('div', { class: 'course-actions' }, ...(back ? [back] : []), ...(practiceBtn ? [practiceBtn] : []), ...(notesBtn ? [notesBtn] : []), ...(rhythmBtn ? [rhythmBtn] : []), primary),
     );
     document.getElementById('course-menu')?.addEventListener('click', () => { host.stopEverything(); host.setKeyHandler(undefined); running = undefined; renderHome(); });
   }
