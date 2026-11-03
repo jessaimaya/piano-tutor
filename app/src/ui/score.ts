@@ -1,4 +1,4 @@
-import { ClefEnum, OpenSheetMusicDisplay, type GraphicalMeasure } from 'opensheetmusicdisplay';
+import { ClefEnum, OpenSheetMusicDisplay, type GraphicalMeasure, type TechnicalInstruction, type VoiceEntry } from 'opensheetmusicdisplay';
 import type { BarRange, MeasuredCursor } from '../practice/range';
 import type { CursorNote } from '../practice/session';
 import type { Spot } from './playhead';
@@ -29,6 +29,9 @@ export interface NoteAnchor {
   due: { midi: number; staff: number }[];
 }
 
+/** Which finger numbers are drawn: the ones that set the hand down at the start, all of them, or none. */
+export type FingerMode = 'start' | 'all' | 'off';
+
 /** OSMD stores pitches with C4 = 48; MIDI has C4 = 60. */
 const OSMD_TO_MIDI = 12;
 
@@ -39,6 +42,8 @@ const OSMD_TO_MIDI = 12;
 export function tripletsBelow(xml: string): string {
   return xml.replace(/<tuplet\b([^>]*)>/g, (all, attrs: string) => (/type="start"/.test(attrs) && !/placement=/.test(attrs) ? `<tuplet${attrs.replace(/\s*\/$/, '')} placement="below"${/\/\s*$/.test(attrs) ? '/' : ''}>` : all));
 }
+
+const isFingering = (t: TechnicalInstruction): boolean => t.type === 0; // TechnicalInstructionType.Fingering
 
 export class ScoreView implements MeasuredCursor {
   private osmd: OpenSheetMusicDisplay;
@@ -54,6 +59,9 @@ export class ScoreView implements MeasuredCursor {
   private activeHands: 'rh' | 'lh' | 'both' = 'both';
   /** Only these bars are drawn; the whole piece when undefined. */
   private drawnBars: BarRange | undefined;
+  private fingers: FingerMode = 'start';
+  /** Every voice entry that has finger numbers, with its full list: OSMD draws what is in the entry, so showing less means editing the entry. */
+  private fingered: { entry: VoiceEntry; all: TechnicalInstruction[] }[] = [];
   /** Draw every bar the same width where there is room for it, so the moving line keeps an even speed. */
   private evenBars = false;
   /** What `evenZoom` found for this piece, by window width and wanted size. */
@@ -91,6 +99,7 @@ export class ScoreView implements MeasuredCursor {
     this.evenZooms.clear();
     this.applyDrawnBars();
     await this.osmd.load(tripletsBelow(xml));
+    this.readFingers();
     this.draw();
     this.osmd.cursor.show();
     this.loaded = true;
@@ -160,6 +169,55 @@ export class ScoreView implements MeasuredCursor {
     rules.MaxMeasureToDrawIndex = this.drawnBars ? this.drawnBars.to - 1 : Number.MAX_VALUE;
   }
 
+  /**
+   * Finger numbers make it easy to play numbers instead of reading notes. By default only the first ones show: the fingers that set each
+   * hand down, so the rest of the piece has to be read.
+   */
+  setFingers(mode: FingerMode): void {
+    if (mode === this.fingers) return;
+    this.fingers = mode;
+    if (this.loaded) this.relayout();
+  }
+
+  private readFingers(): void {
+    this.fingered = [];
+    for (const measure of this.osmd.Sheet.SourceMeasures) {
+      for (const container of measure.VerticalSourceStaffEntryContainers) {
+        for (const staffEntry of container.StaffEntries) {
+          for (const entry of staffEntry?.VoiceEntries ?? []) {
+            if (entry.TechnicalInstructions.some(isFingering)) this.fingered.push({ entry, all: [...entry.TechnicalInstructions] });
+          }
+        }
+      }
+    }
+  }
+
+  /** Leave in each entry the finger numbers wanted. In `start` that is, for each staff, the first notes that have any in the bars drawn. */
+  private applyFingers(): void {
+    const shown = new Set<VoiceEntry>();
+    const has = new Set(this.fingered.map((f) => f.entry)); // from the full lists: an earlier drawing may have left some entries bare
+    if (this.fingers === 'start') {
+      const staves = this.osmd.Sheet.Staves.length;
+      const done = new Set<number>();
+      const measures = this.osmd.Sheet.SourceMeasures;
+      for (let m = this.drawnBars ? this.drawnBars.from - 1 : 0; m < measures.length && done.size < staves; m++) {
+        for (const container of measures[m]!.VerticalSourceStaffEntryContainers) {
+          container.StaffEntries.forEach((staffEntry, staff) => {
+            if (!staffEntry || done.has(staff)) return;
+            const withFingers = staffEntry.VoiceEntries.filter((e) => has.has(e));
+            if (!withFingers.length) return;
+            done.add(staff);
+            withFingers.forEach((e) => shown.add(e));
+          });
+        }
+      }
+    }
+    for (const { entry, all } of this.fingered) {
+      const keep = all.filter((t) => !isFingering(t) || this.fingers === 'all' || shown.has(entry));
+      entry.TechnicalInstructions.splice(0, entry.TechnicalInstructions.length, ...keep);
+    }
+  }
+
   /** Takes effect the next time a score is drawn. */
   setEvenBars(on: boolean): void {
     this.evenBars = on;
@@ -168,6 +226,7 @@ export class ScoreView implements MeasuredCursor {
   /** Draw the loaded piece at the staff size set in `osmd.zoom`. In the minimal view that is the biggest wanted; it shrinks until the window shows two systems. */
   private draw(): void {
     this.osmd.EngravingRules.FixedMeasureWidth = this.evenBars;
+    this.applyFingers();
     const zoom = this.evenZoom(this.osmd.zoom);
     this.osmd.zoom = zoom;
     if (this.paged && !this.fixedZoom) this.fit(zoom);

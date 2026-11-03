@@ -19,7 +19,6 @@
   <script type="module" src="/src/main.ts"></script>
 </head>
 <body>
-<span id="app-version" aria-hidden="true"></span>
 <div class="shell">
   <header class="topbar">
     <button id="min-pieces" type="button">☰ Pieces</button>
@@ -34,9 +33,11 @@
       <button id="zoom-out" type="button" aria-label="Smaller staff">A−</button>
       <button id="zoom-in" type="button" aria-label="Bigger staff">A+</button>
     </span>
+    <button id="fingers" type="button" data-state="start" title="Finger numbers: only the first ones, all of them, or none"></button>
     <div id="themes" class="themes" role="group" aria-label="Theme"></div>
     <span id="pedal" class="pill" title="Sustain pedal (CC64)" hidden>Pedal <b id="pedal-val">–</b></span>
     <span id="midi-status" class="pill" hidden>MIDI: starting…</span>
+    <span id="app-version" title="Version of the app"></span>
     <button id="view-toggle" type="button" title="Switch between the full app and a minimal view for small or e-ink screens">Minimal view</button>
   </header>
   <div id="midi-banner" class="midi-banner" role="alert" hidden>

@@ -25,7 +25,7 @@ import { isVoice, VOICES, type VoiceName } from './ui/voices';
 import { bindTempoDial } from './ui/dial';
 import { KeyboardView } from './ui/keyboard';
 import { filterLibrary, isFiltering, NO_FILTER, type LibraryFilter, type SortBy } from './ui/library-filter';
-import { ScoreView, type NoteAnchor } from './ui/score';
+import { ScoreView, type FingerMode, type NoteAnchor } from './ui/score';
 import { playheadAt, withLeadIn, type Spot } from './ui/playhead';
 import { bindThemes } from './ui/theme';
 import { backupFileName, exportBackup, importBackup, parseBackup } from './storage/backup';
@@ -54,6 +54,26 @@ const log = new PracticeLog(storage);
 const bus = new InputBus();
 const synth = new Synth();
 const score = new ScoreView($('score'));
+const FINGER_MODES: { mode: FingerMode; label: string; glyphs: string }[] = [
+  { mode: 'start', label: 'Fingers: Start', glyphs: '1··' },
+  { mode: 'all', label: 'Fingers: All', glyphs: '123' },
+  { mode: 'off', label: 'Fingers: Off', glyphs: '–––' },
+];
+let fingers: FingerMode = FINGER_MODES.find((f) => f.mode === safeGet('fingers'))?.mode ?? 'start'; // only the first numbers: the notes have to be read
+function showFingers(): void {
+  const f = FINGER_MODES.find((x) => x.mode === fingers)!;
+  const b = $('fingers');
+  b.textContent = f.label;
+  b.dataset.state = f.mode;
+  b.dataset.glyphs = f.glyphs;
+  score.setFingers(fingers);
+}
+$('fingers').addEventListener('click', () => {
+  fingers = FINGER_MODES[(FINGER_MODES.findIndex((f) => f.mode === fingers) + 1) % FINGER_MODES.length]!.mode;
+  safeSet('fingers', fingers);
+  showFingers();
+});
+showFingers();
 const pressed = new Set<number>();
 
 const keyboard = new KeyboardView(
