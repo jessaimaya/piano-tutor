@@ -22,7 +22,7 @@ A one-hand piece skips phases 3 and 4.
 
 ## Progress
 
-One `piano-tutor:piece:v1:<pieceId>` entry per piece (included in the backup file). A run counts toward a task when its accuracy is 90% or more; the task's goal is 2 runs (3 for trouble spots and the metronome). Skip and "Start this piece over" are on the screen. Ids are made from the task's kind, hands and bars, so progress survives re-planning.
+One `piano-tutor:piece:v1:<pieceId>` entry per piece (included in the backup file). A run counts toward a task when its accuracy is 90% or more; a run of 80% passes the step (★) and Next is offered before it has the runs it asks for (★★ at 90%, ★★★ at 97%; the best run is kept in `best`); the task's goal is 2 runs (3 for trouble spots and the metronome). Skip and "Start this piece over" are on the screen. Ids are made from the task's kind, hands and bars, so progress survives re-planning.
 
 ## What is on the page
 
@@ -35,6 +35,8 @@ Three things keep the line and the sound together. Each was measured, because th
 - **Where it lands:** on the noteheads as drawn, not on OSMD's cursor bar, which can sit 6 px off them.
 - **How fast it moves:** bars are drawn the same width (`setEvenBars`), which brings the fastest and slowest stretches of the line from about 3.3x apart to about 1.9x. On a narrow screen the staff shrinks (down to 0.7) to keep two such bars on a line; narrower still, it reads one bar a line. Bars stay even at every width.
 - **When the sound starts:** the piano MP3s open with about 54 ms of silence, which the app now skips (`attackOf`). It is measured on the decoded audio because MP3 padding depends on the decoder.
+
+Before the first note the line waits at the start of the staff and then walks in at the speed it will have in the piece (`withLeadIn`), so the first note can be predicted from how it moves.
 
 In the minimal view the line is a wide grey band: thin and black it reads as one more stem or barline.
 

@@ -1,6 +1,6 @@
 import { CARD_LIMIT_MS } from '../course/state';
 import type { Task } from './path';
-import { isComplete, type PieceState } from './state';
+import { isComplete, PASS_ACCURACY, type PieceState } from './state';
 
 /** Whether what the player does on this step is being counted, or is free practice. */
 export type Counting = 'counts' | 'practice' | 'done';
@@ -26,3 +26,9 @@ export function cardMessage(a: { name: string; ms: number; fast: boolean; missed
 }
 
 export const cardRule = (goal: number): string => `Right in under ${CARD_LIMIT_MS / 1000} s counts. ${goal} to finish.`;
+
+/** Stars for a run: 1 passes the step, 2 is a good run (what the step counts), 3 is nearly clean. */
+export function starsOf(accuracy: number, minAccuracy: number): 0 | 1 | 2 | 3 {
+  return accuracy >= 0.97 ? 3 : accuracy >= minAccuracy ? 2 : accuracy >= PASS_ACCURACY ? 1 : 0;
+}
+export const starText = (n: number): string => '★'.repeat(n) + '☆'.repeat(3 - n);

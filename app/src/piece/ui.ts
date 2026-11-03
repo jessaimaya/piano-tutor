@@ -2,10 +2,11 @@ import { cardKey, cardXml, drawCard, judgeCard, type Card } from '../course/card
 import type { Hands } from '../practice/log';
 import { midiName, type Analysis } from './analysis';
 import { buildPath, type Task } from './path';
-import { BADGE, cardMessage, cardRule, countingOf } from './rule';
+import { PASS_ACCURACY } from './state';
+import { BADGE, cardMessage, cardRule, countingOf, starsOf, starText } from './rule';
 import { CARD_LIMIT_MS } from '../course/state';
 import {
-  currentTask, have, isComplete, isSettled, isSkipped, noteCard, noteRun, parsePieceState, redoTask, skipTask, type PieceState,
+  bestOf, currentTask, have, isComplete, isPassed, isSettled, isSkipped, noteCard, noteRun, parsePieceState, redoTask, skipTask, type PieceState,
 } from './state';
 
 /**
@@ -163,6 +164,7 @@ export function createPiece(host: Host) {
     const { tasks, state } = loaded;
     const t = running;
     const complete = isComplete(state, t);
+    const ready = complete || isPassed(state, t); // finished, or passed with a run good enough to go on
     const counting = countingOf(state, t, { practice, rhythm });
     const i = tasks.indexOf(t);
     document.documentElement.dataset.phase = 'session';
@@ -175,17 +177,17 @@ export function createPiece(host: Host) {
       if (to) void enterTask(to); else renderPractice();
     };
     // Skip goes on to the next step that is still open; once a step is done, Next simply goes to the one after it, so you can walk through them all.
-    const next = complete ? tasks[i + 1] : tasks.find((x, j) => j > i && !isSettled(state, x));
-    const primary = h('button', { type: 'button', class: complete ? 'primary' : '', id: 'course-primary' }, complete ? (next ? 'Next →' : 'Finish ✓') : 'Skip');
+    const next = ready ? tasks[i + 1] : tasks.find((x, j) => j > i && !isSettled(state, x));
+    const primary = h('button', { type: 'button', class: ready ? 'primary' : '', id: 'course-primary' }, ready ? (next ? 'Next →' : 'Finish ✓') : 'Skip');
     primary.addEventListener('click', () => {
-      if (!complete) { loaded!.state = skipTask(loaded!.state, t, host.now()); save(); }
+      if (!ready) { loaded!.state = skipTask(loaded!.state, t, host.now()); save(); }
       go(next);
     });
     const back = i > 0 ? h('button', { type: 'button', id: 'piece-back-step' }, '← Back') : null;
     back?.addEventListener('click', () => go(tasks[i - 1]));
     const dots = h('span', { class: 'piece-dots', 'aria-label': `Step ${i + 1} of ${tasks.length}` },
       ...tasks.map((x) => {
-        const dot = h('i', { role: 'button', tabindex: '0', 'data-state': x === t ? 'now' : isComplete(state, x) ? 'done' : isSkipped(state, x) ? 'skipped' : 'todo', title: x.title });
+        const dot = h('i', { role: 'button', tabindex: '0', 'data-state': x === t ? 'now' : isComplete(state, x) || isPassed(state, x) ? 'done' : isSkipped(state, x) ? 'skipped' : 'todo', title: x.title });
         dot.addEventListener('click', () => { if (x !== t) go(x); });
         dot.addEventListener('keydown', (e) => { if ((e.key === 'Enter' || e.key === ' ') && x !== t) { e.preventDefault(); go(x); } });
         return dot;
@@ -212,6 +214,7 @@ export function createPiece(host: Host) {
         h('span', { id: 'piece-badge', 'data-counting': counting, title: counting === 'counts' ? 'What you play now counts towards the step' : counting === 'done' ? 'This step is finished: play for fun' : 'Free practice: nothing you play now counts' }, BADGE[counting]),
         h('span', { class: 'piece-pips', 'aria-label': `${have(state, t)} of ${t.goal}` }, ...Array.from({ length: t.goal }, (_, k) => h('i', { 'data-on': String(k < have(state, t)) }))),
         h('span', { class: 'muted piece-count' }, `${have(state, t)} of ${t.goal}`),
+        t.mode === 'cards' || !bestOf(state, t) ? null : h('span', { id: 'piece-stars', title: `Best run ${Math.round(bestOf(state, t) * 100)}%` }, starText(starsOf(bestOf(state, t), t.minAccuracy))),
         t.mode === 'cards' ? h('span', { id: 'card-timer', 'data-state': 'idle', title: `Right in under ${CARD_LIMIT_MS / 1000} s counts` }, h('i')) : null),
       h('p', { id: 'course-msg', class: 'course-msg', 'aria-live': 'polite' }),
       h('div', { class: 'course-actions' }, ...(back ? [back] : []), ...(practiceBtn ? [practiceBtn] : []), ...(rhythmBtn ? [rhythmBtn] : []), primary),
@@ -234,7 +237,11 @@ export function createPiece(host: Host) {
     save();
     renderBar();
     const done = isComplete(loaded.state, running);
-    msg(done ? 'Step complete. 🎉' : counted ? 'Good run. Again.' : `${Math.round(r.accuracy * 100)}%. Need ${Math.round(running.minAccuracy * 100)}%.`);
+    const pct = `${Math.round(r.accuracy * 100)}%`;
+    const stars = starText(starsOf(r.accuracy, running.minAccuracy));
+    msg(done ? `${pct} ${stars} Step complete. 🎉` : counted ? `${pct} ${stars} Good run. Again, or Next.`
+      : isPassed(loaded.state, running) ? `${pct} ${stars} Passed. Tap Next, or aim for ${Math.round(running.minAccuracy * 100)}%.`
+      : `${pct}. Need ${Math.round(PASS_ACCURACY * 100)}% to pass.`);
   }
 
   // ───────────── note cards, limited to this piece ─────────────

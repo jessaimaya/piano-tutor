@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { analyse, easierHand, midiName, readSteps, sections, troubleBars, type MeasuredSource, type StepNotes } from './analysis';
 import { buildPath } from './path';
-import { completion, currentTask, noteCard, noteRun, parsePieceState, newPieceState, skipTask } from './state';
+import { bestOf, completion, currentTask, isPassed, isSettled, noteCard, noteRun, parsePieceState, newPieceState, skipTask } from './state';
 import type { CursorNote } from '../practice/session';
 
 /** A piece as bars of [rh notes, lh notes] per beat: each entry is one step. */
@@ -164,5 +164,33 @@ describe('state', () => {
     expect(parsePieceState(JSON.stringify({ ...newPieceState('other') }), 'p').pieceId).toBe('p');
     const s = noteRun(newPieceState('p'), hand, 1);
     expect(parsePieceState(JSON.stringify(s), 'p').progress).toEqual(s.progress);
+  });
+});
+
+describe('passing a step', () => {
+  const hand = buildPath(analyse(piece(Array.from({ length: 4 }, () => ({ rh: easyRh, lh: easyLh })))))
+    .find((t) => t.kind === 'hand')!;
+
+  it('passes at 80% without counting as a good run', () => {
+    const s = noteRun(newPieceState('p'), hand, 0.85);
+    expect(isPassed(s, hand)).toBe(true);
+    expect(isSettled(s, hand)).toBe(true);
+    expect(s.progress[hand.id] ?? 0).toBe(0);
+  });
+  it('does not pass below 80%', () => {
+    const s = noteRun(newPieceState('p'), hand, 0.79);
+    expect(isPassed(s, hand)).toBe(false);
+    expect(bestOf(s, hand)).toBe(0.79);
+  });
+  it('keeps the best run, and a better one counts toward the goal too', () => {
+    const s = noteRun(noteRun(newPieceState('p'), hand, 0.93), hand, 0.85);
+    expect(bestOf(s, hand)).toBe(0.93);
+    expect(s.progress[hand.id]).toBe(1);
+  });
+  it('is read back from storage, and old saves without it still load', () => {
+    const s = noteRun(newPieceState('p'), hand, 0.9);
+    expect(parsePieceState(JSON.stringify(s), 'p').best[hand.id]).toBe(0.9);
+    const { best: _b, ...old } = s;
+    expect(parsePieceState(JSON.stringify(old), 'p').best).toEqual({});
   });
 });

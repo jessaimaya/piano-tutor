@@ -26,7 +26,7 @@ import { bindTempoDial } from './ui/dial';
 import { KeyboardView } from './ui/keyboard';
 import { filterLibrary, isFiltering, NO_FILTER, type LibraryFilter, type SortBy } from './ui/library-filter';
 import { ScoreView, type NoteAnchor } from './ui/score';
-import { playheadAt, type Spot } from './ui/playhead';
+import { playheadAt, withLeadIn, type Spot } from './ui/playhead';
 import { bindThemes } from './ui/theme';
 import { backupFileName, exportBackup, importBackup, parseBackup } from './storage/backup';
 import { course as courseData } from './course/ladder';
@@ -569,13 +569,6 @@ score.onRelayout = () => {
   tempo.cursor.moveTo(tempo.lastRaw);
   score.showCursor(false);
 };
-
-/** The line is not only for the notes: it enters from the start of the staff during the count-in and reaches the first note on the first beat. */
-function withLeadIn(spots: Spot[], beats: number): Spot[] {
-  const f = spots[0];
-  if (!f) return spots;
-  return [{ ...f, beat: -beats, x: f.left !== undefined && f.left < f.x - 2 ? f.left : f.x - 6 }, ...spots];
-}
 
 /**
  * Seen on the screen the line is always late: the panel takes a moment, and a slow screen redraws only every few frames, so what it shows

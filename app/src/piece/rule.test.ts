@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { buildPath, type Task } from './path';
-import { BADGE, cardMessage, cardRule, countingOf } from './rule';
+import { BADGE, cardMessage, cardRule, countingOf, starsOf, starText } from './rule';
 import { newPieceState, noteRun } from './state';
 
 const task = (over: Partial<Task>): Task => ({
@@ -44,4 +44,11 @@ describe('card messages', () => {
   it('states the rule', () => {
     expect(cardRule(10)).toBe('Right in under 2 s counts. 10 to finish.');
   });
+});
+
+describe('stars', () => {
+  it('give one to pass, two for a good run and three for nearly clean', () => {
+    expect([0.5, 0.8, 0.9, 0.93, 0.97, 1].map((a) => starsOf(a, 0.9))).toEqual([0, 1, 2, 2, 3, 3]);
+  });
+  it('are drawn out of three', () => expect(starText(2)).toBe('★★☆'));
 });
