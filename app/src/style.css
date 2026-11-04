@@ -363,7 +363,7 @@ main { min-width: 0; }
 [data-view='minimal'] .hero { grid-row: 1; min-height: 0; margin: 0; }
 [data-view='minimal'] .hero-text { padding: 4px 0; }
 [data-view='minimal'] .piece-title { font-size: 18px; letter-spacing: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-[data-view='minimal'] #score { grid-row: 2; min-height: 0; overflow: hidden; padding: 4px; border: 2px solid #000; border-radius: 0; box-shadow: none; }
+[data-view='minimal'] #score { grid-row: 2; min-height: 0; overflow: hidden; padding: 4px 4px 16px; border: 2px solid #000; border-radius: 0; box-shadow: none; }
 [data-view='minimal'] #status { grid-row: 3; min-height: 0; margin: 4px 0 0; font-size: 13px; line-height: 1.25; color: #000; white-space: normal; }
 [data-view='minimal'] #feedback { grid-row: 4; min-height: 0; margin: 2px 0 0; font-size: 14px; font-weight: 600; border-left: 4px solid #000; padding-left: 6px; }
 [data-view='minimal'] #status:empty, [data-view='minimal'] #feedback:empty { display: none; }

@@ -558,7 +558,7 @@ export class ScoreView implements MeasuredCursor {
     const x = at.x * u;
     // Below the system: the fingering numbers sit above the treble staff and the notes' own numbers are inside, so the marks get a row of their own.
     const bottom = at.staves[at.staves.length - 1]!.ParentStaffLine.PositionAndShape.AbsolutePosition.y + 6.5;
-    const y = (bottom + 3.6) * u;
+    const y = (bottom + 0.3) * u; // just under the staff, so it reads as belonging to the note above and not to the next system
     const key = `${Math.round(x)}@${Math.round(y)}`;
     const old = svg.querySelector(`[data-result="${key}"]`);
     if (old?.classList.contains('hit-result')) return; // a played note stays played
