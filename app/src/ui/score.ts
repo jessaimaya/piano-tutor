@@ -480,6 +480,9 @@ export class ScoreView implements MeasuredCursor {
       line.setAttribute('class', 'playhead');
       svg.append(line);
     }
+    const key = `${spot.x}|${spot.y0}|${spot.y1}`;
+    if (line.dataset.at === key) return; // same place as the last frame: leave the drawing alone
+    line.dataset.at = key;
     line.setAttribute('x1', String(spot.x * u));
     line.setAttribute('x2', String(spot.x * u));
     line.setAttribute('y1', String(spot.y0 * u));

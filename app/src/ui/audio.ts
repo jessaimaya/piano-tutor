@@ -11,6 +11,20 @@ export class Synth {
   private voice: VoiceName = 'piano';
   private sampler = new Sampler();
   private held = new Map<number, Playing>();
+  private busyUntil = 0; // performance.now() time after which nothing is sounding (the reverb tail included)
+  private sleeper: ReturnType<typeof setTimeout> | undefined;
+
+  /** Note that sound lasts until `untilMs` (plus the reverb tail), and put the audio hardware to sleep once it is over: an open context drains the battery. */
+  private busy(untilMs: number): void {
+    this.busyUntil = Math.max(this.busyUntil, untilMs + 3000);
+    clearTimeout(this.sleeper);
+    this.sleeper = setTimeout(() => this.sleepIfQuiet(), Math.max(500, this.busyUntil - performance.now()));
+  }
+
+  private sleepIfQuiet(): void {
+    if (this.held.size > 0 || performance.now() < this.busyUntil) { this.busy(performance.now()); return; }
+    if (this.ctx?.state === 'running') void this.ctx.suspend().catch(() => {}); // every use calls resume() first
+  }
 
   setVoice(voice: VoiceName): void {
     this.voice = voice;
@@ -81,6 +95,7 @@ export class Synth {
       this.noteOff(note);
       if (this.voice === 'grand' && !this.sampler.has([note])) void this.preload([note]); // this once the built-in piano answers
       this.held.set(note, play(this.ctx, this.busFor(this.ctx), this.voice, note, this.ctx.currentTime, 0.8));
+      this.busy(performance.now());
     } catch {
       // no audio available: stay silent
     }
@@ -91,6 +106,7 @@ export class Synth {
     if (!v || !this.ctx) return;
     v.release(this.ctx.currentTime);
     this.held.delete(note);
+    this.busy(performance.now());
   }
 
   /**
@@ -105,6 +121,7 @@ export class Synth {
       const ctx = this.ctx;
       const bus = this.busFor(ctx);
       const offsetSec = this.clockOffset(ctx);
+      this.busy(Math.max(performance.now(), ...notes.map((n) => n.atMs + n.durMs)));
       for (const n of notes) {
         const t = n.atMs / 1000 + offsetSec;
         const end = t + Math.max(0.08, n.durMs / 1000 * 0.97);
@@ -134,6 +151,7 @@ export class Synth {
       void this.ctx.resume();
       const ctx = this.ctx;
       const offsetSec = this.clockOffset(ctx);
+      this.busy(Math.max(performance.now(), ...clicks.map((c) => c.atMs)));
       for (const c of clicks) {
         const t = c.atMs / 1000 + offsetSec;
         if (t < ctx.currentTime) continue;

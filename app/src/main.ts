@@ -34,7 +34,7 @@ import { createCourse } from './course/ui';
 import type { StepTarget } from './course/state';
 import { readSteps, analyse } from './piece/analysis';
 import { createPiece } from './piece/ui';
-import { keepScreenOn } from './ui/wake-lock';
+import { keepScreenOn, screenActivity } from './ui/wake-lock';
 import { resolveZoom, stepZoom, type ViewId } from './ui/view';
 
 const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
@@ -444,9 +444,15 @@ function currentExpected(): Iterable<number> {
   return $<HTMLInputElement>('showNext').checked ? tempo.run.upcoming() : [];
 }
 
+let lastKeys = '';
 function refreshKeys(): void {
+  // every frame of a run comes here: touch the keys only when the pressed or expected ones are not the same as last time
+  const expected = currentExpected();
+  const sig = `${[...pressed].sort().join(',')}|${[...expected].sort().join(',')}`;
+  if (sig === lastKeys) return;
+  lastKeys = sig;
   keyboard.setState('pressed', pressed);
-  keyboard.setState('expected', currentExpected());
+  keyboard.setState('expected', expected);
 }
 
 function renderControls(): void {
@@ -629,8 +635,12 @@ function stepPlaces(cursor: RangeCursor, steps: TimedStep[]): { spots: Spot[]; a
 /** What the status line said last, so the page is only touched when its words change (every repaint costs an e-ink screen a flash). */
 let lastStatus = '';
 
+const MIN_FRAME_MS = 28; // the minimal view (a phone, e-ink) draws about 30 times a second: the line is as smooth to the eye and the battery lasts
+
 function tick(): void {
   if (!tempo || !current) return;
+  if (view === 'minimal' && lastFrameAt && performance.now() - lastFrameAt < MIN_FRAME_MS) { tempo.raf = requestAnimationFrame(tick); return; }
+  screenActivity();
   const now = performance.now() - latencyMs;
   const u = tempo.run.update(now);
   // The hidden cursor follows the clock, so the page turns as the line reaches the last system on it.
@@ -993,6 +1003,7 @@ function listenTick(): void {
     showResult(`That was ${part}${who}. Now your turn: play it back, and press Listen again as often as you like.`);
     return;
   }
+  screenActivity();
   l.raf = requestAnimationFrame(listenTick);
 }
 
@@ -1077,6 +1088,7 @@ bus.on((event, source) => {
   }
   if (event.type !== 'noteOn') return;
 
+  screenActivity();
   pressed.add(event.note);
   refreshKeys(); // show the key even when no run is active (tempo mode before Start has no `tempo`)
   if (source !== 'midi') synth.noteOn(event.note); // the piano makes its own sound
