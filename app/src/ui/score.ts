@@ -3,7 +3,7 @@ import type { BarRange, MeasuredCursor } from '../practice/range';
 import type { CursorNote } from '../practice/session';
 import type { Spot } from './playhead';
 import { DEFAULT_ZOOM } from './view';
-import { clefFor, isSharp, ledgerSteps, staffStep, type Clef } from './staff-position';
+import { accidentalOf, clefFor, ledgerSteps, staffStep, type Clef } from './staff-position';
 
 /** OSMD lays out in units of one staff space; at zoom 1 that is 10 px. */
 const UNIT_PX = 10;
@@ -25,8 +25,10 @@ const EVEN_ZOOM_STEP = 0.1;
 export interface NoteAnchor {
   staves: GraphicalMeasure[];
   x: number;
-  /** The notes due at this spot and the staff each one is written on (0 = top). */
-  due: { midi: number; staff: number }[];
+  /** The notes due at this spot, the staff each one is written on (0 = top) and whether the score writes it as a flat. */
+  due: { midi: number; staff: number; flat: boolean }[];
+  /** The key signature is a flat one, so a black key nobody asked for is written as a flat. */
+  flatKey: boolean;
 }
 
 /** Which finger numbers are drawn: the ones that set the hand down at the start, all of them, or none. */
@@ -420,6 +422,13 @@ export class ScoreView implements MeasuredCursor {
     return out;
   }
 
+  /** Whether the key signature at the cursor has flats (negative number of fifths): black keys are then named and drawn as flats. */
+  flatKey(): boolean {
+    if (!this.loaded) return false;
+    const key = this.osmd.cursor.iterator.CurrentMeasure?.getKeyInstruction(0)?.Key;
+    return key !== undefined && key < 0;
+  }
+
   /** Where the cursor is on the page, taken before a key press can move it. */
   anchor(): NoteAnchor | undefined {
     if (!this.loaded || this.done) return undefined;
@@ -427,8 +436,8 @@ export class ScoreView implements MeasuredCursor {
     const gnote = this.osmd.cursor.GNotesUnderCursor()[0];
     if (!staves?.length || !gnote) return undefined;
     const due = this.osmd.cursor.NotesUnderCursor().filter((n) => !n.isRest())
-      .map((n) => ({ midi: n.halfTone + OSMD_TO_MIDI, staff: n.ParentStaff.idInMusicSheet }));
-    return { staves, x: gnote.PositionAndShape.AbsolutePosition.x, due };
+      .map((n) => ({ midi: n.halfTone + OSMD_TO_MIDI, staff: n.ParentStaff.idInMusicSheet, flat: n.Pitch.AccidentalHalfTones < 0 }));
+    return { staves, x: gnote.PositionAndShape.AbsolutePosition.x, due, flatKey: this.flatKey() };
   }
 
   /**
@@ -507,12 +516,14 @@ export class ScoreView implements MeasuredCursor {
     // The staff the note it should have been is written on, whatever its pitch: the left hand's upper notes sit on the bass staff
     // (above its top line), so a key from Middle C up still belongs there. With nothing due, fall back to the pitch's usual hand.
     const mine = at.due.filter((d) => this.activeHands === 'both' || d.staff === (this.activeHands === 'rh' ? 0 : 1)); // only the hand being asked for
-    const near = mine.reduce<{ midi: number; staff: number } | undefined>((best, d) => (!best || Math.abs(d.midi - midi) < Math.abs(best.midi - midi) ? d : best), undefined);
+    const near = mine.reduce<{ midi: number; staff: number; flat: boolean } | undefined>((best, d) => (!best || Math.abs(d.midi - midi) < Math.abs(best.midi - midi) ? d : best), undefined);
     const staff = at.staves[near?.staff ?? (at.staves.length > 1 && clefFor(midi) === 'bass' ? 1 : 0)] ?? at.staves[0]!;
     const clef: Clef = staff.InitiallyActiveClef?.ClefType === ClefEnum.F ? 'bass' : 'treble';
     const u = UNIT_PX; // the drawing's own units: the zoom is the size the svg is shown at, not part of its coordinates
     const top = staff.ParentStaffLine.PositionAndShape.AbsolutePosition.y;
-    const step = staffStep(midi, clef);
+    // The key you pressed is written the way the score writes it: the same key as a due note takes that note's spelling, any other follows the key signature.
+    const flat = at.due.find((d) => d.midi === midi)?.flat ?? at.flatKey;
+    const step = staffStep(midi, clef, flat);
     const cx = at.x * u;
     const cy = (top + step / 2) * u;
 
@@ -532,9 +543,10 @@ export class ScoreView implements MeasuredCursor {
       add('line', { x1: cx - 1.25 * u, x2: cx + 1.25 * u, y1: y, y2: y, class: 'mark-ledger', 'stroke-width': 0.12 * u });
     }
     add('ellipse', { cx, cy, rx: 0.68 * u, ry: 0.5 * u, transform: `rotate(-20 ${cx} ${cy})`, class: 'mark-head' });
-    if (isSharp(midi)) {
+    const accidental = accidentalOf(midi, flat);
+    if (accidental) {
       const t = add('text', { x: cx - 1.9 * u, y: cy + 0.55 * u, class: 'mark-sharp', 'font-size': 1.9 * u });
-      t.textContent = '♯';
+      t.textContent = accidental;
     }
     svg.append(g);
     setTimeout(() => g.remove(), kind === 'wrong' ? WRONG_NOTE_MS : RIGHT_NOTE_MS);

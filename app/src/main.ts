@@ -503,7 +503,7 @@ function renderStatus(): void {
   if (mode === 'wait') {
     const stats = session?.stats;
     if (!session || !stats || session.finished) { status.textContent = ''; return; }
-    const want = [...session.expected].sort((a, b) => a - b).map(noteName).join(' + ');
+    const want = [...session.expected].sort((a, b) => a - b).map((n) => noteName(n, score.flatKey())).join(' + ');
     status.innerHTML = `Play <strong>${want}</strong>${stats.steps ? ` · ${stats.steps} done` : ''}${stats.wrong ? ` · <span class="bad">${stats.wrong} wrong</span>` : ''}`;
     return;
   }
@@ -651,7 +651,7 @@ function tick(): void {
   }
   if (u.newlyMissed.length) {
     for (const n of u.newlyMissed) keyboard.flash('should', n, 1500);
-    setFeedback(describeMissed(u.newlyMissed));
+    setFeedback(describeMissed(u.newlyMissed, score.flatKey()));
     for (const i of u.newlyMissedSteps) score.markResult(tempo.anchors[i], 'missed');
   }
   // The line crosses the staves and reaches a note when it is due.
@@ -689,7 +689,7 @@ function tempoStatus(u: TempoUpdate, now: number): string {
   const { step, of } = tempo.run.progress;
   const next = tempo.run.upcoming();
   const b = tempo.run.beatsUntilNext(now);
-  const names = $<HTMLInputElement>('showNext').checked && next.length ? ` <strong>${[...next].sort((a, c) => a - c).map(noteName).join(' + ')}</strong>` : '';
+  const names = $<HTMLInputElement>('showNext').checked && next.length ? ` <strong>${[...next].sort((a, c) => a - c).map((n) => noteName(n, score.flatKey())).join(' + ')}</strong>` : '';
   const cue = b === undefined ? ''
     : b <= 0.5 ? `Play${names} <span class="now">NOW</span>`
     : `Next${names} · in ${Math.round(b)}`;
@@ -1115,7 +1115,7 @@ bus.on((event, source) => {
     if (outcome?.result.kind === 'wrong') {
       keyboard.flash('wrong', event.note);
       score.showWrong(event.note, at);
-      setFeedback(describeWrongNote(event.note, [...(session?.expected ?? [])]));
+      setFeedback(describeWrongNote(event.note, [...(session?.expected ?? [])], score.flatKey()));
     }
     if (outcome?.result.kind === 'correct' || outcome?.result.kind === 'advance') {
       keyboard.flash('hit', event.note);
@@ -1123,8 +1123,8 @@ bus.on((event, source) => {
     }
     if (outcome?.result.kind === 'advance') {
       score.clearWrong(); // the cursor moved on: the mistake is behind you
-      const held = [...new Set(score.heldTies.filter(handFilter(hands)).map((n) => noteName(n.midi)))];
-      if (held.length && !outcome.finished) setFeedback(`✓ ${noteName(event.note)} · tied ${held.join(' + ')}: hold it`, 'good');
+      const held = [...new Set(score.heldTies.filter(handFilter(hands)).map((n) => noteName(n.midi, score.flatKey())))];
+      if (held.length && !outcome.finished) setFeedback(`✓ ${noteName(event.note, score.flatKey())} · tied ${held.join(' + ')}: hold it`, 'good');
     }
     renderStatus();
     refreshKeys();
@@ -1137,7 +1137,7 @@ bus.on((event, source) => {
       score.showRight(event.note, tempo.anchors[r.stepIdx] ?? at); // on its own note: the cursor may not have reached it yet
       score.markResult(tempo.anchors[r.stepIdx], 'hit');
       const off = Math.round(r.offsetMs);
-      setFeedback(`✓ ${noteName(event.note)} counted${Math.abs(off) <= 80 ? ', on the beat' : `, ${Math.abs(off)} ms ${off > 0 ? 'late' : 'early'}`}`, 'good');
+      setFeedback(`✓ ${noteName(event.note, score.flatKey())} counted${Math.abs(off) <= 80 ? ', on the beat' : `, ${Math.abs(off)} ms ${off > 0 ? 'late' : 'early'}`}`, 'good');
     }
     if (r.kind === 'extra') {
       keyboard.flash('wrong', event.note);
@@ -1145,7 +1145,7 @@ bus.on((event, source) => {
       for (const w of r.wanted) keyboard.flash('should', w, 1500);
       setFeedback(
         r.offsetMs !== undefined ? describeOffTime(event.note, r.offsetMs)
-          : r.wanted.length ? describeWrongNote(event.note, r.wanted)
+          : r.wanted.length ? describeWrongNote(event.note, r.wanted, score.flatKey())
           : 'Extra note: nothing was due at that moment.',
       );
     }
@@ -1159,7 +1159,7 @@ bus.on((event, source) => {
     } else if (wanted.length) {
       keyboard.flash('wrong', event.note);
       score.showWrong(event.note);
-      setFeedback(describeWrongNote(event.note, wanted));
+      setFeedback(describeWrongNote(event.note, wanted, score.flatKey()));
     }
   }
 });

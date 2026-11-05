@@ -46,3 +46,12 @@ describe('note helpers', () => {
     expect(isBlackKey(60)).toBe(false);
   });
 });
+
+describe('noteName flats', () => {
+  it('spells black keys as flats on request', () => {
+    expect(noteName(63)).toBe('D♯4');
+    expect(noteName(63, true)).toBe('E♭4');
+    expect(noteName(70, true)).toBe('B♭4');
+    expect(noteName(62, true)).toBe('D4');
+  });
+});

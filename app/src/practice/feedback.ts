@@ -11,13 +11,13 @@ export function closest(played: number, wanted: readonly number[]): number | und
 const semitones = (n: number) => `${n} semitone${n === 1 ? '' : 's'}`;
 
 /** A wrong pitch: how far from the nearest note you should have played. */
-export function describeWrongNote(played: number, wanted: readonly number[]): string {
+export function describeWrongNote(played: number, wanted: readonly number[], flat = false): string {
   const target = closest(played, wanted);
-  if (target === undefined) return `${noteName(played)} is not in the score here.`;
+  if (target === undefined) return `${noteName(played, flat)} is not in the score here.`;
   const diff = played - target;
-  if (diff === 0) return `${noteName(played)} was right.`;
+  if (diff === 0) return `${noteName(played, flat)} was right.`;
   const where = diff > 0 ? 'too high' : 'too low';
-  return `You played ${noteName(played)}, wanted ${noteName(target)}: ${semitones(Math.abs(diff))} ${where}.`;
+  return `You played ${noteName(played, flat)}, wanted ${noteName(target, flat)}: ${semitones(Math.abs(diff))} ${where}.`;
 }
 
 /** The right pitch at the wrong moment. */
@@ -26,7 +26,7 @@ export function describeOffTime(note: number, offsetMs: number): string {
   return `${noteName(note)} was the right note, but ${ms} ms ${offsetMs > 0 ? 'late' : 'early'}.`;
 }
 
-export function describeMissed(notes: readonly number[]): string {
-  const names = [...notes].sort((a, b) => a - b).map(noteName).join(' + ');
+export function describeMissed(notes: readonly number[], flat = false): string {
+  const names = [...notes].sort((a, b) => a - b).map((n) => noteName(n, flat)).join(' + ');
   return `Missed ${names}.`;
 }

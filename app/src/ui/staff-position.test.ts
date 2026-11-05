@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { clefFor, isSharp, ledgerSteps, staffStep } from './staff-position';
+import { accidentalOf, clefFor, isSharp, ledgerSteps, staffStep } from './staff-position';
 
 describe('staffStep', () => {
   it('puts the treble lines where they belong', () => {
@@ -51,5 +51,18 @@ describe('clefFor', () => {
   it('splits at Middle C', () => {
     expect(clefFor(60)).toBe('treble');
     expect(clefFor(59)).toBe('bass');
+  });
+});
+
+describe('flat spelling', () => {
+  it('writes a black key on the letter above, with a flat, when asked', () => {
+    expect(staffStep(63, 'treble', true)).toBe(staffStep(63, 'treble') - 1); // E♭4 sits on E, one step above D♯4 on D
+    expect(staffStep(63, 'treble', true)).toBe(staffStep(64, 'treble'));
+    expect(accidentalOf(63, true)).toBe('♭');
+    expect(accidentalOf(63)).toBe('♯');
+  });
+  it('leaves white keys alone', () => {
+    expect(staffStep(62, 'treble', true)).toBe(staffStep(62, 'treble'));
+    expect(accidentalOf(62, true)).toBeNull();
   });
 });

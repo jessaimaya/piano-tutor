@@ -40,8 +40,11 @@ export function parseMidi(data: ArrayLike<number>): MidiEvent | null {
 
 const NAMES = ['C', 'C♯', 'D', 'D♯', 'E', 'F', 'F♯', 'G', 'G♯', 'A', 'A♯', 'B'];
 
-export function noteName(note: number): string {
-  return `${NAMES[note % 12]}${Math.floor(note / 12) - 1}`;
+const FLAT_NAMES = ['C', 'D♭', 'D', 'E♭', 'E', 'F', 'G♭', 'G', 'A♭', 'A', 'B♭', 'B'];
+
+/** `flat`: spell a black key as a flat (E♭, not D♯), the way a flat key signature writes it. */
+export function noteName(note: number, flat = false): string {
+  return `${(flat ? FLAT_NAMES : NAMES)[note % 12]}${Math.floor(note / 12) - 1}`;
 }
 
 export function isBlackKey(note: number): boolean {
