@@ -741,6 +741,23 @@
     "notes": "File replaced by a musescore.com download (78 bars)"
   },
   {
+    "id": "x-ros-untitled-3-samskeyti",
+    "file": "ros-untitled-3-samskeyti.musicxml",
+    "title": "Untitled 3 (Samskeyti)",
+    "composer": "Sigur Rós",
+    "stage": 4,
+    "skills": [
+      "E♭-key-sig",
+      "chords"
+    ],
+    "targetBpm": 70,
+    "hands": "both",
+    "license": "unverified-arrangement",
+    "source": "Sigur Rós – Untitled 3 (Samskeyti), sheet image, read by OMR",
+    "difficulty": 79,
+    "pieceMode": true
+  },
+  {
     "id": "x-canon-d-medium",
     "file": "canon-d-medium.mxl",
     "title": "Canon in D (medium)",
